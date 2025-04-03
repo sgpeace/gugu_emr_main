@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <title>GuGu Medical Center EMR - EMR 조회</title>
+  <style>
+  
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="navigation">
+      {% if index < total - 1 %} <!-- 이전 기록이 존재하면-->
+        <a class="nav-button" href="/patient?name={{ name | urlencode }}&birth_date={{ birth_date | urlencode }}&index={{ index + 1 }}">← 이전 기록</a>
+      {% else %}
+        <span></span>
+      {% endif %}
+      
+      {% if index > 0 %}
+        <a class="nav-button" href="/patient?name={{ name | urlencode }}&birth_date={{ birth_date | urlencode }}&index={{ index - 1 }}">다음 기록 →</a>
+      {% else %}
+        <span></span>
+      {% endif %}
+    </div>
+    <div class="record">
+      <h2>{{ record.name }}</h2>
+      <p><strong>생년월일:</strong> {{ record.birth_date }}</p>
+      <p><strong>방문날짜:</strong> {{ record.visit_date }}</p>
+      <p><strong>증상:</strong><br>{{ record.symptoms }}</p>
+      <p><strong>치료:</strong><br>{{ record.treatment }}</p>
+    </div>
+  </div>
+  <div class="footer">
+    개발자: 조승권
+  </div>
+  <!-- 왼쪽 아래에 고정된 환자목록 버튼 -->
+<a href="/registration" class="fixed-button">환자목록</a>
+</body>
+</html>

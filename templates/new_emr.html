@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}새로운 EMR 작성 - GuGu Medical Center EMR{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>새로운 EMR 작성</h1>
+  {% if error %}
+  <p class="error">{{ error }}</p>
+  {% endif %}
+  <form action="/emr/new" method="post">
+    <label>성함</label>
+    <input type="text" name="name" required>
+
+    <label>생년월일</label>
+    <input type="date" name="birth_date" required>
+
+    <label>방문날짜</label>
+    <input type="date" name="visit_date" required>
+
+    <label>증상</label>
+    <textarea name="symptoms" rows="3" required></textarea>
+
+    <label>치료</label>
+    <textarea name="treatment" rows="3" required></textarea>
+
+    <button type="submit">저장</button>
+  </form>
+</div>
+{% endblock %}

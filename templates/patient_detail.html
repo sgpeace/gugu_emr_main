@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}환자 상세 정보 - GuGu Medical Center EMR{% endblock %}
+
+{% block content %}
+<div class="patient-container">
+
+  <!-- 🏥 왼쪽: 방문 기록 (사이드바) -->
+  <div class="left-panel">
+    <h3>방문 기록</h3>
+    {% for record in visit_records %}
+    <a href="/patient_detail?name={{ name | urlencode }}&birth_date={{ birth_date | urlencode }}&visit_date={{ record.visit_date.strftime('%Y-%m-%d') }}"
+      class="visit-button">
+      {{ record.visit_date.strftime('%Y-%m-%d') }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- 📌 오른쪽: 환자 정보 및 차트 -->
+  <div class="main-content">
+    
+    <div class="patient-info">
+      <h2>환자 정보</h2>
+      <div class="info-row">
+        <div><strong>이름:</strong> {{ name }}</div>
+        <div><strong>생년월일:</strong> {{ birth_date }}</div>
+      </div>
+    </div>
+
+    <div class="content-panel">
+      <div class="box chart">
+        <h3>새로운 차트 작성</h3>
+        <form action="/patient_detail/new_emr" method="post">
+          <input type="hidden" name="name" value="{{ name }}">
+          <input type="hidden" name="birth_date" value="{{ birth_date }}">
+
+          <div class="form-row">
+            <label for="visit_date">방문 날짜</label>
+            <input type="date" id="visit_date" name="visit_date" required>
+          </div>
+
+          <div class="form-row">
+            <label for="vitals">Vital Signs</label>
+            <div class="vitals-group">
+              <input type="number" step="1" name="vitals_bp" placeholder="혈압 (mmHg)">
+              <input type="number" step="1" name="vitals_hr" placeholder="맥박 (bpm)">
+            </div>
+            <div class="vitals-group">
+              <input type="number" step="1" name="vitals_glucose" placeholder="혈당 (mg/dL)">
+              <input type="number" step="0.1" name="vitals_temp" placeholder="체온 (°C)">
+            </div>
+          </div>
+
+          <div class="soap-section">
+            <h4>Symptoms (증상)</h4>
+            <textarea name="symptoms" rows="3" placeholder="예) 환자의 호소, 통증 정도, 현재 상황" required></textarea>
+          </div>
+          <div class="soap-section">
+            <h4>Signs (징후)</h4>
+            <textarea name="objective" rows="3" placeholder="예) 검사소견, 관찰된 징후"></textarea>
+          </div>
+          <div class="soap-section">
+            <h4>Assessment (진단)</h4>
+            <textarea name="assessment" rows="3" placeholder="예) 임상적 판단, 감별진단 등"></textarea>
+          </div>
+          <div class="soap-section">
+            <h4>Plan (치료 계획)</h4>
+            <textarea name="treatment" rows="3" placeholder="예) 처방약, 추후 계획, 추가 검사 등" required></textarea>
+          </div>
+
+          <div class="button-group">
+            <button type="submit" class="button">저장</button>
+            <button type="button" class="button" onclick="alert('진료 완료 처리!')">진료 완료</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="box chart">
+        <h3>직전 기록</h3>
+        {% if latest_record %}
+        <p><strong>방문날짜:</strong> {{ latest_record.visit_date.strftime('%Y-%m-%d') }}</p>
+        <p><strong>주관적 증상(S):</strong> {{ latest_record.symptoms }}</p>
+        <p><strong>치료 계획(P):</strong> {{ latest_record.treatment }}</p>
+        {% else %}
+        <p>기록이 없습니다.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

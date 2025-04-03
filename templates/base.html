@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <!-- 메타 태그 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ✅ Google Fonts (Nanum Gothic) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
+
+    <!-- ✅ Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- ✅ FastAPI에서 정적 파일 연결 -->
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+
+    <title>{% block title %}GuGu Medical Center EMR{% endblock %}</title>
+</head>
+
+
+
+
+<body>
+
+
+    <!-- 본문 (각 페이지에서 개별 내용 추가) -->
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- 푸터 (공통) -->
+    <footer class="footer">
+        개발자: 조승권
+    </footer>
+
+
+    <!-- JavaScript 연결 -->
+    <script src="/static/js/dashboard.js"></script>
+
+
+
+</body>
+
+</html>

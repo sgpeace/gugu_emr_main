@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}#1 메인대시보드 - GuGu Medical Center EMR{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  
+  <!-- 🏥 왼쪽: 오늘의 환자 (40%) -->
+  <div class="patient-list-section">
+    <h2>오늘의 환자</h2>
+    <table class="patient-table">
+      <thead>
+        <tr>
+          <th>순번</th>
+          <th>이름</th>
+          <th>상태</th>
+          <th>입장</th>
+          <th>삭제</th>
+        </tr>
+      </thead>
+      <tbody id="patient-list">
+        <!-- 환자 목록 동적 추가 -->
+      </tbody>
+    </table>
+
+    <!-- 하단: 검색창 & 버튼들 -->
+    <div class="patient-controls">
+      <!-- 너비를 살짝 줄인 환자 등록 입력 -->
+      <input type="text" id="patient-search" placeholder="환자 등록">
+      <!-- 새 환자 정보 결과를 표시할 영역 -->
+      <div id="new-patient-search"></div>
+      <!-- "환자 등록" 입력과 "+" 버튼 사이에 "확인" 버튼 추가 -->
+      <button id="confirm-patient" class="confirm-button">확인</button>
+      <button id="add-patient" class="plus-button">+</button>
+      <button id="new-patient" class="new-button">신환 등록</button>
+    </div>
+
+    <!-- 저장 & 초기화 버튼 -->
+    <div class="patient-actions">
+      <!-- 저장 버튼 위에 텍스트 입력이 가능한 네모난 박스 추가 -->
+      <div class="save-text-box">박스</div>
+      <button id="save-patients" class="save-button">저장</button>
+      <button id="reset-patients" class="reset-button">초기화</button>
+    </div>
+  </div>
+
+  <!-- 📌 오른쪽: 상태별 환자 (60%) -->
+  <div class="status-section">
+    <div class="status-container">
+      <div class="status-box" id="in-treatment">
+        <h3>진료중</h3>
+        <ul id="treatment-list"></ul>
+      </div>
+      <div class="status-box" id="in-infusion">
+        <h3>수액중</h3>
+        <ul id="infusion-list"></ul>
+      </div>
+      <div class="status-box" id="in-medication">
+        <h3>복약중</h3>
+        <ul id="medication-list"></ul>
+      </div>
+    </div>
+
+    🔍 환자 검색
+    <div class="search-patient-section">
+      <input type="text" id="patient-name-search" placeholder="환자 이름 검색">
+      <div id="search-results" placeholder="검색 결과">
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
