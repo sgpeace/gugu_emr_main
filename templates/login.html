@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 - GuGu Medical Center EMR{% endblock %}
+
+{% block content %}
+  <div class="login-wrapper">
+    <div class="login-box">
+      <img src="/static/gugu_logo.jpg" alt="GuGu Medical Center Logo" class="login-logo">
+      <h2>GuGu Medical Center</h2>
+      
+      <!-- 에러 메시지 출력 -->
+      {% if error %}
+      <div class="error-message">{{ error }}</div>
+      {% endif %}
+      
+      <form action="/login" method="post">
+        <div class="input-group">
+          <label for="username">
+            <i class="fas fa-user"></i>
+          </label>
+          <input type="text" id="username" name="username" placeholder="아이디" required>
+        </div>
+
+        <div class="input-group">
+          <label for="password">
+            <i class="fas fa-lock"></i>
+          </label>
+          <input type="password" id="password" name="password" placeholder="비밀번호" required>
+        </div>
+
+        <button type="submit" class="login-button">로그인</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

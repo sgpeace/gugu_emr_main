@@ -1,0 +1,1192 @@
+/* ========================= */
+/* 🌟 기본 스타일 (Normalize 추가) */
+/* ========================= */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+    height: 100%;
+    background: linear-gradient(to right, #e0e7e9, #f4f7f8);
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+html {
+    height: 100%;
+}
+
+/* ===== 컨테이너 ===== */
+.container {
+    width: 90vw;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* ===== 카드 스타일 (공통) ===== */
+.card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* ===== 버튼 스타일 (공통) ===== */
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.button {
+    flex: 1;
+    padding: 10px;
+    background: #3b7a99;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+.button:hover {
+    background: #327589;
+}
+
+/* ========================= */
+/* 🌟 로그인 박스 스타일 */
+/* ========================= */
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    /* 로그인 화면만 세로 전체 차지 */
+    width: 100%;
+}
+
+.login-box {
+    width: 350px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+/* 로고 스타일 */
+.login-logo {
+    width: 150px;
+    height: auto;
+}
+
+/* 로그인 제목 */
+.login-box h2 {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+/* 입력 필드 스타일 */
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    position: absolute;
+    left: 10px;
+    color: #888;
+    font-size: 1rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 12px 12px 30px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #56AB2F;
+    box-shadow: 0px 0px 5px rgba(86, 171, 47, 0.3);
+}
+
+/* 로그인 버튼 스타일 (녹색) */
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(to right, #56AB2F, #3B741E);
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.login-button:hover {
+    transform: scale(1.02);
+}
+
+/* ========================= */
+/* 🌟 대시보드 스타일 */
+/* ========================= */
+
+/* 📌 메인 대시보드 레이아웃 */
+.dashboard-header {
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+    font-size: 1rem;
+    color: #666;
+    font-weight: bold;
+}
+
+/* 왼쪽/오른쪽 레이아웃 */
+.dashboard-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    min-height: 90vh;
+    width: 100%;
+}
+
+/* 왼쪽: 오늘의 환자 */
+.patient-list-section {
+    width: 40%;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    /* height: 95%; <-- 제거 */
+}
+
+/* 테이블 */
+.patient-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.patient-table th,
+.patient-table td {
+    border: 1px solid #ddd;
+    padding: 7px 10px;
+    text-align: center;
+}
+
+.patient-table th {
+    background-color: #f2f2f2;
+}
+
+/* 환자 검색창 + 제안 목록 */
+.patient-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.patient-controls input#patient-search {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+#new-patient-search {
+    flex: 1;
+}
+
+.suggestion-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    background: #fff;
+    max-height: 150px;
+    overflow-y: auto;
+    transition: max-height 0.3s ease;
+}
+
+.suggestion-list li {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.suggestion-list li:hover {
+    background-color: #f0f0f0;
+}
+
+.no-result {
+    padding: 8px 12px;
+    color: #888;
+}
+
+/* 상태/저장 영역 */
+.patient-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.save-text-box {
+    /* width: 100%;  그대로 두어도 괜찮지만, 너무 길다면 auto로 조정 가능 */
+    width: 100%;
+    min-height: 40px;
+    /* border: 2px solid #000; <-- 너무 두꺼우니 줄임 */
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+/* 오른쪽: 상태 섹션 */
+.status-section {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* height: 100%; <-- 제거 */
+}
+
+.status-container {
+    display: flex;
+    gap: 15px;
+    min-height: 70vh;
+    /* flex: 1; <-- 필요한 경우 유지, 문제되면 제거 */
+}
+
+/* status-box 스타일 개선 */
+.status-box {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    transition: box-shadow 0.3s;
+}
+
+.status-box:hover {
+    box-shadow: 0px 5px 12px rgba(0, 0, 0, 0.25);
+}
+
+.status-box h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+    color: #333;
+}
+
+/* 항목(환자 이름과 생년월일)을 위한 li 스타일 */
+.status-box ul {
+    list-style: none;
+    padding: 0;
+}
+
+.status-box ul li {
+    padding: 8px;
+    margin-bottom: 6px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+/* 생년월일 표시용 작은 글씨 */
+.small-birthdate {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.status-box button {
+    padding: 6px 10px;
+    border: none;
+    background-color: #56AB2F;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.status-box button:hover {
+    background-color: #3B741E;
+}
+
+
+/* 오른쪽 검색 */
+.search-patient-section {
+    margin-top: 15px;
+}
+
+.search-patient-section input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+#search-results {
+    margin-top: 5px;
+    font-size: 1rem;
+}
+
+/* ========================= */
+/* 🌟 기타 (환자 접수, 상세 페이지 등) */
+/* ========================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* 고정 버튼 (예: 환자목록) */
+.fixed-button {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    line-height: 60px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    font-size: 10px;
+    color: #666;
+}
+
+/* ========================= */
+/* Registration 페이지 전용 스타일 */
+#registration-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+#registration-table th,
+#registration-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+#registration-table th {
+    background-color: #f2f2f2;
+}
+
+#registration-table input {
+    width: 90%;
+    padding: 4px;
+    text-align: center;
+}
+
+button.update-button,
+button.delete-button {
+    margin: 0 5px;
+    padding: 3px 7px;
+    font-size: 0.8rem;
+}
+
+/* 관리 버튼도 조금 색상 강조 */
+.manage-button {
+    background-color: #cfcfcf;
+    /* 원하는 색상 사용 */
+    color: white;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.manage-button:hover {
+    background-color: #a1a1a1;
+}
+
+/* 기본 상태: '삭제' 열 숨김 */
+.patient-table .delete-col {
+    display: none;
+}
+
+/* 관리 모드 활성화: '삭제' 열 보이기 */
+.patient-table.management-mode .delete-col {
+    display: table-cell;
+    /* 테이블 열이므로 table-cell */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================= */
+/* 🌟 환자 상세 페이지 스타일 */
+/* ========================= */
+/* ========================= */
+/* 🌟 환자 상세 페이지 스타일 */
+/* ========================= */
+/* ========================= */
+/* 🌟 환자 상세 페이지 스타일 */
+/* ========================= */
+/* ========================= */
+/* 🌟 환자 상세 페이지 스타일 */
+/* ========================= */
+/* 
+  ================================
+  전역 기본 스타일 
+  ================================
+*/
+body {
+    margin: 0;
+    padding: 0;
+    background: #f8f9fa;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: #333;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* 
+    ================================
+    뒤로가기 버튼: 오른쪽 상단 고정
+    ================================
+  */
+.back-button {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #4c7eaa;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    z-index: 9999;
+}
+
+.back-button:hover {
+    background: #3b6394;
+}
+
+/* 
+    ================================
+    상단: 환자 정보 배너
+    ================================
+  */
+.patient-header {
+    text-align: center;
+    padding: 40px 20px 20px;
+    background: #e9ecef;
+    border-bottom: 1px solid #ccc;
+}
+
+.patient-header .patient-title {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #333;
+    font-weight: bold;
+}
+
+.patient-header .patient-title span {
+    font-size: 1.2rem;
+    color: #666;
+    margin-left: 6px;
+}
+
+/* 
+    ================================
+    메인 레이아웃: 3 columns
+    ================================
+  */
+.emr-layout {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 20px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* 
+    ================================
+    카드 스타일 (각 패널 공통)
+    ================================
+  */
+.emr-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+}
+
+.emr-card h2 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* 
+    ================================
+    왼쪽 패널: 방문 기록
+    ================================
+  */
+.visits-panel {
+    flex: 1;
+    min-width: 180px;
+}
+
+.visits-panel ul li {
+    margin-bottom: 8px;
+}
+
+.record-link:hover {
+    text-decoration: underline;
+}
+
+/* 
+    ================================
+    가운데 패널: 새 진료차트 작성
+    ================================
+  */
+.form-panel {
+    flex: 6;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+
+
+/* N/Ex. 테이블 스타일 */
+.ne-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.ne-table td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+
+.ne-table input[type="text"] {
+    padding: 4px 6px;
+    font-size: 0.9rem;
+    width: auto;
+}
+
+
+/* =========================== */
+/*  inline-group no-wrap      */
+/*  (Onset/Duration/Assoc.Sx,  */
+/*   Allergy/FHx/Social 등)   */
+/* =========================== */
+.form-panel .no-wrap {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    /* 공백 최대한 축소 */
+    margin-bottom: 12px;
+}
+
+.form-panel .no-wrap .inline-item {
+    flex: 1;
+    /* 나머지 공간 모두 차지 */
+    min-width: 0;
+    /* overflow 방지 */
+}
+
+.form-panel .no-wrap .inline-item label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-panel .no-wrap .inline-item input,
+.form-panel .no-wrap .inline-item select {
+    width: 100%;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+}
+
+.form-panel .date-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.form-panel .date-inline label {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.form-panel .date-inline input[type="date"] {
+    width: 160px;
+    /* ← 입력창 길이 줄이기 */
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.btn-chart-container {
+    text-align: right;
+    flex: 1;
+}
+
+.btn-chart {
+    background-color: #6da96f;
+    color: white;
+    text-decoration: none;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.btn-chart:hover {
+    background-color: #388e3c;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  C.C. 텍스트영역 확대                                 */
+/* ───────────────────────────────────────────────────── */
+.form-panel .cc-fieldset textarea {
+    min-height: 80px;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  Vital Signs, History, N/Ex. 등 section-fieldset   */
+/* ───────────────────────────────────────────────────── */
+.form-panel fieldset.section-fieldset {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.form-panel legend {
+    padding: 0 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+}
+
+.form-panel fieldset legend+.form-group,
+.form-panel>.form-group>label[for="med_hx"]~input,
+.form-panel>.form-group>label[for="pmhx"]~input {
+    margin-top: 0;
+    /* 기존 inline-group 마진 제거 */
+}
+
+.cc-fieldset textarea {
+    min-height: 140px;
+}
+
+.form-panel>.form-group:nth-of-type(ros),
+.form-panel>.form-group:nth-of-type(pe) {
+    margin-bottom: 12px;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  vitals-grid 고정 3열×2행                             */
+/* ───────────────────────────────────────────────────── */
+.form-panel .vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.form-panel .vital-item label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-panel .vital-item input {
+    width: 100%;
+    padding: 6px 8px;
+    box-sizing: border-box;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  버튼 그룹 중앙 정렬 유지                             */
+/* ───────────────────────────────────────────────────── */
+.form-panel .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* ────────────────────────────────────────────────────── */
+/* Fieldset 박스 스타일 (Vital Signs, 기타 섹션)       */
+/* ────────────────────────────────────────────────────── */
+.form-panel fieldset {
+    border: 1px solid #ccc;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+}
+
+.form-panel legend {
+    padding: 0 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+}
+
+
+
+
+/* 버튼 그룹 */
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-submit,
+.btn-complete {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-submit {
+    background: #56ab2f;
+    color: white;
+}
+
+.btn-submit:hover {
+    background: #4b9729;
+}
+
+.btn-complete {
+    background: #3b741e;
+    color: white;
+}
+
+.btn-complete:hover {
+    background: #335f18;
+}
+
+/* 오류 메시지 */
+.error-message {
+    display: block;
+    margin-top: 5px;
+    color: red;
+    font-size: 0.85rem;
+}
+
+/* 
+    ================================
+    오른쪽 패널: 최근 진료 기록
+    ================================
+  */
+.recent-panel {
+    flex: 3;
+}
+
+/* form-panel 안의 inline-group 스타일 */
+.form-panel .inline-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.form-panel .inline-group label {
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.form-panel .inline-group input {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 80px;
+    box-sizing: border-box;
+}
+
+.form-panel .header-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.form-panel .header-group label {
+    margin-right: 4px;
+}
+
+.form-panel .header-group input,
+.form-panel .header-group select {
+    max-width: 100px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+}
+
+
+/* 
+    ================================
+    모달 (방문 기록 상세)
+    ================================
+  */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.modal-section {
+    margin-bottom: 15px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* 
+    ================================
+    반응형: 모바일(<=768px)
+    ================================
+  */
+@media screen and (max-width: 768px) {
+    .emr-layout {
+        flex-direction: column;
+        padding: 10px;
+    }
+
+    .visits-panel,
+    .form-panel,
+    .recent-panel {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .back-button {
+        top: 10px;
+        right: 10px;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ========================= */
+/* 🌟 환자 접수 페이지 스타일 */
+/* ========================= */
+/* ========================= */
+/* 🌟 환자 접수 페이지 스타일 */
+/* ========================= */
+/* ========================= */
+/* 🌟 환자 접수 페이지 스타일 */
+/* ========================= */
+/* ========================= */
+/* 🌟 환자 접수 페이지 스타일 */
+/* ========================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* ========================= */
+/* 🌟 고정 버튼 스타일 */
+/* ========================= */
+.fixed-button {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    line-height: 60px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.home-button {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: #3f97df;
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.reset-button {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background-color: #e2685f;
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+
+
+/* ── 팝업 오버레이 & 폼 ─────────────────────────────── */
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.popup-form {
+    background: #fff;
+    padding: 20px 24px;
+    border-radius: 8px;
+    width: 300px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.popup-form h3 {
+    margin: 0 0 12px;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* 레이블 & 입력 */
+.popup-form label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.popup-form label input {
+    width: 100%;
+    padding: 6px 8px;
+    margin-top: 4px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 버튼 그룹 */
+.popup-form .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.popup-form .button-group button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin: 0 6px;
+}
+
+.popup-form #save-new-patient {
+    background: #56AB2F;
+    color: #fff;
+}
+
+.popup-form #cancel-new-patient {
+    background: #ccc;
+    color: #333;
+}
+
+.popup-form button:hover {
+    opacity: 0.9;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================= */
+/* 🌟 푸터 (공통) */
+/* ========================= */
+.footer {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    font-size: 10px;
+    color: #666;
+}
+
+
+
+/* style.css 또는 base.css 에 추가되어야 함 */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    opacity: 0.9;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.toast.success {
+    background-color: #28a745;
+}
+
+.toast.error {
+    background-color: #dc3545;
+}
+
+.toast.hidden {
+    display: none;
+}
