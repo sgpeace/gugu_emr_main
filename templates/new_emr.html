@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}환자 상세 정보 - GuGu Medical Center EMR{% endblock %}
+
+{% block content %}
+
+<!-- ★ 뒤로가기 버튼: 화면 오른쪽 상단에 고정 -->
+<a href="/dashboard" class="back-button">메인 대시보드</a>
+
+<!-- ★ 상단: 환자 정보 (가운데 정렬 배너) -->
+<div class="patient-header">
+  <h1 class="patient-title">{{ name }} <span>({{ birth_date }})</span></h1>
+</div>
+
+<!-- ★ 전체 3열 레이아웃 컨테이너 -->
+<div class="emr-layout">
+
+  <!-- (1) 방문 기록 패널 (왼쪽) -->
+  <div class="emr-card visits-panel">
+    <h2>방문 기록</h2>
+    <ul>
+      {% for record in visit_records %}
+      <li data-symptoms="{{ record.symptoms }}"
+          data-treatment="{{ record.treatment }}"
+          data-visit-date="{{ record.visit_date.strftime('%Y-%m-%d') }}">
+        <a href="#" class="record-link">{{ record.visit_date.strftime('%Y-%m-%d') }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- (2) 새 진료차트 작성 (가운데, 가장 넓은 영역) -->
+  <div class="emr-card form-panel">
+    <h2>새로운 진료차트 작성</h2>
+    <form id="new-emr-form" action="/patient_emr/new_emr" method="post">
+      <input type="hidden" name="name" value="{{ name }}">
+      <input type="hidden" name="birth_date" value="{{ birth_date }}">
+
+      <!-- 방문 날짜 -->
+      <div class="form-group">
+        <label for="visit_date">방문 날짜</label>
+        <input type="date" id="visit_date" name="visit_date" required>
+        <span class="error-message" id="visit_date_error"></span>
+      </div>
+
+      <!-- Vital Signs -->
+      <div class="form-group">
+        <label>Vital Signs</label>
+        <div class="vitals-container">
+          <input type="number" step="1" name="vitals_bp" placeholder="혈압 (mmHg)">
+          <input type="number" step="1" name="vitals_hr" placeholder="맥박 (bpm)">
+          <input type="number" step="1" name="vitals_glucose" placeholder="혈당 (mg/dL)">
+          <input type="number" step="0.1" name="vitals_temp" placeholder="체온 (°C)">
+        </div>
+      </div>
+
+      <!-- Symptoms (S) -->
+      <div class="form-group">
+        <label>Symptoms (증상)</label>
+        <textarea name="symptoms" rows="3" required placeholder="환자 호소, 통증 정도 등"></textarea>
+        <span class="error-message" id="symptoms_error"></span>
+      </div>
+
+      <!-- Signs (O) -->
+      <div class="form-group">
+        <label>Signs (징후)</label>
+        <textarea name="objective" rows="3" placeholder="검사 소견, 관찰된 징후"></textarea>
+      </div>
+
+      <!-- Assessment (A) -->
+      <div class="form-group">
+        <label>Assessment (진단)</label>
+        <textarea name="assessment" rows="3" placeholder="임상적 판단, 감별진단"></textarea>
+      </div>
+
+      <!-- Plan (P) -->
+      <div class="form-group">
+        <label>Plan (치료 계획)</label>
+        <textarea name="treatment" rows="3" required placeholder="처방약, 추후 계획 등"></textarea>
+        <span class="error-message" id="treatment_error"></span>
+      </div>
+
+      <div class="button-group">
+        <button type="submit" class="btn-submit">저장</button>
+        <button type="button" class="btn-complete" onclick="alert('진료 완료 처리!')">진료 완료</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- (3) 최근 진료 기록 (오른쪽) -->
+  <div class="emr-card recent-panel">
+    <h2>최근 진료 기록</h2>
+    {% if latest_record %}
+      <div class="record" id="latest-record">
+        <p><strong>방문날짜:</strong> {{ latest_record.visit_date.strftime('%Y-%m-%d') }}</p>
+        <p><strong>증상 (S):</strong> {{ latest_record.symptoms }}</p>
+        <p><strong>치료 계획 (P):</strong> {{ latest_record.treatment }}</p>
+      </div>
+    {% else %}
+      <p>진료 기록이 없습니다.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- 진료 기록 상세 모달 -->
+<div id="record-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-button">&times;</span>
+    <h3>진료 기록 상세</h3>
+    <p id="modal-visit-date"></p>
+    <div class="modal-section">
+      <label>증상:</label>
+      <textarea id="modal-symptoms"></textarea>
+    </div>
+    <div class="modal-section">
+      <label>치료 계획:</label>
+      <textarea id="modal-treatment"></textarea>
+    </div>
+    <div class="modal-buttons">
+      <button id="modal-save">저장</button>
+      <button id="modal-cancel">취소</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/patient_emr.js"></script>
+{% endblock %}
