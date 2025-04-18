@@ -50,11 +50,12 @@ document.querySelectorAll(".record-link").forEach(link => {
         e.preventDefault(); // 기본 동작 방지
 
         const visitDate = this.parentElement.getAttribute("data-visit-date");
-        console.log("방문 날짜:", visitDate);
+        const name = document.querySelector("input[name='name']").value; // name 값 가져오기
+        console.log("방문 날짜:", visitDate, "환자 이름:", name);
 
         try {
             // Fetch API로 /patient_emr/past_emr 엔드포인트 호출
-            const response = await fetch(`/patient_emr/past_emr?visit_date=${visitDate}`);
+            const response = await fetch(`/patient_emr/past_emr?visit_date=${visitDate}&name=${encodeURIComponent(name)}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -71,6 +72,7 @@ document.querySelectorAll(".record-link").forEach(link => {
         }
     });
 });
+
 
 // 데이터를 폼에 채워 넣는 함수
 function populateFormWithData(data) {

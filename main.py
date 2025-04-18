@@ -297,17 +297,22 @@ async def create_new_emr(
 
 # 과거 EMR 기록 불러오기
 @app.get("/patient_emr/past_emr")
-async def get_past_emr(visit_date: str, db: Session = Depends(get_db)):
+async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)):
     try:
         # 방문 날짜를 파싱
         visit_date_obj = datetime.strptime(visit_date, "%Y-%m-%d").date()
     except ValueError:
         raise HTTPException(status_code=400, detail="잘못된 날짜 형식입니다.")
 
-    # 방문 날짜에 해당하는 EMR 기록 조회
-    emr_record = db.query(EMR).filter(EMR.visit_date == visit_date_obj).first()
+    # 방문 날짜와 이름에 해당하는 EMR 기록 조회
+    emr_record = (
+        db.query(EMR)
+        .join(Patient, EMR.patient_id == Patient.id)
+        .filter(EMR.visit_date == visit_date_obj, Patient.name == name)
+        .first()
+    )
     if not emr_record:
-        raise HTTPException(status_code=404, detail="해당 날짜의 진료 기록을 찾을 수 없습니다.")
+        raise HTTPException(status_code=404, detail="해당 날짜와 이름의 진료 기록을 찾을 수 없습니다.")
 
     # 결과 반환
     return {
