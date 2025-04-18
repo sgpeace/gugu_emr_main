@@ -44,3 +44,54 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 3000);
     }
 });
+
+document.querySelectorAll(".record-link").forEach(link => {
+    link.addEventListener("click", async function (e) {
+        e.preventDefault(); // 기본 동작 방지
+
+        const visitDate = this.parentElement.getAttribute("data-visit-date");
+        console.log("방문 날짜:", visitDate);
+
+        try {
+            // Fetch API로 /patient_emr/past_emr 엔드포인트 호출
+            const response = await fetch(`/patient_emr/past_emr?visit_date=${visitDate}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("진료 기록 데이터:", data);
+
+            // 받은 데이터를 폼에 채워 넣기
+            populateFormWithData(data);
+        } catch (error) {
+            console.error("진료 기록 조회 실패:", error);
+            alert("진료 기록을 불러오는 데 실패했습니다.");
+        }
+    });
+});
+
+// 데이터를 폼에 채워 넣는 함수
+function populateFormWithData(data) {
+    // 방문 날짜
+    document.getElementById("visit_date").value = data.visit_date;
+
+    // Vital Signs
+    document.querySelector("input[name='vitals_bp']").value = data.bp || "";
+    document.querySelector("input[name='vitals_hr']").value = data.hr || "";
+    document.querySelector("input[name='vitals_glucose']").value = data.glucose || "";
+    document.querySelector("input[name='vitals_temp']").value = data.temp || "";
+
+    // Symptoms (S)
+    document.querySelector("textarea[name='symptoms']").value = data.symptoms || "";
+
+    // Signs (O)
+    document.querySelector("textarea[name='objective']").value = data.objective || "";
+
+    // Assessment (A)
+    document.querySelector("textarea[name='assessment']").value = data.assessment || "";
+
+    // Plan (P)
+    document.querySelector("textarea[name='treatment']").value = data.treatment || "";
+}

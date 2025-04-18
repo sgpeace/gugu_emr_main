@@ -19,9 +19,7 @@
     <h2>방문 기록</h2>
     <ul>
       {% for record in visit_records %}
-      <li data-symptoms="{{ record.symptoms }}"
-          data-treatment="{{ record.treatment }}"
-          data-visit-date="{{ record.visit_date.strftime('%Y-%m-%d') }}">
+      <li data-visit-date="{{ record.visit_date.strftime('%Y-%m-%d') }}">
         <a href="#" class="record-link">{{ record.visit_date.strftime('%Y-%m-%d') }}</a>
       </li>
       {% endfor %}
@@ -102,8 +100,17 @@
 
 </div>
 
+<!-- ✅ 토스트 알림 영역 -->
+<div id="custom-toast" class="toast hidden"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/patient_emr.js"></script>
+{% endblock %}
+
 <!-- 진료 기록 상세 모달 -->
-<div id="record-modal" class="modal">
+<!-- <div id="record-modal" class="modal">
   <div class="modal-content">
     <span class="close-button">&times;</span>
     <h3>진료 기록 상세</h3>
@@ -121,12 +128,4 @@
       <button id="modal-cancel">취소</button>
     </div>
   </div>
-</div>
-<!-- ✅ 토스트 알림 영역 -->
-<div id="custom-toast" class="toast hidden"></div>
-
-{% endblock %}
-
-{% block scripts %}
-<script src="/static/js/patient_emr.js"></script>
-{% endblock %}
+</div> -->
