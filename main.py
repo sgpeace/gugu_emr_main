@@ -30,6 +30,7 @@ def get_db():
 # === 데이터베이스 모델 정의 ===
 
 # 환자 정보 테이블: 이름과 6자리 생년월일을 저장하여 동명이인 문제를 방지
+# 신환 등록 때 작성되는 테이블
 class Patient(Base):
     __tablename__ = 'patients'
     id = Column(Integer, primary_key=True, index=True)
@@ -51,8 +52,6 @@ class EMR(Base):
     symptoms = Column(Text, nullable=False)
     treatment = Column(Text, nullable=False)
     status = Column(String(20), nullable=False, server_default=text("'진료중'"))
-
-    # Vital 및 SOAP
     bp = Column(String(20))         # 혈압
     hr = Column(Integer)           # 맥박
     glucose = Column(Integer)      # 혈당
@@ -296,8 +295,40 @@ async def create_new_emr(
     "message": "진료차트가 성공적으로 저장되었습니다.",
 })
 
+# 과거 EMR 기록 불러오기
+@app.get("/patient_emr/past_emr")
+async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)):
+    try:
+        # 방문 날짜를 파싱
+        visit_date_obj = datetime.strptime(visit_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="잘못된 날짜 형식입니다.")
 
+    # 방문 날짜와 이름에 해당하는 EMR 기록 조회
+    emr_record = (
+        db.query(EMR)
+        .join(Patient, EMR.patient_id == Patient.id)
+        .filter(EMR.visit_date == visit_date_obj, Patient.name == name)
+        .first()
+    )
+    if not emr_record:
+        raise HTTPException(status_code=404, detail="해당 날짜와 이름의 진료 기록을 찾을 수 없습니다.")
 
+    # 결과 반환
+    return {
+        "id": emr_record.id,
+        "patient_id": emr_record.patient_id,
+        "visit_date": emr_record.visit_date.strftime("%Y-%m-%d"),
+        "symptoms": emr_record.symptoms,
+        "treatment": emr_record.treatment,
+        "status": emr_record.status,
+        "bp": emr_record.bp,
+        "hr": emr_record.hr,
+        "glucose": emr_record.glucose,
+        "temp": emr_record.temp,
+        "objective": emr_record.objective,
+        "assessment": emr_record.assessment,
+    }
 
 # @app.post("/patient_emr/complete_visit")
 # async def complete_visit(
