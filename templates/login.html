@@ -8,6 +8,11 @@
       <img src="/static/gugu_logo.jpg" alt="GuGu Medical Center Logo" class="login-logo">
       <h2>GuGu Medical Center</h2>
       
+      <!-- 에러 메시지 출력 -->
+      {% if error %}
+      <div class="error-message">{{ error }}</div>
+      {% endif %}
+      
       <form action="/login" method="post">
         <div class="input-group">
           <label for="username">

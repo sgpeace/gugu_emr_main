@@ -1,6 +1,6 @@
+<!-- ✅ base.html 수정 -->
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <!-- 메타 태그 -->
     <meta charset="UTF-8">
@@ -20,12 +20,7 @@
     <title>{% block title %}GuGu Medical Center EMR{% endblock %}</title>
 </head>
 
-
-
-
 <body>
-
-
     <!-- 본문 (각 페이지에서 개별 내용 추가) -->
     <div class="container">
         {% block content %}{% endblock %}
@@ -33,15 +28,12 @@
 
     <!-- 푸터 (공통) -->
     <footer class="footer">
-        개발자: 조승권
+        개발자: 구구 전산화팀
     </footer>
 
+    <!-- 공통 JS -->
 
-    <!-- JavaScript 연결 -->
-    <script src="/static/js/dashboard.js"></script>
-
-
-
+    <!-- ✅ 개별 페이지에서 JS 추가할 수 있도록 블록 선언 -->
+    {% block scripts %}{% endblock %}
 </body>
-
 </html>
