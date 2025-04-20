@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}기본 정보 조사 - GuGu Medical Center EMR{% endblock %}
+
+{% block styles %}
+<style>
+  .container { max-width:900px; margin:0 auto; padding:20px; }
+  .card { background:#fff; border-radius:8px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+  /* 1) 섹션 제목(legend)을 더 진하고 크게 */
+  fieldset legend {
+    font-size:1.4rem;
+    font-weight:800;
+    color:#2c3e50;
+    margin-bottom:1rem;
+  }
+  /* 필드셋 공통 */
+  fieldset {
+    margin-bottom:2rem;
+    padding:1rem;
+    border:1px solid #ddd;
+    border-radius:6px;
+    background:#fafafa;
+  }
+
+  .form-group { display:flex; flex-direction:column; margin-bottom:0.75rem; }
+  .form-group label { margin-bottom:0.25rem; font-weight:600; }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding:0.5rem;
+    border:1px solid #ccc;
+    border-radius:4px;
+    font-size:0.9rem;
+  }
+
+  /* 3) textarea 크기 변경 금지 */
+  .form-group textarea { resize: none !important; }
+
+  .button-group { display:flex; gap:1rem; margin-top:1.5rem; }
+  .button { flex:1; padding:0.75rem; background:#3b7a99; color:#fff; border:none; border-radius:5px; cursor:pointer; }
+  .button:hover { background:#327589; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <a href="/dashboard" class="back-button">← 메인 대시보드</a>
+  <div class="card">
+    <h2>기본 정보 조사</h2>
+    <form action="/patient_emr/basic_info" method="post" id="basic-info-form">
+
+      <!-- 1) 작성일/정보제공자/작성자 분리 -->
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.5rem;">
+        <div class="form-group">
+          <label for="form_date">작성일</label>
+          <input type="date" id="form_date" name="form_date" required>
+        </div>
+        <div class="form-group">
+          <label for="provider">정보제공자</label>
+          <select id="provider" name="provider" required>
+            <option value="">— 선택 —</option>
+            <option value="본인">본인</option>
+            <option value="보호자">보호자</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="author">작성자</label>
+          <input type="text" id="author" name="author" placeholder="작성자 이름" required>
+        </div>
+      </div>
+
+      <!-- 2) 기본 정보 박스 -->
+      <div class="form-grid">
+        <fieldset style="grid-column:1 / -1;">
+          <legend>기본 정보</legend>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+
+            <!-- 성명 / 성별 / 생년월일 -->
+            <div class="form-group">
+              <label for="name">성명</label>
+              <input type="text" id="name" name="name" placeholder="예) 홍길동" value="{{ name or '' }}">
+            </div>
+            <div class="form-group">
+              <label for="gender">성별</label>
+              <select id="gender" name="gender">
+                <option value="">— 선택 —</option>
+                <option value="M">M</option>
+                <option value="F">F</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="birth_date">생년월일</label>
+              <input type="date" id="birth_date" name="birth_date" value="{{ birth_date or '' }}">
+            </div>
+
+            <!-- 주소(2span) / 직업 -->
+            <div class="form-group" style="grid-column:1 / span 2;">
+              <label for="address">주소</label>
+              <input type="text" id="address" name="address" placeholder="예) 서울시 강남구 ...">
+            </div>
+            <div class="form-group">
+              <label for="occupation">직업</label>
+              <input type="text" id="occupation" name="occupation" placeholder="예) 회사원, 학생 등">
+            </div>
+
+            <!-- 종교 / 교육정도 / 가족사항 -->
+            <div class="form-group">
+              <label for="religion">종교</label>
+              <input type="text" id="religion" name="religion" placeholder="예) 기독교, 불교 등">
+            </div>
+            <div class="form-group">
+              <label for="education">교육정도</label>
+              <input type="text" id="education" name="education" placeholder="최종 학력">
+            </div>
+            <div class="form-group">
+              <label for="marital_status">가족사항</label>
+              <input type="text" id="marital_status" name="marital_status" placeholder="기혼/미혼 등">
+            </div>
+
+            <!-- 기타사항(3span) -->
+            <div class="form-group" style="grid-column:1 / span 3;">
+              <label for="other_info">기타사항</label>
+              <textarea id="other_info" name="other_info" rows="2"></textarea>
+            </div>
+
+          </div>
+        </fieldset>
+
+        <!-- 3) Vital Signs (V/S) 박스 -->
+        <fieldset style="grid-column:1 / -1;">
+          <legend>Vital Signs (V/S)</legend>
+          <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:0.5rem;">
+            {% for fld in ["bt","pr","rr","bp","height","weight"] %}
+            <div class="form-group">
+              <label for="{{ fld }}">{{ fld|upper }}</label>
+              <input type="{{ fld in ['bt','height','weight'] and 'number' or (fld=='birth_date' and 'date') or 'text' }}"
+                     id="{{ fld }}" name="{{ fld }}"
+                     {% if fld=="bp" %} placeholder="예) 120/80"{% endif %}>
+            </div>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <!-- 4) 과거력 및 현 복용약 박스 -->
+        <fieldset style="grid-column:1 / -1;">
+          <legend>과거력 및 현 복용약</legend>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+
+            <!-- 2) Allergy 필드 맨 위로 이동 -->
+            <div class="form-group">
+              <label for="allergy">Allergy</label>
+              <select id="allergy" name="allergy">
+                <option value="">— 선택 —</option>
+                <option value="무">무</option>
+                <option value="유">유</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="allergy_detail">세부내용</label>
+              <input type="text" id="allergy_detail" name="allergy_detail" placeholder="음식/약/기타">
+            </div>
+
+            <!-- 기존 과거력 항목들 -->
+            {% for item in ["당뇨","고혈압","간염","결핵","관절염","기타"] %}
+            <div class="form-group">
+              <label>{{ item }}</label>
+              <select name="history_{{ loop.index }}">
+                <option value="">— 선택 —</option>
+                <option value="무">무</option>
+                <option value="유">유</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>{{ item }} 세부</label>
+              <input type="text" name="history_{{ loop.index }}_detail" placeholder="진단 시기/치료/약">
+            </div>
+            {% endfor %}
+
+          </div>
+        </fieldset>
+
+        <!-- 5) 저장/취소 버튼 -->
+        <div class="button-group" style="grid-column:1 / -1;">
+          <button type="submit" class="button">저장</button>
+          <button type="button" class="button" onclick="history.back()">취소</button>
+        </div>
+
+      </div><!-- /.form-grid -->
+
+    </form>
+  </div>
+</div>
+{% endblock %}
