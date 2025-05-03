@@ -48,16 +48,34 @@ class EMR(Base):
     __tablename__ = 'emrs'
     id = Column(Integer, primary_key=True, index=True)
     patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
-    visit_date = Column(Date, nullable=False)
-    symptoms = Column(Text, nullable=False)
-    treatment = Column(Text, nullable=False)
-    status = Column(String(20), nullable=False, server_default=text("'진료중'"))
-    bp = Column(String(20))         # 혈압
-    hr = Column(Integer)           # 맥박
-    glucose = Column(Integer)      # 혈당
-    temp = Column(Float)           # 체온
-    objective = Column(Text)       # 징후 (Signs)
-    assessment = Column(Text)      # 진단 (Assessment)
+    record_date = Column(Date, nullable=False)
+    name = Column(String(100), nullable=False)  # 성명
+    gender = Column(String(10), nullable=False)  # 성별
+    age = Column(String(20), nullable=False)  # 나이
+    bt = Column(Float)  # BT (체온)
+    bp = Column(String(20))  # BP (혈압)
+    hr = Column(Integer)  # HR (맥박)
+    bp2 = Column(String(20))  # 2차 BP
+    bst = Column(Integer)  # BST (혈당)
+    post_bst = Column(Integer)  # 식후(시간)
+    cc = Column(Text)  # 주호소
+    onset = Column(String(50))  # Onset
+    duration = Column(String(50))  # Duration
+    assoc = Column(String(100))  # Assoc. Sx.
+    medication_hx = Column(Text)  # Medication Hx.
+    pmhx = Column(Text)  # PMHx.
+    allergy = Column(Text)  # Allergy
+    fhx = Column(Text)  # FHx.
+    social = Column(Text)  # Social
+    pi = Column(Text)  # P.I. (병력)
+    ros = Column(Text)  # ROS
+    pe = Column(Text)  # P/E
+    problem_list = Column(Text)  # Problem list
+    assessment = Column(Text)  # Assessment
+    mmse = Column(Integer)  # MMSE
+    cdr = Column(Float)  # CDR
+    psqi = Column(Integer)  # PSQI
+    isi = Column(Integer)  # ISI
 
     patient = relationship("Patient", back_populates="emrs")
 
@@ -222,19 +240,24 @@ async def patient_emr(
         print("생년월일 파싱 오류:", e)
         raise HTTPException(status_code=400, detail="잘못된 생년월일 형식입니다.")
 
-    # 환자 조회 시 로그 추가
+    # 환자 조회
     patient = db.query(Patient).filter(Patient.name == name, Patient.birth_date == birth_date).first()
     if not patient:
         print("환자 조회 실패:", name, birth_date)
         raise HTTPException(status_code=404, detail="해당 환자를 찾을 수 없습니다.")
 
     # 환자의 진료 기록 조회
-    visit_records = db.query(EMR).filter(EMR.patient_id == patient.id).order_by(EMR.visit_date.desc()).all()
+    visit_records = db.query(EMR).filter(EMR.patient_id == patient.id).order_by(EMR.record_date.desc()).all()
     if visit_records:
         latest_record = visit_records[0]
+        # latest_record의 날짜와 환자의 이름으로 cc와 pi 조회
+        cc = latest_record.cc
+        pi = latest_record.pi
     else:
         visit_records = []
         latest_record = None
+        cc = None
+        pi = None
 
     print("환자 조회 성공:", patient, "진료 기록 수:", len(visit_records))
 
@@ -244,23 +267,43 @@ async def patient_emr(
         "birth_date": birth_date,
         "patient": patient,
         "visit_records": visit_records,
-        "latest_record": latest_record
+        "latest_record": latest_record,
+        "cc": cc,
+        "pi": pi
     })
 
-# === 새로운 EMR 저장 API ===
 @app.post("/patient_emr/new_emr")
 async def create_new_emr(
     name: str = Form(...),
     birth_date: str = Form(...),
-    visit_date: str = Form(...),
-    symptoms: str = Form(...),
-    treatment: str = Form(...),
-    vitals_bp: str = Form(None),
-    vitals_hr: int = Form(None),
-    vitals_glucose: int = Form(None),
-    vitals_temp: float = Form(None),
-    objective: str = Form(None),
+    record_date: str = Form(...),
+    gender: str = Form(...),
+    age: str = Form(...),
+    bt: float = Form(None),
+    bp: str = Form(None),
+    hr: int = Form(None),
+    bp2: str = Form(None),
+    bst: int = Form(None),
+    post_bst: int = Form(None),
+    cc: str = Form(None),
+    onset: str = Form(None),
+    duration: str = Form(None),
+    assoc: str = Form(None),
+    medication_hx: str = Form(None),
+    pmhx: str = Form(None),
+    allergy: str = Form(None),
+    fhx: str = Form(None),
+    social: str = Form(None),
+    pi: str = Form(None),
+    ros: str = Form(None),
+    pe: str = Form(None),
+    problem_list: str = Form(None),
     assessment: str = Form(None),
+    mmse: int = Form(None),
+    cdr: float = Form(None),
+    psqi: int = Form(None),
+    isi: int = Form(None),
+    gds: int = Form(None),
     db: Session = Depends(get_db)
 ):
     # 환자 찾기
@@ -270,30 +313,50 @@ async def create_new_emr(
 
     # 날짜 파싱
     try:
-        visit_date_obj = datetime.strptime(visit_date, "%Y-%m-%d").date()
+        record_date_obj = datetime.strptime(record_date, "%Y-%m-%d").date()
     except ValueError:
         raise HTTPException(status_code=400, detail="날짜 형식 오류")
 
     # EMR 저장
     new_emr = EMR(
         patient_id=patient.id,
-        visit_date=visit_date_obj,
-        symptoms=symptoms,
-        treatment=treatment,
-        bp=vitals_bp,
-        hr=vitals_hr,
-        glucose=vitals_glucose,
-        temp=vitals_temp,
-        objective=objective,
-        assessment=assessment
+        record_date=record_date_obj,
+        name=name,
+        gender=gender,
+        age=age,
+        bt=bt,
+        bp=bp,
+        hr=hr,
+        bp2=bp2,
+        bst=bst,
+        post_bst=post_bst,
+        cc=cc,
+        onset=onset,
+        duration=duration,
+        assoc=assoc,
+        medication_hx=medication_hx,
+        pmhx=pmhx,
+        allergy=allergy,
+        fhx=fhx,
+        social=social,
+        pi=pi,
+        ros=ros,
+        pe=pe,
+        problem_list=problem_list,
+        assessment=assessment,
+        mmse=mmse,
+        cdr=cdr,
+        psqi=psqi,
+        isi=isi,
     )
     db.add(new_emr)
     db.commit()
     db.refresh(new_emr)
 
     return JSONResponse(content={
-    "message": "진료차트가 성공적으로 저장되었습니다.",
-})
+        "message": "진료차트가 성공적으로 저장되었습니다.",
+        "emr_id": new_emr.id
+    })
 
 # 과거 EMR 기록 불러오기
 @app.get("/patient_emr/past_emr")
@@ -308,27 +371,46 @@ async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)
     emr_record = (
         db.query(EMR)
         .join(Patient, EMR.patient_id == Patient.id)
-        .filter(EMR.visit_date == visit_date_obj, Patient.name == name)
+        .filter(EMR.record_date == visit_date_obj, Patient.name == name)
         .first()
     )
     if not emr_record:
         raise HTTPException(status_code=404, detail="해당 날짜와 이름의 진료 기록을 찾을 수 없습니다.")
 
-    # 결과 반환
-    return {
-        "id": emr_record.id,
+    # 결과 반환 (JSONResponse 형식으로 수정)
+    return JSONResponse(content={
+        "message": "진료 기록이 성공적으로 조회되었습니다.",
+        "emr_id": emr_record.id,
         "patient_id": emr_record.patient_id,
-        "visit_date": emr_record.visit_date.strftime("%Y-%m-%d"),
-        "symptoms": emr_record.symptoms,
-        "treatment": emr_record.treatment,
-        "status": emr_record.status,
+        "record_date": emr_record.record_date.strftime("%Y-%m-%d"),
+        "name": emr_record.name,
+        "gender": emr_record.gender,
+        "age": emr_record.age,
+        "bt": emr_record.bt,
         "bp": emr_record.bp,
         "hr": emr_record.hr,
-        "glucose": emr_record.glucose,
-        "temp": emr_record.temp,
-        "objective": emr_record.objective,
+        "bp2": emr_record.bp2,
+        "bst": emr_record.bst,
+        "post_bst": emr_record.post_bst,
+        "cc": emr_record.cc,
+        "onset": emr_record.onset,
+        "duration": emr_record.duration,
+        "assoc": emr_record.assoc,
+        "medication_hx": emr_record.medication_hx,
+        "pmhx": emr_record.pmhx,
+        "allergy": emr_record.allergy,
+        "fhx": emr_record.fhx,
+        "social": emr_record.social,
+        "pi": emr_record.pi,
+        "ros": emr_record.ros,
+        "pe": emr_record.pe,
+        "problem_list": emr_record.problem_list,
         "assessment": emr_record.assessment,
-    }
+        "mmse": emr_record.mmse,
+        "cdr": emr_record.cdr,
+        "psqi": emr_record.psqi,
+        "isi": emr_record.isi,
+    })
 
 # @app.post("/patient_emr/complete_visit")
 # async def complete_visit(

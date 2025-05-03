@@ -45,6 +45,48 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+    const dateInput = document.getElementById("record_date");
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.max = today;
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    // 날짜 선택 제한
+    const dateInput = document.getElementById("record_date");
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.max = today;
+
+    // 나이 자동 계산
+    const birthRaw = document.querySelector('input[name="birth_date"]').value;  // "yymmdd"
+    if (birthRaw && birthRaw.length === 6) {
+        const yy = parseInt(birthRaw.slice(0, 2), 10);
+        const mm = parseInt(birthRaw.slice(2, 4), 10) - 1;  // JS월 0~11
+        const dd = parseInt(birthRaw.slice(4, 6), 10);
+        // 연도 보정: (00~현재)→2000대, 그 외→1900대
+        const fullYear = yy > new Date().getFullYear() % 100 ? 1900 + yy : 2000 + yy;
+        const birthDate = new Date(fullYear, mm, dd);
+        const now = new Date();
+
+        // 국제 나이 (만 나이)
+        let intlAge = now.getFullYear() - birthDate.getFullYear();
+        if (
+            now.getMonth() < birthDate.getMonth() ||
+            (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())
+        ) {
+            intlAge--;
+        }
+
+        // 한국 나이
+        const korAge = now.getFullYear() - birthDate.getFullYear() + 1;
+
+        document.getElementById("age").value = `${korAge}세 (만${intlAge}세)`;
+    }
+});
+
+
+
 document.querySelectorAll(".record-link").forEach(link => {
     link.addEventListener("click", async function (e) {
         e.preventDefault(); // 기본 동작 방지
@@ -77,23 +119,45 @@ document.querySelectorAll(".record-link").forEach(link => {
 // 데이터를 폼에 채워 넣는 함수
 function populateFormWithData(data) {
     // 방문 날짜
-    document.getElementById("visit_date").value = data.visit_date;
+    document.getElementById("record_date").value = data.record_date;
 
     // Vital Signs
-    document.querySelector("input[name='vitals_bp']").value = data.bp || "";
-    document.querySelector("input[name='vitals_hr']").value = data.hr || "";
-    document.querySelector("input[name='vitals_glucose']").value = data.glucose || "";
-    document.querySelector("input[name='vitals_temp']").value = data.temp || "";
+    document.querySelector("input[name='bp']").value = data.bp || "";
+    document.querySelector("input[name='hr']").value = data.hr || "";
+    document.querySelector("input[name='bst']").value = data.bst || "";
+    document.querySelector("input[name='bt']").value = data.bt || "";
 
-    // Symptoms (S)
-    document.querySelector("textarea[name='symptoms']").value = data.symptoms || "";
+    // Symptoms (C.C.)
+    document.querySelector("textarea[name='cc']").value = data.cc || "";
 
-    // Signs (O)
-    document.querySelector("textarea[name='objective']").value = data.objective || "";
+    // Onset, Duration, Assoc
+    document.querySelector("input[name='onset']").value = data.onset || "";
+    document.querySelector("input[name='duration']").value = data.duration || "";
+    document.querySelector("input[name='assoc']").value = data.assoc || "";
 
-    // Assessment (A)
+    // History
+    document.querySelector("input[name='medication_hx']").value = data.medication_hx || "";
+    document.querySelector("input[name='pmhx']").value = data.pmhx || "";
+    document.querySelector("input[name='allergy']").value = data.allergy || "";
+    document.querySelector("input[name='fhx']").value = data.fhx || "";
+    document.querySelector("input[name='social']").value = data.social || "";
+
+    // P.I. (병력)
+    document.querySelector("textarea[name='pi']").value = data.pi || "";
+
+    // ROS
+    document.querySelector("input[name='ros']").value = data.ros || "";
+
+    // P/E
+    document.querySelector("input[name='pe']").value = data.pe || "";
+
+    // Problem list / Assessment
+    document.querySelector("textarea[name='problem_list']").value = data.problem_list || "";
     document.querySelector("textarea[name='assessment']").value = data.assessment || "";
 
-    // Plan (P)
-    document.querySelector("textarea[name='treatment']").value = data.treatment || "";
+    // MMSE, CDR, PSQI, ISI
+    document.querySelector("input[name='mmse']").value = data.mmse || "";
+    document.querySelector("input[name='cdr']").value = data.cdr || "";
+    document.querySelector("input[name='psqi']").value = data.psqi || "";
+    document.querySelector("input[name='isi']").value = data.isi || "";
 }

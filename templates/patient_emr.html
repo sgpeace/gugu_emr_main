@@ -1,131 +1,218 @@
 {% extends "base.html" %}
-{% block title %}환자 상세 정보 - GuGu Medical Center EMR{% endblock %}
+{% block title %}환자 상세 정보 – GuGu Medical Center EMR{% endblock %}
 
 {% block content %}
+<a href="/dashboard" class="back-button">← 메인 대시보드</a>
 
-<!-- ★ 뒤로가기 버튼: 화면 오른쪽 상단에 고정 -->
-<a href="/dashboard" class="back-button">메인 대시보드</a>
-
-<!-- ★ 상단: 환자 정보 (가운데 정렬 배너) -->
+<div id="custom-toast" class="toast hidden"></div>
 <div class="patient-header">
-  <h1 class="patient-title">{{ name }} <span>({{ birth_date }})</span></h1>
+  <h1 class="patient-title">{{ name }}&nbsp;님 <span>({{ birth_date }})</span></h1>
 </div>
 
-<!-- ★ 전체 3열 레이아웃 컨테이너 -->
 <div class="emr-layout">
 
-  <!-- (1) 방문 기록 패널 (왼쪽) -->
+  <!-- (1) 방문 기록 -->
   <div class="emr-card visits-panel">
     <h2>방문 기록</h2>
     <ul>
       {% for record in visit_records %}
-      <li data-visit-date="{{ record.visit_date.strftime('%Y-%m-%d') }}">
-        <a href="#" class="record-link">{{ record.visit_date.strftime('%Y-%m-%d') }}</a>
+      <li data-visit-date="{{ record.record_date.strftime('%Y-%m-%d') }}">
+        <a href="#" class="record-link">{{ record.record_date.strftime('%Y-%m-%d') }}</a>
       </li>
       {% endfor %}
     </ul>
   </div>
 
-  <!-- (2) 새 진료차트 작성 (가운데, 가장 넓은 영역) -->
+  <!-- (2) 일일기록지 작성 -->
   <div class="emr-card form-panel">
-    <h2>새로운 진료차트 작성</h2>
-    <form id="new-emr-form">
+    <h2>일일기록지 작성</h2>
+    <div class="btn-chart-container">
+      <a class="btn-chart" href="/patient_emr/new_emr?name={{ name }}&birth_date={{ birth_date }}">
+        신환 차트
+      </a>
+    </div>
+    <form id="new-emr-form" action="/patient_emr/new_emr" method="post">
       <input type="hidden" name="name" value="{{ name }}">
       <input type="hidden" name="birth_date" value="{{ birth_date }}">
 
-      <!-- 방문 날짜 -->
-      <div class="form-group">
-        <label for="visit_date">방문 날짜</label>
-        <input type="date" id="visit_date" name="visit_date" required>
-        <span class="error-message" id="visit_date_error"></span>
+      <!-- 1. Date -->
+      <div class="form-group date-inline">
+        <label for="record_date">Date</label>
+        <input type="date" id="record_date" name="record_date" required>
       </div>
 
-      <!-- Vital Signs -->
-      <div class="form-group">
-        <label>Vital Signs</label>
-        <div class="vitals-container">
-          <input type="number" step="1" name="vitals_bp" placeholder="혈압 (mmHg)">
-          <input type="number" step="1" name="vitals_hr" placeholder="맥박 (bpm)">
-          <input type="number" step="1" name="vitals_glucose" placeholder="혈당 (mg/dL)">
-          <input type="number" step="0.1" name="vitals_temp" placeholder="체온 (°C)">
+
+      <!-- 2. 성명 / 성별 / 나이 -->
+      <div class="form-group header-group">
+        <label for="display_name">&nbsp;성명</label>
+        <input type="text" id="display_name" name="display_name" value="{{ name }}" readonly>
+
+        <label for="gender">&nbsp;&nbsp;성별</label>
+        <select id="gender" name="gender">
+          <option>남</option>
+          <option>여</option>
+        </select>
+
+        <label for="age">&nbsp;&nbsp;나이</label>
+        <input type="text" id="age" name="age" readonly>
+      </div>
+
+      <!-- 3. Vital Signs -->
+      <fieldset class="section-fieldset">
+        <legend>Vital Signs (V/S)</legend>
+        <div class="vitals-grid">
+          <div class="vital-item">
+            <label for="bt">BT (°C)</label>
+            <input type="text" id="bt" name="bt" placeholder="36.5">
+          </div>
+          <div class="vital-item">
+            <label for="bp">BP (mmHg)</label>
+            <input type="text" id="bp" name="bp" placeholder="120/80">
+          </div>
+          <div class="vital-item">
+            <label for="hr">HR (bpm)</label>
+            <input type="text" id="hr" name="hr" placeholder="72">
+          </div>
+          <div class="vital-item">
+            <label for="bp2">2차 BP</label>
+            <input type="text" id="bp2" name="bp2" placeholder="--">
+          </div>
+          <div class="vital-item">
+            <label for="bst">BST</label>
+            <input type="text" id="bst" name="bst" placeholder="110">
+          </div>
+          <div class="vital-item">
+            <label for="post_bst">식후(시간)</label>
+            <input type="text" id="post_bst" name="post_bst" placeholder="2">
+          </div>
         </div>
-      </div>
+      </fieldset>
 
-      <!-- Symptoms (S) -->
+      <!-- 4. C.C. + Onset/Duration/Assoc.Sx -->
+      <fieldset class="section-fieldset cc-fieldset">
+        <legend>C.C. (주호소)</legend>
+        <div class="form-group">
+          <textarea id="cc" name="cc" placeholder="환자 주호소를 입력하세요"></textarea>
+        </div>
+        <div class="form-group inline-group no-wrap">
+          <div class="inline-item">
+            <label for="onset">Onset</label>
+            <input type="text" id="onset" name="onset" placeholder="ex: 2일 전">
+          </div>
+          <div class="inline-item">
+            <label for="duration">Duration</label>
+            <input type="text" id="duration" name="duration" placeholder="ex: 1일">
+          </div>
+          <div class="inline-item">
+            <label for="assoc">Assoc. Sx.</label>
+            <input type="text" id="assoc" name="assoc" placeholder="관련 증상">
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 5. History -->
+      <fieldset class="section-fieldset">
+        <legend>History</legend>
+        <div class="form-group">
+          <label for="med_hx">Medication Hx.</label>
+          <input type="text" id="med_hx" name="medication_hx" placeholder="복용 중인 약물">
+        </div>
+        <div class="form-group">
+          <label for="pmhx">PMHx.</label>
+          <input type="text" id="pmhx" name="pmhx" placeholder="과거 병력">
+        </div>
+        <div class="form-group inline-group no-wrap">
+          <div class="inline-item">
+            <label for="allergy">Allergy</label>
+            <input type="text" id="allergy" name="allergy" placeholder="유/무">
+          </div>
+          <div class="inline-item">
+            <label for="fhx">FHx.</label>
+            <input type="text" id="fhx" name="fhx" placeholder="가족력">
+          </div>
+          <div class="inline-item">
+            <label for="social">Social</label>
+            <input type="text" id="social" name="social" placeholder="흡연/음주">
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 6. P.I. -->
       <div class="form-group">
-        <label>Symptoms (증상)</label>
-        <textarea name="symptoms" rows="3" required placeholder="환자 호소, 통증 정도 등"></textarea>
-        <span class="error-message" id="symptoms_error"></span>
+        <label for="pi">P.I. (병력)</label>
+        <textarea id="pi" name="pi" rows="3"></textarea>
       </div>
 
-      <!-- Signs (O) -->
+      <!-- 7. ROS -->
       <div class="form-group">
-        <label>Signs (징후)</label>
-        <textarea name="objective" rows="3" placeholder="검사 소견, 관찰된 징후"></textarea>
+        <label for="ros">ROS</label>
+        <input type="text" id="ros" name="ros" placeholder="Review of Systems">
       </div>
 
-      <!-- Assessment (A) -->
+      <!-- 8. P/E -->
       <div class="form-group">
-        <label>Assessment (진단)</label>
-        <textarea name="assessment" rows="3" placeholder="임상적 판단, 감별진단"></textarea>
+        <label for="pe">P/E</label>
+        <input type="text" id="pe" name="pe" placeholder="Physical Exam">
       </div>
 
-      <!-- Plan (P) -->
+      <!-- 9. Problem list / Assessment -->
       <div class="form-group">
-        <label>Plan (치료 계획)</label>
-        <textarea name="treatment" rows="3" required placeholder="처방약, 추후 계획 등"></textarea>
-        <span class="error-message" id="treatment_error"></span>
+        <label for="problems">Problem list</label>
+        <textarea id="problems" name="problem_list" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="assessment">Assessment</label>
+        <textarea id="assessment" name="assessment" rows="2"></textarea>
       </div>
 
+      <!-- 10. N/Ex. -->
+      <fieldset class="section-fieldset">
+        <legend>N/Ex.</legend>
+        <table class="ne-table">
+          <tr>
+            <td><label><input type="checkbox" name="ne_cog"> 인지저하</label></td>
+            <td>MMSE<input type="text" name="mmse" style="width:50px;">/30</td>
+            <td>CDR<input type="text" name="cdr" style="width:50px;"></td>
+          </tr>
+          <tr>
+            <td><label><input type="checkbox" name="ne_sleep"> 수면장애</label></td>
+            <td colspan="2">
+              PSQI<input type="text" name="psqi" style="width:60px;">
+              ISI<input type="text" name="isi" style="width:60px;">
+            </td>
+          </tr>
+          <tr>
+            <td><label><input type="checkbox" name="ne_depress"> 우울감</label></td>
+            <td colspan="2">GDS <input type="text" name="gds" style="width:60px;"></td>
+          </tr>
+        </table>
+      </fieldset>
+
+      <!-- 저장/완료 버튼 -->
       <div class="button-group">
         <button type="submit" class="btn-submit">저장</button>
-        <button type="button" class="btn-complete" onclick="alert('진료 완료 처리!')">진료 완료</button>
+        <button type="button" class="btn-complete">진료 완료</button>
       </div>
     </form>
   </div>
 
-  <!-- (3) 최근 진료 기록 (오른쪽) -->
+  <!-- (3) 최근 진료 기록 -->
   <div class="emr-card recent-panel">
     <h2>최근 진료 기록</h2>
     {% if latest_record %}
-      <div class="record" id="latest-record">
-        <p><strong>방문날짜:</strong> {{ latest_record.visit_date.strftime('%Y-%m-%d') }}</p>
-        <p><strong>증상 (S):</strong> {{ latest_record.symptoms }}</p>
-        <p><strong>치료 계획 (P):</strong> {{ latest_record.treatment }}</p>
-      </div>
+    <div class="record">
+      <p><strong>방문날짜:</strong> {{ latest_record.record_date.strftime('%Y-%m-%d') }}</p>
+      <p><strong>주호소 (CC):</strong> {{ cc }}</p>
+      <p><strong>병력 (PI):</strong> {{ pi }}</p>
+    </div>
     {% else %}
-      <p>진료 기록이 없습니다.</p>
+    <p>진료 기록이 없습니다.</p>
     {% endif %}
   </div>
 
 </div>
-
-<!-- ✅ 토스트 알림 영역 -->
-<div id="custom-toast" class="toast hidden"></div>
-
 {% endblock %}
 
 {% block scripts %}
 <script src="/static/js/patient_emr.js"></script>
 {% endblock %}
-
-<!-- 진료 기록 상세 모달 -->
-<!-- <div id="record-modal" class="modal">
-  <div class="modal-content">
-    <span class="close-button">&times;</span>
-    <h3>진료 기록 상세</h3>
-    <p id="modal-visit-date"></p>
-    <div class="modal-section">
-      <label>증상:</label>
-      <textarea id="modal-symptoms"></textarea>
-    </div>
-    <div class="modal-section">
-      <label>치료 계획:</label>
-      <textarea id="modal-treatment"></textarea>
-    </div>
-    <div class="modal-buttons">
-      <button id="modal-save">저장</button>
-      <button id="modal-cancel">취소</button>
-    </div>
-  </div>
-</div> -->

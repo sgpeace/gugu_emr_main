@@ -612,12 +612,12 @@ ul {
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
     font-weight: 600;
 }
 
@@ -631,16 +631,200 @@ ul {
     font-size: 0.9rem;
 }
 
-.vitals-container {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+
+
+/* N/Ex. 테이블 스타일 */
+.ne-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
 }
 
-.vitals-container input {
-    flex: 1;
-    min-width: 100px;
+.ne-table td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    vertical-align: middle;
+    font-size: 0.95rem;
 }
+
+.ne-table input[type="text"] {
+    padding: 4px 6px;
+    font-size: 0.9rem;
+    width: auto;
+}
+
+
+/* =========================== */
+/*  inline-group no-wrap      */
+/*  (Onset/Duration/Assoc.Sx,  */
+/*   Allergy/FHx/Social 등)   */
+/* =========================== */
+.form-panel .no-wrap {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    /* 공백 최대한 축소 */
+    margin-bottom: 12px;
+}
+
+.form-panel .no-wrap .inline-item {
+    flex: 1;
+    /* 나머지 공간 모두 차지 */
+    min-width: 0;
+    /* overflow 방지 */
+}
+
+.form-panel .no-wrap .inline-item label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-panel .no-wrap .inline-item input,
+.form-panel .no-wrap .inline-item select {
+    width: 100%;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+}
+
+.form-panel .date-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.form-panel .date-inline label {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.form-panel .date-inline input[type="date"] {
+    width: 160px;
+    /* ← 입력창 길이 줄이기 */
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.btn-chart-container {
+    text-align: right;
+    flex: 1;
+}
+
+.btn-chart {
+    background-color: #6da96f;
+    color: white;
+    text-decoration: none;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.btn-chart:hover {
+    background-color: #388e3c;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  C.C. 텍스트영역 확대                                 */
+/* ───────────────────────────────────────────────────── */
+.form-panel .cc-fieldset textarea {
+    min-height: 80px;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  Vital Signs, History, N/Ex. 등 section-fieldset   */
+/* ───────────────────────────────────────────────────── */
+.form-panel fieldset.section-fieldset {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.form-panel legend {
+    padding: 0 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+}
+
+.form-panel fieldset legend+.form-group,
+.form-panel>.form-group>label[for="med_hx"]~input,
+.form-panel>.form-group>label[for="pmhx"]~input {
+    margin-top: 0;
+    /* 기존 inline-group 마진 제거 */
+}
+
+.cc-fieldset textarea {
+    min-height: 140px;
+}
+
+.form-panel>.form-group:nth-of-type(ros),
+.form-panel>.form-group:nth-of-type(pe) {
+    margin-bottom: 12px;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  vitals-grid 고정 3열×2행                             */
+/* ───────────────────────────────────────────────────── */
+.form-panel .vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.form-panel .vital-item label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-panel .vital-item input {
+    width: 100%;
+    padding: 6px 8px;
+    box-sizing: border-box;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  버튼 그룹 중앙 정렬 유지                             */
+/* ───────────────────────────────────────────────────── */
+.form-panel .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* ────────────────────────────────────────────────────── */
+/* Fieldset 박스 스타일 (Vital Signs, 기타 섹션)       */
+/* ────────────────────────────────────────────────────── */
+.form-panel fieldset {
+    border: 1px solid #ccc;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+}
+
+.form-panel legend {
+    padding: 0 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+}
+
+
+
 
 /* 버튼 그룹 */
 .button-group {
@@ -690,6 +874,47 @@ ul {
 .recent-panel {
     flex: 3;
 }
+
+/* form-panel 안의 inline-group 스타일 */
+.form-panel .inline-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.form-panel .inline-group label {
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.form-panel .inline-group input {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 80px;
+    box-sizing: border-box;
+}
+
+.form-panel .header-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.form-panel .header-group label {
+    margin-right: 4px;
+}
+
+.form-panel .header-group input,
+.form-panel .header-group select {
+    max-width: 100px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+}
+
 
 /* 
     ================================
@@ -840,6 +1065,92 @@ th {
     font-size: 14px;
 }
 
+
+
+/* ── 팝업 오버레이 & 폼 ─────────────────────────────── */
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.popup-form {
+    background: #fff;
+    padding: 20px 24px;
+    border-radius: 8px;
+    width: 300px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.popup-form h3 {
+    margin: 0 0 12px;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* 레이블 & 입력 */
+.popup-form label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.popup-form label input {
+    width: 100%;
+    padding: 6px 8px;
+    margin-top: 4px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 버튼 그룹 */
+.popup-form .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.popup-form .button-group button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin: 0 6px;
+}
+
+.popup-form #save-new-patient {
+    background: #56AB2F;
+    color: #fff;
+}
+
+.popup-form #cancel-new-patient {
+    background: #ccc;
+    color: #333;
+}
+
+.popup-form button:hover {
+    opacity: 0.9;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 /* ========================= */
 /* 🌟 푸터 (공통) */
 /* ========================= */
@@ -851,29 +1162,9 @@ th {
     color: #666;
 }
 
-.popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  
-  .popup-form {
-    background: #fff;
-    padding: 20px 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    text-align: center;
-    min-width: 300px;
-  }
 
- /* style.css 또는 base.css 에 추가되어야 함 */
+
+/* style.css 또는 base.css 에 추가되어야 함 */
 .toast {
     position: fixed;
     bottom: 20px;
@@ -886,16 +1177,16 @@ th {
     z-index: 9999;
     opacity: 0.9;
     transition: opacity 0.3s ease-in-out;
-  }
-  
-  .toast.success {
+}
+
+.toast.success {
     background-color: #28a745;
-  }
-  
-  .toast.error {
+}
+
+.toast.error {
     background-color: #dc3545;
-  }
-  
-  .toast.hidden {
+}
+
+.toast.hidden {
     display: none;
-  }
+}
