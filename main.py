@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form, Depends, HTTPException, Body
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, Body, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -12,6 +12,9 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy import CheckConstraint
 from sqlalchemy import Float
+from pydantic import BaseModel
+from typing import List
+
 
 # === DATABASE SETUP ===
 DATABASE_URL = "mysql+pymysql://root:Tmdrnjs159!@localhost/emr_db"
@@ -84,8 +87,21 @@ class Registration(Base):
     __tablename__ = 'registrations'
     id = Column(Integer, primary_key=True, index=True)
     patient_name = Column(String(100), nullable=False)
+    birth_date = Column(String(6), nullable=False)
     status = Column(String(20), nullable=False, default="대기")
     created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+class RegistrationOut(BaseModel):
+    id:           int
+    patient_name: str
+    birth_date:   str
+    status:       str
+    class Config:
+        orm_mode = True
+
+class RegistrationCreate(BaseModel):
+    patient_name:   str
+    birth_date:     str
 
 
 # (추후Visit, Chart 등 추가 가능)
@@ -155,8 +171,8 @@ def search_patient(newname: str = None, db: Session = Depends(get_db)):
         return {"result": []}
 
 # 신환등록 관련
-@app.post("/dashboard/add_patient")
-def add_patient(name: str = Form(...), birth_date: str = Form(...), db: Session = Depends(get_db)):
+@app.post("/dashboard/add_new_patient")
+def add_new_patient(name: str = Form(...), birth_date: str = Form(...), db: Session = Depends(get_db)):
     # 이름과 생년월일 모두로 중복 체크
     existing_patient = db.query(Patient).filter(
         Patient.name == name,
@@ -179,49 +195,82 @@ def add_patient(name: str = Form(...), birth_date: str = Form(...), db: Session 
         }
     }
 
-
 # 환자 접수 관리 페이지
-@app.get("/registration", response_class=HTMLResponse)
-async def registration_page(request: Request, db: Session = Depends(get_db)):
+@app.get("/dashboard/registrations", response_model=List[RegistrationOut])
+def list_registrations(db: Session = Depends(get_db)):
     regs = db.query(Registration).order_by(Registration.id).all()
-    return templates.TemplateResponse("registration.html", {"request": request, "registrations": regs})
+    return regs
 
-@app.post("/registration/add")
-async def registration_add(request: Request, patient_name: str = Form(...), db: Session = Depends(get_db)):
-    if not patient_name:
-        raise HTTPException(status_code=400, detail="환자 이름은 필수입니다.")
-    new_reg = Registration(patient_name=patient_name, status="대기")
+@app.post("/dashboard/registrations", response_model = RegistrationOut, status_code = status.HTTP_201_CREATED,)
+def create_registration(reg_in: RegistrationCreate= Body(...), db: Session = Depends(get_db),):
+    new_reg = Registration(
+        patient_name = reg_in.patient_name,
+        birth_date = reg_in.birth_date,
+        status = "대기",)
+    
     db.add(new_reg)
     db.commit()
     db.refresh(new_reg)
-    return RedirectResponse(url="/registration", status_code=302)
+    return new_reg
 
-@app.post("/registration/update")
-async def registration_update(request: Request, id: int = Form(...), patient_name: str = Form(...), status: str = Form(...), db: Session = Depends(get_db)):
-    reg = db.query(Registration).filter(Registration.id == id).first()
-    if not reg:
-        raise HTTPException(status_code=404, detail="등록된 환자를 찾을 수 없습니다.")
-    reg.patient_name = patient_name
-    reg.status = status
+
+@app.post("/dashboard/registrations/add", response_class=JSONResponse)
+def add_to_registration(patient_name: str = Form(...), birth_date: str = Form(...), db: Session = Depends(get_db)):
+    # 1) Insert into Registration
+    new_reg = Registration(
+        patient_name=patient_name,
+        birth_date=birth_date,
+        status="대기"
+    )
+    db.add(new_reg)
     db.commit()
-    return RedirectResponse(url="/registration", status_code=302)
+    db.refresh(new_reg)
 
-@app.post("/registration/delete")
-async def registration_delete(request: Request, id: int = Form(...), db: Session = Depends(get_db)):
-    reg = db.query(Registration).filter(Registration.id == id).first()
+    # 2) Return exactly the fields your JS needs
+    return {
+        "id":            new_reg.id,
+        "patient_name":  new_reg.patient_name,
+        "birth_date":    new_reg.birth_date,
+        "status":        new_reg.status
+    }
+
+
+# DELETE a single registration
+@app.delete("/dashboard/registrations/{reg_id}", status_code=204)
+def delete_registration(reg_id: int, db: Session = Depends(get_db)):
+    reg = db.query(Registration).filter(Registration.id == reg_id).first()
     if not reg:
-        raise HTTPException(status_code=404, detail="등록된 환자를 찾을 수 없습니다.")
+        raise HTTPException(404, "등록된 환자를 찾을 수 없습니다.")
     db.delete(reg)
     db.commit()
-    return RedirectResponse(url="/registration", status_code=302)
+    return  # 204 No Content
 
-@app.post("/registration/reset")
-async def registration_reset(request: Request, db: Session = Depends(get_db)):
+# POST to reset (clear) all registrations
+@app.post("/dashboard/registrations/reset",status_code=204)
+def reset_registrations(db: Session = Depends(get_db)):
     db.query(Registration).delete()
     db.commit()
-    db.execute(text("ALTER TABLE registrations AUTO_INCREMENT = 1"))
+    return
+
+from fastapi import Body
+
+@app.patch("/dashboard/registrations/{reg_id}", response_model=RegistrationOut)
+def update_registration_status(
+    reg_id: int,
+    payload: dict = Body(...),          # expects {"status": "..."}
+    db: Session = Depends(get_db)
+):
+    reg = db.query(Registration).filter(Registration.id == reg_id).first()
+    if not reg:
+        raise HTTPException(404, "등록된 환자를 찾을 수 없습니다.")
+    new_status = payload.get("status")
+    if new_status not in ("대기", "진료"):
+        raise HTTPException(400, "올바르지 않은 상태입니다.")
+    reg.status = new_status
     db.commit()
-    return RedirectResponse(url="/registration", status_code=302)
+    db.refresh(reg)
+    return reg
+
 
 # === 3. 환자 개별 페이지 (환자 방문 기록 및 진료 입력) ===
 @app.get("/patient_emr", response_class=HTMLResponse)

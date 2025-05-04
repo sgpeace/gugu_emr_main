@@ -4,7 +4,7 @@
 
 {% block content %}
   <h1>환자 접수표</h1>
-  <table id="registration-table">
+  <table>
     <thead>
       <tr>
         <th>순번</th>
@@ -15,17 +15,23 @@
     </thead>
     <tbody>
       {% for reg in registrations %}
-      <tr data-id="{{ reg.id }}">
-        <td>{{ loop.index }}</td>
+      <tr>
+        <td>{{ reg.id }}</td>
         <td>
-          <input type="text" class="reg-patient-name" value="{{ reg.patient_name }}" required>
+          <form action="/registration/update" method="post" style="display: inline;">
+            <input type="hidden" name="id" value="{{ reg.id }}">
+            <input type="text" name="patient_name" value="{{ reg.patient_name }}" required>
         </td>
         <td>
-          <input type="text" class="reg-status" value="{{ reg.status }}" required>
+            <input type="text" name="status" value="{{ reg.status }}" required>
         </td>
         <td>
-          <button class="update-button">수정</button>
-          <button class="delete-button">삭제</button>
+            <button type="submit">수정</button>
+          </form>
+          <form action="/registration/delete" method="post" style="display: inline;">
+            <input type="hidden" name="id" value="{{ reg.id }}">
+            <button type="submit" onclick="return confirm('삭제하시겠습니까?')">삭제</button>
+          </form>
         </td>
       </tr>
       {% endfor %}
@@ -33,12 +39,8 @@
   </table>
 
   <h2>새 접수 추가</h2>
-  <form id="add-registration-form" action="/registration/add" method="post">
+  <form action="/registration/add" method="post">
     <label>환자이름: <input type="text" name="patient_name" required></label>
     <button type="submit">추가</button>
   </form>
-
-  <button id="reset-registrations">전체 초기화</button>
-
-  <script src="/static/js/registration.js"></script>
 {% endblock %}
