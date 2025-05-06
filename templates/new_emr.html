@@ -1,130 +1,195 @@
 {% extends "base.html" %}
-{% block title %}환자 상세 정보 - GuGu Medical Center EMR{% endblock %}
+
+{% block title %}기본 정보 조사 - GuGu Medical Center EMR{% endblock %}
+
+{% block styles %}
+<style>
+  .container { max-width:900px; margin:0 auto; padding:20px; }
+  .card { background:#fff; border-radius:8px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+  /* 1) 섹션 제목(legend)을 더 진하고 크게 */
+  fieldset legend {
+    font-size:1.4rem;
+    font-weight:800;
+    color:#2c3e50;
+    margin-bottom:1rem;
+  }
+  /* 필드셋 공통 */
+  fieldset {
+    margin-bottom:2rem;
+    padding:1rem;
+    border:1px solid #ddd;
+    border-radius:6px;
+    background:#fafafa;
+  }
+
+  .form-group { display:flex; flex-direction:column; margin-bottom:0.75rem; }
+  .form-group label { margin-bottom:0.25rem; font-weight:600; }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding:0.5rem;
+    border:1px solid #ccc;
+    border-radius:4px;
+    font-size:0.9rem;
+  }
+
+  /* 3) textarea 크기 변경 금지 */
+  .form-group textarea { resize: none !important; }
+
+  .button-group { display:flex; gap:1rem; margin-top:1.5rem; }
+  .button { flex:1; padding:0.75rem; background:#3b7a99; color:#fff; border:none; border-radius:5px; cursor:pointer; }
+  .button:hover { background:#327589; }
+</style>
+{% endblock %}
 
 {% block content %}
+<div class="container">
+  <a href="/dashboard" class="back-button">← 메인 대시보드</a>
+  <div class="card">
+    <h2>기본 정보 조사</h2>
+    <form action="/patient_emr/new_patient_chart/information" method="post" id="basic-info-form">
 
-<!-- ★ 뒤로가기 버튼: 화면 오른쪽 상단에 고정 -->
-<a href="/dashboard" class="back-button">메인 대시보드</a>
-
-<!-- ★ 상단: 환자 정보 (가운데 정렬 배너) -->
-<div class="patient-header">
-  <h1 class="patient-title">{{ name }} <span>({{ birth_date }})</span></h1>
-</div>
-
-<!-- ★ 전체 3열 레이아웃 컨테이너 -->
-<div class="emr-layout">
-
-  <!-- (1) 방문 기록 패널 (왼쪽) -->
-  <div class="emr-card visits-panel">
-    <h2>방문 기록</h2>
-    <ul>
-      {% for record in visit_records %}
-      <li data-symptoms="{{ record.symptoms }}"
-          data-treatment="{{ record.treatment }}"
-          data-visit-date="{{ record.visit_date.strftime('%Y-%m-%d') }}">
-        <a href="#" class="record-link">{{ record.visit_date.strftime('%Y-%m-%d') }}</a>
-      </li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <!-- (2) 새 진료차트 작성 (가운데, 가장 넓은 영역) -->
-  <div class="emr-card form-panel">
-    <h2>새로운 진료차트 작성</h2>
-    <form id="new-emr-form" action="/patient_emr/new_emr" method="post">
-      <input type="hidden" name="name" value="{{ name }}">
-      <input type="hidden" name="birth_date" value="{{ birth_date }}">
-
-      <!-- 방문 날짜 -->
-      <div class="form-group">
-        <label for="visit_date">방문 날짜</label>
-        <input type="date" id="visit_date" name="visit_date" required>
-        <span class="error-message" id="visit_date_error"></span>
-      </div>
-
-      <!-- Vital Signs -->
-      <div class="form-group">
-        <label>Vital Signs</label>
-        <div class="vitals-container">
-          <input type="number" step="1" name="vitals_bp" placeholder="혈압 (mmHg)">
-          <input type="number" step="1" name="vitals_hr" placeholder="맥박 (bpm)">
-          <input type="number" step="1" name="vitals_glucose" placeholder="혈당 (mg/dL)">
-          <input type="number" step="0.1" name="vitals_temp" placeholder="체온 (°C)">
+      <!-- 1) 작성일/정보제공자/작성자 분리 -->
+ 
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.5rem;">
+        <div class="form-group">
+          <label for="form_date">작성일</label>
+          <input type="date" id="form_date" name="form_date" value="{{ chart.form_date if chart else '' }}" required>
+        </div>
+        <div class="form-group">
+          <label for="provider">정보제공자</label>
+          <select id="provider" name="provider" required>
+            <option value="">— 선택 —</option>
+            <option value="본인" {% if chart and chart.provider == "본인" %}selected{% endif %}>본인</option>
+            <option value="보호자" {% if chart and chart.provider == "보호자" %}selected{% endif %}>보호자</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="author">작성자</label>
+          <input type="text" id="author" name="author" value="{{ chart.author if chart else '' }}" placeholder="작성자 이름" required>
         </div>
       </div>
 
-      <!-- Symptoms (S) -->
-      <div class="form-group">
-        <label>Symptoms (증상)</label>
-        <textarea name="symptoms" rows="3" required placeholder="환자 호소, 통증 정도 등"></textarea>
-        <span class="error-message" id="symptoms_error"></span>
-      </div>
+      <!-- 2) 기본 정보 박스 -->
+      <div class="form-grid">
+        <fieldset style="grid-column:1 / -1;">
+          <legend>기본 정보</legend>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
 
-      <!-- Signs (O) -->
-      <div class="form-group">
-        <label>Signs (징후)</label>
-        <textarea name="objective" rows="3" placeholder="검사 소견, 관찰된 징후"></textarea>
-      </div>
+            <!-- 성명 / 성별 / 생년월일 -->
+            <div class="form-group">
+              <label for="name">성명</label>
+              <input type="text" id="name" name="name" value="{{ name }}" readonly>
+            </div>
+            <div class="form-group">
+              <label for="gender">성별</label>
+              <select id="gender" name="gender">
+                <option value="">— 선택 —</option>
+                <option value="M" {% if chart and chart.gender == "M" %}selected{% endif %}>M</option>
+                <option value="F" {% if chart and chart.gender == "F" %}selected{% endif %}>F</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="birth_date">생년월일</label>
+              <input type="date" id="birth_date" name="birth_date" value="{{ chart.birth_date if chart else '' }}">
+            </div>
 
-      <!-- Assessment (A) -->
-      <div class="form-group">
-        <label>Assessment (진단)</label>
-        <textarea name="assessment" rows="3" placeholder="임상적 판단, 감별진단"></textarea>
-      </div>
+            <!-- 주소(2span) / 직업 -->
+            <div class="form-group" style="grid-column:1 / span 2;">
+              <label for="address">주소</label>
+              <input type="text" id="address" name="address" value="{{ chart.address if chart else '' }}" placeholder="예) 서울시 강남구 ...">
+            </div>
+            <div class="form-group">
+              <label for="occupation">직업</label>
+              <input type="text" id="occupation" name="occupation" value="{{ chart.occupation if chart else '' }}" placeholder="예) 회사원, 학생 등">
+            </div>
 
-      <!-- Plan (P) -->
-      <div class="form-group">
-        <label>Plan (치료 계획)</label>
-        <textarea name="treatment" rows="3" required placeholder="처방약, 추후 계획 등"></textarea>
-        <span class="error-message" id="treatment_error"></span>
-      </div>
+            <!-- 종교 / 교육정도 / 가족사항 -->
+            <div class="form-group">
+              <label for="religion">종교</label>
+              <input type="text" id="religion" name="religion" value="{{ chart.religion if chart else '' }}" placeholder="예) 기독교, 불교 등">
+            </div>
+            <div class="form-group">
+              <label for="education">교육정도</label>
+              <input type="text" id="education" name="education" value="{{ chart.education if chart else '' }}" placeholder="최종 학력">
+            </div>
+            <div class="form-group">
+              <label for="marital_status">가족사항</label>
+              <input type="text" id="marital_status" name="marital_status" value="{{ chart.marital_status if chart else '' }}" placeholder="기혼/미혼 등">
+            </div>
 
-      <div class="button-group">
-        <button type="submit" class="btn-submit">저장</button>
-        <button type="button" class="btn-complete" onclick="alert('진료 완료 처리!')">진료 완료</button>
-      </div>
+            <!-- 기타사항(3span) -->
+            <div class="form-group" style="grid-column:1 / span 3;">
+              <label for="other_info">기타사항</label>
+              <textarea id="other_info" name="other_info" rows="2">{{ chart.other_info if chart else '' }}</textarea>
+            </div>
+
+          </div>
+        </fieldset>
+
+        <!-- 3) Vital Signs (V/S) 박스 -->
+        <fieldset style="grid-column:1 / -1;">
+          <legend>Vital Signs (V/S)</legend>
+          <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:0.5rem;">
+            {% for fld in ["bt","pr","rr","bp","height","weight"] %}
+            <div class="form-group">
+              <label for="{{ fld }}">{{ fld|upper }}</label>
+              <input type="{{ fld in ['bt','height','weight'] and 'number' or 'text' }}"
+                    id="{{ fld }}" name="{{ fld }}" value="{{ getattr(chart, fld) if chart else '' }}">
+            </div>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <!-- 4) 과거력 및 현 복용약 박스 -->
+        <fieldset style="grid-column:1 / -1;">
+          <legend>과거력 및 현 복용약</legend>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+
+            <!-- Allergy -->
+            <div class="form-group">
+              <label for="allergy">Allergy</label>
+              <select id="allergy" name="allergy">
+                <option value="">— 선택 —</option>
+                <option value="무" {% if chart and chart.allergy == "무" %}selected{% endif %}>무</option>
+                <option value="유" {% if chart and chart.allergy == "유" %}selected{% endif %}>유</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="allergy_detail">세부내용</label>
+              <input type="text" id="allergy_detail" name="allergy_detail" value="{{ chart.allergy_detail if chart else '' }}" placeholder="음식/약/기타">
+            </div>
+
+            <!-- 기존 과거력 항목들 -->
+            {% for item in ["DM","HTN","HEPA","TB","OA","ETC"] %}
+            <div class="form-group">
+              <label>{{ item }}</label>
+              <select name="history_{{ item }}">
+                <option value="">— 선택 —</option>
+                <option value="무" {% if chart and getattr(chart, "history_" + item) == "무" %}selected{% endif %}>무</option>
+                <option value="유" {% if chart and getattr(chart, "history_" + item) == "유" %}selected{% endif %}>유</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>{{ item }} 세부</label>
+              <input type="text" name="history_{{ item }}_detail" value="{{ getattr(chart, "history_" + item + "_detail") if chart else '' }}" placeholder="진단 시기/치료/약">
+            </div>
+            {% endfor %}
+
+          </div>
+        </fieldset>
+
+        <!-- 5) 저장/취소 버튼 -->
+        <div class="button-group" style="grid-column:1 / -1;">
+          <button type="submit" class="button">저장</button>
+          <button type="button" class="button" onclick="history.back()">취소</button>
+        </div>
+
+      </div><!-- /.form-grid -->
+
     </form>
   </div>
-
-  <!-- (3) 최근 진료 기록 (오른쪽) -->
-  <div class="emr-card recent-panel">
-    <h2>최근 진료 기록</h2>
-    {% if latest_record %}
-      <div class="record" id="latest-record">
-        <p><strong>방문날짜:</strong> {{ latest_record.visit_date.strftime('%Y-%m-%d') }}</p>
-        <p><strong>증상 (S):</strong> {{ latest_record.symptoms }}</p>
-        <p><strong>치료 계획 (P):</strong> {{ latest_record.treatment }}</p>
-      </div>
-    {% else %}
-      <p>진료 기록이 없습니다.</p>
-    {% endif %}
-  </div>
-
 </div>
-
-<!-- 진료 기록 상세 모달 -->
-<div id="record-modal" class="modal">
-  <div class="modal-content">
-    <span class="close-button">&times;</span>
-    <h3>진료 기록 상세</h3>
-    <p id="modal-visit-date"></p>
-    <div class="modal-section">
-      <label>증상:</label>
-      <textarea id="modal-symptoms"></textarea>
-    </div>
-    <div class="modal-section">
-      <label>치료 계획:</label>
-      <textarea id="modal-treatment"></textarea>
-    </div>
-    <div class="modal-buttons">
-      <button id="modal-save">저장</button>
-      <button id="modal-cancel">취소</button>
-    </div>
-  </div>
-</div>
-
-{% endblock %}
-
-{% block scripts %}
-<script src="/static/js/patient_emr.js"></script>
 {% endblock %}

@@ -103,6 +103,43 @@ class RegistrationCreate(BaseModel):
     patient_name:   str
     birth_date:     str
 
+#신환차트정보
+class NewPatientChart(Base):
+    __tablename__ = "new_patient_chart"
+    id = Column(Integer, primary_key=True, index=True)
+    form_date = Column(Date, nullable=False)
+    provider = Column(String(50), nullable=False)
+    author = Column(String(50), nullable=False)
+    name = Column(String(100), nullable=False)
+    gender = Column(String(10), nullable=False)
+    birth_date = Column(Date, nullable=False)
+    address = Column(String(255), nullable=False)
+    occupation = Column(String(100))
+    religion = Column(String(50))
+    education = Column(String(50))
+    marital_status = Column(String(50))
+    other_info = Column(Text)
+    bt = Column(Float)
+    pr = Column(Integer)
+    rr = Column(Integer)
+    bp = Column(String(20))
+    height = Column(Float)
+    weight = Column(Float)
+    allergy = Column(String(10))
+    allergy_detail = Column(Text)
+    history_DM = Column(String(10))
+    history_DM_detail = Column(Text)
+    history_HTN = Column(String(10))
+    history_HTN_detail = Column(Text)
+    history_HEPA = Column(String(10))
+    history_HEPA_detail = Column(Text)
+    history_TB = Column(String(10))
+    history_TB_detail = Column(Text)
+    history_OA = Column(String(10))
+    history_OA_detail = Column(Text)
+    history_ETC = Column(String(10))
+    history_ETC_detail = Column(Text)
+
 
 # (추후Visit, Chart 등 추가 가능)
 
@@ -460,6 +497,107 @@ async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)
         "psqi": emr_record.psqi,
         "isi": emr_record.isi,
     })
+
+#신환차트 버튼 클릭시
+@app.get("/patient_emr/new_patient_chart", response_class=HTMLResponse)
+async def new_patient_chart(request: Request, name: str, birth_date: str, db: Session = Depends(get_db)):
+    # 환자 정보 조회
+    patient_chart = db.query(NewPatientChart).filter(
+        NewPatientChart.name == name,
+        NewPatientChart.birth_date == birth_date
+    ).first()
+
+    if not patient_chart:
+        # 환자 정보가 없으면 빈 값으로 렌더링
+        return templates.TemplateResponse("new_emr.html", {
+            "request": request,
+            "name": name,
+            "birth_date": birth_date,
+            "chart": None
+        })
+
+    # 환자 정보가 있으면 해당 데이터를 템플릿에 전달
+    return templates.TemplateResponse("new_emr.html", {
+        "request": request,
+        "name": name,
+        "birth_date": birth_date,
+        "chart": patient_chart
+    })
+
+@app.post("/patient_emr/new_patient_chart/information")
+async def save_new_patient_chart(
+    form_date: str = Form(...),
+    provider: str = Form(...),
+    author: str = Form(...),
+    name: str = Form(...),
+    gender: str = Form(...),
+    birth_date: str = Form(...),
+    address: str = Form(...),
+    occupation: str = Form(None),
+    religion: str = Form(None),
+    education: str = Form(None),
+    marital_status: str = Form(None),
+    other_info: str = Form(None),
+    bt: float = Form(None),
+    pr: int = Form(None),
+    rr: int = Form(None),
+    bp: str = Form(None),
+    height: float = Form(None),
+    weight: float = Form(None),
+    allergy: str = Form(None),
+    allergy_detail: str = Form(None),
+    history_DM: str = Form(None),
+    history_DM_detail: str = Form(None),
+    history_HTN: str = Form(None),
+    history_HTN_detail: str = Form(None),
+    history_HEPA: str = Form(None),
+    history_HEPA_detail: str = Form(None),
+    history_TB: str = Form(None),
+    history_TB_detail: str = Form(None),
+    history_OA: str = Form(None),
+    history_OA_detail: str = Form(None),
+    history_ETC: str = Form(None),
+    history_ETC_detail: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    new_chart = NewPatientChart(
+        form_date=form_date,
+        provider=provider,
+        author=author,
+        name=name,
+        gender=gender,
+        birth_date=birth_date,
+        address=address,
+        occupation=occupation,
+        religion=religion,
+        education=education,
+        marital_status=marital_status,
+        other_info=other_info,
+        bt=bt,
+        pr=pr,
+        rr=rr,
+        bp=bp,
+        height=height,
+        weight=weight,
+        allergy=allergy,
+        allergy_detail=allergy_detail,
+        history_DM=history_DM,
+        history_DM_detail=history_DM_detail,
+        history_HTN=history_HTN,
+        history_HTN_detail=history_HTN_detail,
+        history_HEPA=history_HEPA,
+        history_HEPA_detail=history_HEPA_detail,
+        history_TB=history_TB,
+        history_TB_detail=history_TB_detail,
+        history_OA=history_OA,
+        history_OA_detail=history_OA_detail,
+        history_ETC=history_ETC,
+        history_ETC_detail=history_ETC_detail,
+    )
+    db.add(new_chart)
+    db.commit()
+    db.refresh(new_chart)
+    return {"message": "환자 정보가 성공적으로 저장되었습니다.", "id": new_chart.id}
 
 # @app.post("/patient_emr/complete_visit")
 # async def complete_visit(
