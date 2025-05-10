@@ -98,7 +98,7 @@ document.querySelectorAll(".record-link").forEach(link => {
         try {
             // Fetch API로 /patient_emr/past_emr 엔드포인트 호출
             const response = await fetch(`/patient_emr/past_emr?visit_date=${visitDate}&name=${encodeURIComponent(name)}`);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -160,4 +160,6 @@ function populateFormWithData(data) {
     document.querySelector("input[name='cdr']").value = data.cdr || "";
     document.querySelector("input[name='psqi']").value = data.psqi || "";
     document.querySelector("input[name='isi']").value = data.isi || "";
+
+
 }

@@ -17,7 +17,7 @@ from typing import List
 
 
 # === DATABASE SETUP ===
-DATABASE_URL = "mysql+pymysql://root:Tmdrnjs159!@localhost/emr_db"
+DATABASE_URL = "mysql+pymysql://root:134340@localhost/emr_db"
 engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
 SessionLocal = sessionmaker(bind=engine)

@@ -27,7 +27,7 @@
   <div class="emr-card form-panel">
     <h2>일일기록지 작성</h2>
     <div class="btn-chart-container">
-      <a class="btn-chart", href="/patient_emr/new_patient_chart?name={{ name }}&birth_date={{ birth_date }}">
+      <a class="btn-chart" , href="/patient_emr/new_patient_chart?name={{ name }}&birth_date={{ birth_date }}">
         신환 차트
       </a>
     </div>
@@ -171,14 +171,14 @@
         <table class="ne-table">
           <tr>
             <td><label><input type="checkbox" name="ne_cog"> 인지저하</label></td>
-            <td>MMSE<input type="text" name="mmse" style="width:50px;">/30</td>
-            <td>CDR<input type="text" name="cdr" style="width:50px;"></td>
+            <td>MMSE <input type="text" name="mmse" style="width:50px;"> /30</td>
+            <td>CDR <input type="text" name="cdr" style="width:50px;"></td>
           </tr>
           <tr>
             <td><label><input type="checkbox" name="ne_sleep"> 수면장애</label></td>
             <td colspan="2">
-              PSQI<input type="text" name="psqi" style="width:60px;">
-              ISI<input type="text" name="isi" style="width:60px;">
+              PSQI <input type="text" name="psqi" style="width:60px;">
+              or ISI <input type="text" name="isi" style="width:60px;">
             </td>
           </tr>
           <tr>
@@ -187,6 +187,154 @@
           </tr>
         </table>
       </fieldset>
+
+      <!-- (4) Prescription — Plan -->
+      <fieldset class="form-section">
+        <legend>Plan</legend>
+        <table class="plan-table">
+          <colgroup>
+            <col class="col-num">
+            <col class="col-desc">
+            <col class="col-method">
+            <col class="col-period">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description to P</th>
+              <th>Method</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- (4-1) free input rows #1–4 -->
+            {% for i in range(1,5) %}
+            <tr>
+              <td>{{ i }}</td>
+              <td>
+                {% if i == 1 %}
+                <input type="text" name="plan_desc_{{i}}" placeholder="처방 내용을 입력하세요">
+                {% else %}
+                <input type="text" name="plan_desc_{{i}}">
+                {% endif %}
+              </td>
+              <td>
+                {% if i == 1 %}
+                <input type="text" name="plan_method_{{i}}" placeholder="복용 방법">
+                {% else %}
+                <input type="text" name="plan_method_{{i}}">
+                {% endif %}
+              </td>
+              <td>
+                {% if i == 1 %}
+                <input type="text" name="plan_period_{{i}}" placeholder="처방 기간">
+                {% else %}
+                <input type="text" name="plan_period_{{i}}">
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+
+            <!-- (4-2) 파스 -->
+            <tr>
+              <td>5</td>
+              <td>파스</td>
+              <td>
+                <label><input type="radio" name="plan_pas_5" value="O">O</label>
+                <label><input type="radio" name="plan_pas_5" value="X">X</label>
+              </td>
+              <td>
+                <label><input type="radio" name="plan_pas_period_5" value="Cool">Cool</label>
+                <label><input type="radio" name="plan_pas_period_5" value="Hot">Hot</label>
+              </td>
+            </tr>
+
+            <!-- (4-3) 비타민제(삐콤) -->
+            <tr>
+              <td>6</td>
+              <td>삐콤</td>
+              <td colspan="2">
+                <label><input type="radio" name="plan_bear_6" value="O">O</label>
+                <label><input type="radio" name="plan_bear_6" value="X">X</label>
+              </td>
+            </tr>
+
+            <!-- (4-4) 근육통 -->
+            <tr>
+              <td>7</td>
+              <td>근육통</td>
+              <td>
+                안티푸라민<br>
+                <label><input type="radio" name="plan_anti_7" value="O">O</label>
+                <label><input type="radio" name="plan_anti_7" value="X">X</label>
+              </td>
+              <td>
+                루마겔<br>
+                <label><input type="radio" name="plan_ruma_7" value="O">O</label>
+                <label><input type="radio" name="plan_ruma_7" value="X">X</label>
+              </td>
+            </tr>
+
+            <!-- (4-5) 발백선: colspan 제거, 빈 셀로 메서드 칸 채움 -->
+            <tr>
+              <td>8</td>
+              <td class="site-row">
+                &nbsp;발백선 (site:
+                <input type="text" name="plan_tinea_site_8" placeholder="부위">
+                )
+              </td>
+              <td></td> <!-- Method 칸 빈 셀 -->
+              <td>
+                <label><input type="radio" name="plan_tinea_8" value="O">O</label>
+                <label><input type="radio" name="plan_tinea_8" value="X">X</label>
+              </td>
+            </tr>
+
+            <!-- (4-6) 피부염: 동일하게 -->
+            <tr>
+              <td>9</td>
+              <td class="site-row">
+                &nbsp;피부염 (site:
+                <input type="text" name="plan_derma_site_9" placeholder="부위">
+                )
+              </td>
+              <td></td>
+              <td>
+                <label><input type="radio" name="plan_derma_9" value="O">O</label>
+                <label><input type="radio" name="plan_derma_9" value="X">X</label>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </fieldset>
+
+      <!-- (5) Medication Counseling -->
+      <fieldset class="form-section">
+        <legend>Medication Counseling</legend>
+        <textarea name="med_counseling" class="med-counsel" rows="2" placeholder="복약 상담 내용을 입력하세요"></textarea>
+      </fieldset>
+
+      <!-- (6) IV Order -->
+      <fieldset class="form-section">
+        <legend>IV Order</legend>
+        <div class="iv-order">
+          <span class="iv-desc">
+            N/S 500 ml + Vit B/C 2 mL ×4 amp (인당 15–20 mL)
+          </span>
+          <span class="iv-choice">
+            <label><input type="radio" name="iv_order" value="O">O</label>
+            <label><input type="radio" name="iv_order" value="X">X</label>
+          </span>
+        </div>
+      </fieldset>
+
+      <!-- (7) Signatures -->
+      <div class="signature-block">
+        <label>Dr. <input type="text" name="sign_dr" placeholder="서명"></label>
+        <label>Nurse <input type="text" name="sign_nurse" placeholder="서명"></label>
+        <label>Pharmacist <input type="text" name="sign_pharmacist" placeholder="서명"></label>
+      </div>
+
 
       <!-- 저장/완료 버튼 -->
       <div class="button-group">

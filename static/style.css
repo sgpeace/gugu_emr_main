@@ -1141,15 +1141,125 @@ th {
 }
 
 
+/* ─── (4) Prescription — Plan ───────────────────────────────── */
+.plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    /* colgroup 기반 너비 고정 */
+    margin-top: 1rem;
+}
+
+.plan-table th,
+.plan-table td {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+.plan-table th {
+    background: #f4f4f4;
+    text-align: center;
+}
+
+/* Durg Plan Table의 width 조정 */
+.plan-table col.col-num {
+    width: 6%;
+}
+
+.plan-table col.col-desc {
+    width: 46%;
+}
+
+.plan-table col.col-method {
+    width: 24%;
+}
+
+.plan-table col.col-period {
+    width: 24%;
+}
+
+/* 입력박스 */
+.plan-table td input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.25rem;
+}
 
 
+/* ─── (4-5)/(4-6) site 입력줄 레이아웃 ───────────────────────── */
+/* site-row input 은 description 칸 너비 안에서만 꽉 차도록 */
 
+.site-row {
+    white-space: nowrap;
+}
 
+/* input 은 100% 가 아니라 적당히 고정 너비로 */
+.site-row input[type="text"] {
+    width: 150px;
+    /* 필요에 맞춰 px 단위로 조절 */
+    box-sizing: border-box;
+    display: inline-block;
+    vertical-align: middle;
+}
 
+/* (4-5)/(4-6) site-row: 경계선 제거 및 가운데 정렬 */
+.plan-table td.site-row {
+    text-align: center;
+    border-right: none;
+}
 
+.plan-table td.site-row+td {
+    border-left: none;
+}
 
+/* ─── (5) Medication Counseling ─────────────────────────────── */
+.med-counsel {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    resize: vertical;
+    margin-top: 0.5rem;
+}
 
+/* ─── (6) IV Order ──────────────────────────────────────────── */
+.iv-order {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.3rem 0.5rem 0.5rem 0.5rem;
+}
 
+.iv-desc {
+    flex: 1;
+    font-size: 0.95em;
+    white-space: nowrap;
+}
+
+.iv-choice label {
+    margin-left: 1rem;
+}
+
+/* ─── (7) Signatures ───────────────────────────────────────── */
+.signature-block {
+    margin-top: 2rem;
+    text-align: right;
+    /* 전체 왼쪽 정렬 */
+}
+
+.signature-block label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.signature-block input {
+    border: none;
+    border-bottom: 1px solid #000;
+    margin-left: 0.5rem;
+    width: 180px;
+    padding: 0.25rem 0;
+}
 
 /* ========================= */
 /* 🌟 푸터 (공통) */
