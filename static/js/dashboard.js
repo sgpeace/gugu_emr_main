@@ -88,167 +88,179 @@ function addPatientToTable(patient) {
 
 
 
-document.addEventListener("DOMContentLoaded", () => {
-    // ─── A) Load existing registrations ───
-    fetch("/dashboard/registrations")
-      .then(r => r.json())
-      .then(regs => {
-        regs.forEach(reg => {
-          addPatientToTable({
-            id:         reg.id,
-            name:       reg.patient_name,
-            birth_date: reg.birth_date,
-            status:     reg.status
+    document.addEventListener("DOMContentLoaded", () => {
+      // ─── A) Load existing registrations ───
+      fetch("/dashboard/registrations")
+          .then(r => r.json())
+          .then(regs => {
+              regs.forEach(reg => {
+                  addPatientToTable({
+                      id: reg.id,
+                      name: reg.patient_name,
+                      birth_date: reg.birth_date,
+                      status: reg.status
+                  });
+              });
+          })
+          .catch(err => console.error("등록 목록 로드 실패:", err));
+  
+      document.getElementById("manage-button")
+          .addEventListener("click", () => {
+              document.querySelector(".patient-table")
+                  .classList.toggle("management-mode");
           });
-        });
-      })
-      .catch(err => console.error("등록 목록 로드 실패:", err));
   
-    document.getElementById("manage-button")
-    .addEventListener("click", () => {
-      document.querySelector(".patient-table")
-        .classList.toggle("management-mode");
-    });
+      // ─── C) Reset button ───
+      document.getElementById("reset-patients")
+          .addEventListener("click", () => {
+              if (!confirm("정말 대기열을 초기화하시겠습니까?")) return;
+              fetch("/dashboard/registrations/reset", { method: "POST" })
+                  .then(res => {
+                      if (!res.ok) throw new Error("초기화 실패");
+                      document.getElementById("patient-list").innerHTML = "";
+                  })
+                  .catch(err => {
+                      console.error(err);
+                      alert("초기화에 실패했습니다.");
+                  });
+          });
   
-    // ─── C) Reset button ───
-    document.getElementById("reset-patients")
-    .addEventListener("click", () => {
-      if(!confirm("정말 대기열을 초기화하시겠습니까?")) return;  
-      fetch("/dashboard/registrations/reset", { method: "POST" })
-        .then(res => {
-          if (!res.ok) throw new Error("초기화 실패");
-          document.getElementById("patient-list").innerHTML = "";
-        })
-        .catch(err => {
-          console.error(err);
-          alert("초기화에 실패했습니다.");
-        });
-    });
-      
-    // ─── D) Confirm‑patient search & register ───
-    // dashboard 상 '환자 등록' 칸에 환자 이름을 넣고 '확인' 버튼 누르면 작동하는 부분 + 환자 이름 클릭하면 테이블로 이동하도록 하는 부분
-    document.getElementById("confirm-patient").addEventListener("click", function () {
-        const patientName = document.getElementById("patient-search").value.trim();
-        if (!patientName) {
-            alert("환자 이름을 입력하세요.");
-            return;
-        }
-
-        fetch(`/dashboard/search?newname=${encodeURIComponent(patientName)}`)
-            .then(response => response.json())
-            .then(data => {
-                const suggestionBox = document.getElementById("new-patient-search"); // new-patient-search는 결과를 저장할 요소
-                suggestionBox.innerHTML = ""; // 기존 결과 초기화
-                if (data.result && data.result.length > 0) {
-                    let list = document.createElement("ul");
-                    list.classList.add("suggestion-list");
-                    data.result.forEach(item => {
-                        let li = document.createElement("li");
-                        li.textContent = `${item.name} (${item.birth_date})`;
-
-                        li.addEventListener("click", () => {
-                            //1) Send to backend
-                            fetch("/dashboard/registrations", {
-                                method: "POST",
-                                headers: {"Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    patient_name: item.name,
-                                    birth_date:     item.birth_date
-                                })
-                            })
-                            .then(res => {
-                                if (!res.ok) throw new Error("등록 실패");
-                                return res.json(); // {id, patient_name, birth_date, status}
-                            })
-                            .then(reg => {
-                                // 2) On Success, render it in my table
-                                addPatientToTable({
-                                    id:         reg.id,
-                                    name:       reg.patient_name,
-                                    birth_date: reg.birth_date,
-                                    status:     reg.status
-                                });
-                            })
-                            .catch(err => {
-                                console.error(err);
-                                alert("환자 등록에 실패했습니다.");
-                            });
-
-                            //3) Clear out suggestions&input box
-                            suggestionBox.innerHTML = "";
-                            document.getElementById("patient-search").value = "";
-
-                        });
-                        list.appendChild(li);
-                    });
-                    suggestionBox.appendChild(list);
-                } else {
-                    suggestionBox.innerHTML = "<div class='no-result'>해당 환자 없음. 신규 등록 가능합니다.</div>";
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("데이터를 불러오는데 실패했습니다.");
-            });
-    });
+      // ─── D) Confirm‑patient search & register ───
+      document.getElementById("confirm-patient").addEventListener("click", function () {
+          const patientName = document.getElementById("patient-search").value.trim();
+          if (!patientName) {
+              alert("환자 이름을 입력하세요.");
+              return;
+          }
   
-    // ─── E) New‑patient popup ───
-    // 신환등록 버튼을 눌렀을 때 작용하는 코드들
-    document.getElementById("new-patient").addEventListener("click", function () {
-        const formHtml = `
-        <div class="popup-overlay">
-        <div id="new-patient-form" class="popup-form">
-            <h3>신환 등록</h3>
-            <label>
-            이름
-            <input type="text" id="new-patient-name" placeholder="이름을 입력하세요">
-            </label>
-            <label>
-            생년월일
-            <input type="text" id="new-patient-birth" maxlength="6" placeholder="6자리 입력">
-            </label>
-            <div class="button-group">
-            <button id="save-new-patient">저장</button>
-            <button id="cancel-new-patient">취소</button>
-            </div>
-        </div>
-        </div>
-        `;
-        const container = document.createElement("div");
-        container.innerHTML = formHtml;
-        document.body.appendChild(container);
-
-        function close() { document.body.removeChild(container); }
-
-        container.querySelector("#save-new-patient").addEventListener("click", () => {
-            const name = container.querySelector("#new-patient-name").value.trim();
-            const birth = container.querySelector("#new-patient-birth").value.trim();
-            if (!name || birth.length !== 6) {
-                return alert("이름과 생년월일(6자리)을 정확히 입력하세요.");
-            }
-            fetch("/dashboard/add_new_patient", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ name, birth_date: birth })
-            })
-                .then(res => res.ok ? res.json() : Promise.reject("등록 실패"))
-                .then(() => {
-                    alert("환자가 성공적으로 등록되었습니다.");
-                    close();
-                })
-                .catch(err => { console.error(err); alert("등록 중 오류 발생"); });
-        });
-
-        container.querySelector("#cancel-new-patient").addEventListener("click", close);
-        // 오버레이 외곽 클릭 시에도 닫기
-        container.querySelector(".popup-overlay").addEventListener("click", e => {
-            if (e.target === container.querySelector(".popup-overlay")) close();
-        });
-    });
-
+          fetch(`/dashboard/search?newname=${encodeURIComponent(patientName)}`)
+              .then(response => response.json())
+              .then(data => {
+                  const suggestionBox = document.getElementById("new-patient-search");
+                  suggestionBox.innerHTML = "";
+                  if (data.result && data.result.length > 0) {
+                      let list = document.createElement("ul");
+                      list.classList.add("suggestion-list");
+                      data.result.forEach(item => {
+                          let li = document.createElement("li");
+                          li.textContent = `${item.name} (${item.birth_date})`;
+  
+                          li.addEventListener("click", () => {
+                              fetch("/dashboard/registrations/add", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                                  body: new URLSearchParams({ 
+                                  patient_name: item.name,
+                                  birth_date: item.birth_date
+                                  })
+                              })
+                                  .then(res => {
+                                      if (!res.ok) return res.json().then(data => { throw new Error(data.message); });
+                                      return res.json();
+                                  })
+                                  .then(reg => {
+                                      addPatientToTable({
+                                          id: reg.id,
+                                          name: reg.patient_name,
+                                          birth_date: reg.birth_date,
+                                          status: reg.status
+                                      });
+                                      alert("환자 등록 완료!");
+                                  })
+                                  .catch(err => {
+                                      console.error(err);
+                                      alert("등록 오류: " + err.message);
+                                  });
+  
+                              suggestionBox.innerHTML = "";
+                              document.getElementById("patient-search").value = "";
+                          });
+                          list.appendChild(li);
+                      });
+                      suggestionBox.appendChild(list);
+                  } else {
+                      suggestionBox.innerHTML = "<div class='no-result'>해당 환자 없음. 신규 등록 가능합니다.</div>";
+                  }
+              })
+              .catch(error => {
+                  console.error("Error:", error);
+                  alert("데이터를 불러오는데 실패했습니다.");
+              });
+      });
+  
+      // ─── E) New‑patient popup ───
+      document.getElementById("new-patient").addEventListener("click", function () {
+          const formHtml = `
+          <div class="popup-overlay">
+          <div id="new-patient-form" class="popup-form">
+              <h3>신환 등록</h3>
+              <label>이름<input type="text" id="new-patient-name" placeholder="이름을 입력하세요"></label>
+              <label>생년월일<input type="text" id="new-patient-birth" maxlength="6" placeholder="6자리 입력"></label>
+              <div class="button-group">
+                  <button id="save-new-patient">저장</button>
+                  <button id="cancel-new-patient">취소</button>
+              </div>
+          </div>
+          </div>`;
+          const container = document.createElement("div");
+          container.innerHTML = formHtml;
+          document.body.appendChild(container);
+  
+          function close() { document.body.removeChild(container); }
+  
+          container.querySelector("#save-new-patient").addEventListener("click", () => {
+              const name = container.querySelector("#new-patient-name").value.trim();
+              const birth = container.querySelector("#new-patient-birth").value.trim();
+              if (!name || birth.length !== 6) {
+                  return alert("이름과 생년월일(6자리)을 정확히 입력하세요.");
+              }
+              fetch("/dashboard/add_new_patient", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  body: new URLSearchParams({ name, birth_date: birth })
+              })
+                  .then(res => res.ok ? res.json() : Promise.reject("등록 실패"))
+                  .then(() => {
+                      alert("환자가 성공적으로 등록되었습니다.");
+                      close();
+                  })
+                  .catch(err => { console.error(err); alert("등록 중 오류 발생"); });
+          });
+  
+          container.querySelector("#cancel-new-patient").addEventListener("click", close);
+      });
+  
+      // ─── F) 오른쪽 환자 이름 검색 ───
+      document.getElementById("confirm-name-search").addEventListener("click", function () {
+          const searchName = document.getElementById("patient-name-search").value.trim();
+          if (!searchName) {
+              alert("환자 이름을 입력하세요.");
+              return;
+          }
+  
+          fetch(`/dashboard/search?newname=${encodeURIComponent(searchName)}`)
+              .then(response => response.json())
+              .then(data => {
+                  const resultBox = document.getElementById("search-results");
+                  resultBox.innerHTML = "";
+                  if (data.result && data.result.length > 0) {
+                      let list = document.createElement("ul");
+                      list.classList.add("suggestion-list");
+                      data.result.forEach(item => {
+                          let li = document.createElement("li");
+                          li.textContent = `${item.name} (${item.birth_date})`;
+                          li.addEventListener("click", () => {
+                              window.location.href = `/patient_emr?name=${encodeURIComponent(item.name)}&birth_date=${encodeURIComponent(item.birth_date)}`;
+                          });
+                          list.appendChild(li);
+                      });
+                      resultBox.appendChild(list);
+                  } else {
+                      resultBox.innerHTML = "<div class='no-result'>해당 환자가 없습니다!</div>";
+                  }
+              });
+      });
   });
-  
-
 
 // 신규 등록 버튼 (별도 AJAX 처리 가능)
 // document.getElementById("new-patient").addEventListener("click", function () {
