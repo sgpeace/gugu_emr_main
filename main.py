@@ -17,7 +17,7 @@ from typing import List, Optional
 
 
 # === DATABASE SETUP ===
-DATABASE_URL = "mysql+pymysql://root:Tmdrnjs159!@localhost/emr_db"
+DATABASE_URL = "mysql+pymysql://root:134340@localhost/emr_db"
 engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
 SessionLocal = sessionmaker(bind=engine)
@@ -389,6 +389,7 @@ async def patient_emr(
         "patient": patient,
         "visit_records": visit_records,
         "latest_record": latest_record,
+        "emr": latest_record,   
         "cc": cc,
         "pi": pi
     })
@@ -705,36 +706,53 @@ async def save_new_patient_chart(
 @app.get("/patient_emr_nur", response_class=HTMLResponse)
 def patient_emr_nur(
     request: Request,
-    emr_id: int,
+    name: str,
+    birth_date: str,
     db: Session = Depends(get_db)
 ):
-    emr = db.query(EMR).filter(EMR.id == emr_id).first()
-    if not emr:
-        raise HTTPException(404, "해당 진료기록을 찾을 수 없습니다.")
+    # 1) 환자 조회 (없으면 404)
+    patient = db.query(Patient)\
+                .filter(Patient.name == name, Patient.birth_date == birth_date)\
+                .first()
+    if not patient:
+        raise HTTPException(404, "환자를 찾을 수 없습니다.")
+
+    # 2) 최신 EMR 조회 (없어도 에러 내지 않고 None 처리)
+    emr = db.query(EMR)\
+            .filter(EMR.patient_id == patient.id)\
+            .order_by(EMR.record_date.desc())\
+            .first()
+
+    # 3) 템플릿에 emr가 None일 수도 있게 넘김
     return templates.TemplateResponse("patient_emr_nur.html", {
-        "request": request,
-        "emr": emr
+        "request":     request,
+        "name":        name,
+        "birth_date":  birth_date,
+        "emr":         emr      # emr == None 가능
     })
 
 @app.post("/patient_emr_nur")
 def save_patient_emr_nur(
-    emr_id:          int   = Form(...),
-    iv_route:        str   = Form(None),
-    nursing_result:  str   = Form(None),
-    sign_nurse:      str   = Form(None),
-    nurse_note:      str   = Form(None),
-    db:              Session = Depends(get_db)
+    emr_id:         int     = Form(...),
+    iv_route:       str     = Form(None),
+    nursing_result: str     = Form(None),
+    sign_nurse:     str     = Form(None),
+    nurse_note:     str     = Form(None),
+    db:             Session = Depends(get_db)
 ):
+    # 1) 해당 EMR 레코드 조회
     emr = db.query(EMR).filter(EMR.id == emr_id).first()
     if not emr:
-        raise HTTPException(404, "해당 진료기록을 찾을 수 없습니다.")
+        raise HTTPException(status_code=404, detail="해당 진료기록을 찾을 수 없습니다.")
+    # 2) 간호부 전용 필드 업데이트
     emr.iv_route       = iv_route
     emr.nursing_result = nursing_result
     emr.sign_nurse     = sign_nurse
     emr.nurse_note     = nurse_note
+    # 3) DB 반영
     db.commit()
+    # 4) 저장 후 대시보드로 리다이렉트
     return RedirectResponse(url="/dashboard", status_code=302)
-
 
 
 

@@ -34,6 +34,7 @@
     <form id="new-emr-form" action="/patient_emr/new_emr" method="post">
       <input type="hidden" name="name" value="{{ name }}">
       <input type="hidden" name="birth_date" value="{{ birth_date }}">
+      <input type="hidden" id="emr_id" name="emr_id" value="{{ emr.id }}">
 
       <!-- 1. Date -->
       <div class="form-group date-inline">

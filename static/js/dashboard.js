@@ -258,48 +258,40 @@ document.addEventListener("DOMContentLoaded", () => {
 function processCompletedPatient() {
   const completed = sessionStorage.getItem('completedPatient');
   if (!completed) return;
+  const [name, birth, ivFlag] = completed.split('||');
 
-  const [name, birth, ivFlag, emrId] = completed.split('||');  // emrId 추가 분해
-  const treatmentList = document.getElementById('treatment-list');
+  const treatmentList  = document.getElementById('treatment-list');
   const medicationList = document.getElementById('medication-list');
-  const infusionList = document.getElementById('infusion-list');
+  const infusionList   = document.getElementById('infusion-list');
 
-  // 1) 테이블 상태 업데이트
-  document.querySelectorAll('#patient-list tr').forEach(row => {
-    const cell = row.querySelector('td:nth-child(2)');
-    if (cell && cell.textContent.includes(name)) {
-      row.querySelector('.status-cell').textContent = ivFlag === 'O' ? '수액' : '복약';
-    }
-  });
-
-  // 2) treatment → medication (약국용 링크)
+  // 2) treatment → medication-list
   Array.from(treatmentList.children).forEach(li => {
     if (li.textContent.includes(name)) {
-      // 이동하는 li 내부의 <a>를 약국 EMR 링크로 교체
+      // 기존 링크(li 안 a 태그)를 제거하고, 새로 name/birth로 href를 붙입니다.
       const newLi = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = `/patient_emr_pha?emr_id=${emrId}`;
-      a.innerHTML = `${name} <span class="small-birthdate">(${birth})</span>`;
+      const a     = document.createElement('a');
+      a.href      = `/patient_emr_pha?name=${encodeURIComponent(name)}&birth_date=${encodeURIComponent(birth)}`;
+      a.textContent = `${name} (${birth})`;
       newLi.appendChild(a);
       medicationList.appendChild(newLi);
       treatmentList.removeChild(li);
     }
   });
 
-  // 3) IV Order='O'인 경우에만 infusion에 복제
+  // 3) IV Order='O'인 경우 infusion-list
   if (ivFlag === 'O') {
     Array.from(medicationList.children).forEach(li => {
       if (li.textContent.includes(name)) {
-        const nurLi = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = `/patient_emr_nur?emr_id=${emrId}`;
-        a.innerHTML = `${name} <span class="small-birthdate">(${birth})</span>`;
-        nurLi.appendChild(a);
-        infusionList.appendChild(nurLi);
+        const newLi = document.createElement('li');
+        const a     = document.createElement('a');
+        a.href      = `/patient_emr_nur?name=${encodeURIComponent(name)}&birth_date=${encodeURIComponent(birth)}`;
+        a.textContent = `${name} (${birth})`;
+        newLi.appendChild(a);
+        infusionList.appendChild(newLi);
       }
     });
   }
 
-  // 4) 이제 한 번만 처리하고 제거
+  // 4) 세션 정리
   sessionStorage.removeItem('completedPatient');
 }

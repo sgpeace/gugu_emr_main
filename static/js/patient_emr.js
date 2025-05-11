@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     emrForm.addEventListener("submit", async function (e) {
         e.preventDefault();
-
         const formData = new FormData(emrForm);
 
         try {
@@ -16,14 +15,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "POST",
                 body: formData,
             });
-
             const result = await response.json();
 
             if (response.ok) {
                 showToast(result.message || "저장되었습니다.");
-                // 선택적으로 폼 리셋 또는 페이지 갱신 가능
-                // emrForm.reset();
-                // location.reload();
+
+                // ★ 서버가 돌려준 emr_id를 쿼리로 붙여서 페이지 리로드
+                if (result.emr_id) {
+                    const name = encodeURIComponent(document.querySelector('input[name="name"]').value);
+                    const birth_date = encodeURIComponent(document.querySelector('input[name="birth_date"]').value);
+                    const emrId = result.emr_id;
+                    window.location.href = `/patient_emr?name=${name}&birth_date=${birth_date}&emr_id=${emrId}`;
+                }
             } else {
                 showToast(result.message || "저장 중 오류 발생", true);
             }
@@ -32,6 +35,17 @@ document.addEventListener("DOMContentLoaded", function () {
             showToast("서버 오류가 발생했습니다.", true);
         }
     });
+
+    function showToast(message, isError = false) {
+        toast.textContent = message;
+        toast.classList.remove("hidden");
+        toast.classList.add(isError ? "error" : "success");
+
+        setTimeout(() => {
+            toast.classList.add("hidden");
+            toast.classList.remove("error", "success");
+        }, 3000);
+    }
 
     function showToast(message, isError = false) {
         toast.textContent = message;
@@ -98,7 +112,7 @@ document.querySelectorAll(".record-link").forEach(link => {
         try {
             // Fetch API로 /patient_emr/past_emr 엔드포인트 호출
             const response = await fetch(`/patient_emr/past_emr?visit_date=${visitDate}&name=${encodeURIComponent(name)}`);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -219,7 +233,6 @@ function populateFormWithData(data) {
 
 
 // ─── 모달 관련 전체 코드 ────────────────────────────────────
-// 1) 모달 요소 가져오기
 const modal = document.getElementById('complete-modal');
 const modalCC = document.getElementById('modal-cc');
 const modalBP = document.getElementById('modal-bp');
@@ -238,8 +251,10 @@ btnComplete.addEventListener('click', () => {
     const ccVal = document.querySelector('textarea[name="cc"]').value.trim();
     const bpVal = document.querySelector('input[name="bp"]').value.trim();
     const planVal = Array.from(document.querySelectorAll('input[name^="plan_desc_"]'))
-        .map(el => el.value.trim()).filter(v => v).join('; ');
-    // IV Order는 라디오 버튼에서 가져오기
+        .map(el => el.value.trim())
+        .filter(v => v)
+        .join('; ');
+    // IV Order 읽기
     const ivRadio = document.querySelector('input[name="iv_order"]:checked');
     const ivVal = ivRadio ? ivRadio.value : '';
 
@@ -249,7 +264,6 @@ btnComplete.addEventListener('click', () => {
     modalPlan.textContent = planVal || '미입력';
     modalIV.textContent = ivVal || '미입력';
 
-    // 서명·에러 초기화 & 모달 띄우기
     modalSign.value = '';
     modalError.textContent = '';
     modal.style.display = 'block';
@@ -265,7 +279,8 @@ window.addEventListener('click', e => {
 
 // 4) 확인 버튼
 btnConfirm.addEventListener('click', e => {
-    e.preventDefault();                   // ★ stop any form-submit
+    e.preventDefault();  // 폼 서밋 방지
+
     const userSign = modalSign.value.trim();
     const realSign = document.querySelector('input[name="sign_dr"]').value.trim();
     if (userSign !== realSign) {
@@ -273,12 +288,20 @@ btnConfirm.addEventListener('click', e => {
         return;
     }
 
-    // 완료된 환자 정보(이름 || 생년월일 || IV 여부) 저장
-    const name = document.querySelector('input[name="name"]').value.trim();
-    const birth = document.querySelector('input[name="birth_date"]').value.trim();
+    // URL query에서 emr_id 꺼내기
+    const params = new URLSearchParams(window.location.search);
+    const emrId = params.get('emr_id') || '';
+
+    const name = document.querySelector('input[name="name"]').value;
+    const birth = document.querySelector('input[name="birth_date"]').value;
     const ivRadio2 = document.querySelector('input[name="iv_order"]:checked');
     const ivFlag = ivRadio2 ? ivRadio2.value : '';
-    sessionStorage.setItem('completedPatient', `${name}||${birth}||${ivFlag}`);
+
+    // 세션에 저장 (대시보드로 전달될 정보)
+    sessionStorage.setItem(
+        'completedPatient',
+        `${name}||${birth}||${ivFlag}||${emrId}`
+    );
 
     // 대시보드로 이동
     window.location.href = '/dashboard';

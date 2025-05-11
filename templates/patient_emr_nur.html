@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}간호 차트 입력 – GuGu Medical Center EMR{% endblock %}
+
+{% block content %}
+<!-- 1) 뒤로가기 버튼 -->
+<a href="/dashboard" class="back-button">← 대시보드로 돌아가기</a>
+
+<!-- (토스트 메시지) patient_emr.html 에도 있던 요소 -->
+<div id="custom-toast" class="toast hidden"></div>
+
+<!-- 2) 환자 헤더 -->
+<div class="patient-header">
+  <h1 class="patient-title">{{ name }} 님 <span>({{ birth_date }})</span></h1>
+  {% if emr %}
+  <p>방문일: {{ emr.record_date.strftime('%Y-%m-%d') }}</p>
+  {% else %}
+  <p>방문일: 기록 없음</p>
+  {% endif %}
+</div>
+
+<!-- 3) 바로 간호부 전용 폼 패널 -->
+<div class="emr-layout">
+  <div class="emr-card form-panel">
+    <h2>간호 차트 입력</h2>
+
+    <form action="/patient_emr_nur" method="post">
+      <input type="hidden" name="emr_id" value="{{ emr.id if emr else '' }}">
+
+      <!-- ── Read-only 기존 진료 정보 ──────────────────────────── -->
+      <fieldset class="section-fieldset">
+        <legend>기본 진료 정보</legend>
+        <div class="no-wrap">
+          <div class="inline-item">
+            <label>혈압 (BP)</label>
+            <div class="readonly-value">{{ emr.bp or '—' }}</div>
+          </div>
+          <div class="inline-item">
+            <label>맥박 (HR)</label>
+            <div class="readonly-value">{{ emr.hr or '—' }}</div>
+          </div>
+          <div class="inline-item">
+            <label>식후 혈당 (BST)</label>
+            <div class="readonly-value">{{ emr.bst or '—' }}</div>
+          </div>
+          <div class="inline-item">
+            <label>수액처방 (IV Order)</label>
+            <div class="readonly-value">{{ emr.iv_order or '—' }}</div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ── 간호부 입력란 ─────────────────────────── -->
+      <fieldset class="section-fieldset">
+        <legend>간호 기록</legend>
+        <div class="no-wrap">
+          <div class="inline-item" style="flex: 2;">
+            <label for="iv_route">IV 경로</label>
+            <input type="text" id="iv_route" name="iv_route" value="{{ emr.iv_route or '' }}">
+          </div>
+          <div class="inline-item" style="flex: 1;">
+            <label for="nursing_result">간호 수행 결과</label>
+            <input type="text" id="nursing_result" name="nursing_result" value="{{ emr.nursing_result or '' }}"
+              placeholder="성공 / 실패">
+          </div>
+          <div class="inline-item" style="flex: 1;">
+            <label for="sign_nurse">SN (학생 간호사)</label>
+            <input type="text" id="sign_nurse" name="sign_nurse" value="{{ emr.sign_nurse or '' }}" placeholder="서명">
+          </div>
+        </div>
+
+        <!-- 기존 memo/특이사항은 다음 줄에 -->
+        <div class="form-group">
+          <label for="nurse_note">메모 / 특이사항</label>
+          <textarea id="nurse_note" name="nurse_note" rows="2">{{ emr.nurse_note or '' }}</textarea>
+        </div>
+      </fieldset>
+
+      <!-- ── 제출 버튼 ──────────────────────────── -->
+      <div class="button-group">
+        <button type="submit" class="button">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<!-- 필요하다면 JS 추가 -->
+{% endblock %}
