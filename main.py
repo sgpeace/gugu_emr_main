@@ -132,7 +132,7 @@ class RegistrationOut(BaseModel):
     birth_date:   str
     status:       str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class RegistrationCreate(BaseModel):
     patient_name:   str
@@ -755,6 +755,46 @@ def save_patient_emr_nur(
     return RedirectResponse(url="/dashboard", status_code=302)
 
 
+
+# ─── 약국부 EMR 폼 ───────────────────────────────────────
+# ─── 약국부 EMR 폼 ───────────────────────────────────────
+@app.get("/patient_emr_pha", response_class=HTMLResponse)
+async def patient_emr_pha(
+    request: Request,
+    name: str,
+    birth_date: str,
+    db: Session = Depends(get_db),
+):
+    # 1) Patient 조회 (birth_date는 DB에 저장된 문자열과 동일하게 비교)
+    patient = (
+        db.query(Patient)
+          .filter(Patient.name == name, Patient.birth_date == birth_date)
+          .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="환자를 찾을 수 없습니다.")
+
+    # 2) 해당 환자의 모든 EMR(진료 기록) 조회
+    visit_records = (
+        db.query(EMR)
+          .filter(EMR.patient_id == patient.id)
+          .order_by(EMR.record_date.desc())
+          .all()
+    )
+
+    # 3) 최신 EMR 한 건
+    emr = visit_records[0] if visit_records else None
+    if not emr:
+        raise HTTPException(status_code=404, detail="아직 생성된 진료 기록이 없습니다.")
+
+    # 4) 템플릿 렌더
+    return templates.TemplateResponse("patient_emr_pha.html", {
+        "request":       request,
+        "name":          name,
+        "birth_date":    birth_date,
+        "visit_records": visit_records,
+        "emr":           emr
+    })
 
 
 # @app.post("/patient_emr/complete_visit")
