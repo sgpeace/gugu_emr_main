@@ -98,7 +98,7 @@ document.querySelectorAll(".record-link").forEach(link => {
         try {
             // Fetch API로 /patient_emr/past_emr 엔드포인트 호출
             const response = await fetch(`/patient_emr/past_emr?visit_date=${visitDate}&name=${encodeURIComponent(name)}`);
-
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -160,6 +160,126 @@ function populateFormWithData(data) {
     document.querySelector("input[name='cdr']").value = data.cdr || "";
     document.querySelector("input[name='psqi']").value = data.psqi || "";
     document.querySelector("input[name='isi']").value = data.isi || "";
+    document.querySelector("input[name='gds']").value = data.gds || "";
 
+    // (4-1) Free input rows #1–4
+    for (let i = 1; i <= 4; i++) {
+        document.querySelector(`input[name='plan_desc_${i}']`).value = data[`plan_desc_${i}`] || "";
+        document.querySelector(`input[name='plan_method_${i}']`).value = data[`plan_method_${i}`] || "";
+        document.querySelector(`input[name='plan_period_${i}']`).value = data[`plan_period_${i}`] || "";
+    }
 
+    // (4-2) 파스
+    if (data.plan_pas_5) {
+        document.querySelector(`input[name='plan_pas_5'][value='${data.plan_pas_5}']`).checked = true;
+    }
+    if (data.plan_pas_period_5) {
+        document.querySelector(`input[name='plan_pas_period_5'][value='${data.plan_pas_period_5}']`).checked = true;
+    }
+
+    // (4-3) 비타민제(삐콤)
+    if (data.plan_bear_6) {
+        document.querySelector(`input[name='plan_bear_6'][value='${data.plan_bear_6}']`).checked = true;
+    }
+
+    // (4-4) 근육통
+    if (data.plan_anti_7) {
+        document.querySelector(`input[name='plan_anti_7'][value='${data.plan_anti_7}']`).checked = true;
+    }
+    if (data.plan_ruma_7) {
+        document.querySelector(`input[name='plan_ruma_7'][value='${data.plan_ruma_7}']`).checked = true;
+    }
+
+    // (4-5) 발백선
+    document.querySelector("input[name='plan_tinea_site_8']").value = data.plan_tinea_site_8 || "";
+    if (data.plan_tinea_8) {
+        document.querySelector(`input[name='plan_tinea_8'][value='${data.plan_tinea_8}']`).checked = true;
+    }
+
+    // (4-6) 피부염
+    document.querySelector("input[name='plan_derma_site_9']").value = data.plan_derma_site_9 || "";
+    if (data.plan_derma_9) {
+        document.querySelector(`input[name='plan_derma_9'][value='${data.plan_derma_9}']`).checked = true;
+    }
+
+    // (5) Medication Counseling
+    document.querySelector("textarea[name='med_counseling']").value = data.med_counseling || "";
+
+    // (6) IV Order
+    if (data.iv_order) {
+        document.querySelector(`input[name='iv_order'][value='${data.iv_order}']`).checked = true;
+    }
+
+    // (7) Signatures
+    document.querySelector("input[name='sign_dr']").value = data.sign_dr || "";
+    document.querySelector("input[name='sign_nurse']").value = data.sign_nurse || "";
+    document.querySelector("input[name='sign_pharmacist']").value = data.sign_pharmacist || "";
 }
+
+
+
+// ─── 모달 관련 전체 코드 ────────────────────────────────────
+// 1) 모달 요소 가져오기
+const modal = document.getElementById('complete-modal');
+const modalCC = document.getElementById('modal-cc');
+const modalBP = document.getElementById('modal-bp');
+const modalPlan = document.getElementById('modal-plan');
+const modalIV = document.getElementById('modal-iv');
+const modalSign = document.getElementById('modal-sign');
+const modalError = document.getElementById('modal-error');
+const btnComplete = document.querySelector('.btn-complete');
+const btnClose = modal.querySelector('.close-button');
+const btnCancel = document.getElementById('cancel-complete');
+const btnConfirm = document.getElementById('confirm-complete');
+
+// 2) “진료 완료” 버튼 클릭
+btnComplete.addEventListener('click', () => {
+    // CC, BP, Plan 읽기
+    const ccVal = document.querySelector('textarea[name="cc"]').value.trim();
+    const bpVal = document.querySelector('input[name="bp"]').value.trim();
+    const planVal = Array.from(document.querySelectorAll('input[name^="plan_desc_"]'))
+        .map(el => el.value.trim()).filter(v => v).join('; ');
+    // IV Order는 라디오 버튼에서 가져오기
+    const ivRadio = document.querySelector('input[name="iv_order"]:checked');
+    const ivVal = ivRadio ? ivRadio.value : '';
+
+    // 모달에 값 채우기
+    modalCC.textContent = ccVal || '미입력';
+    modalBP.textContent = bpVal || '미입력';
+    modalPlan.textContent = planVal || '미입력';
+    modalIV.textContent = ivVal || '미입력';
+
+    // 서명·에러 초기화 & 모달 띄우기
+    modalSign.value = '';
+    modalError.textContent = '';
+    modal.style.display = 'block';
+});
+
+// 3) 모달 닫기
+function closeModal() { modal.style.display = 'none'; }
+btnClose.addEventListener('click', closeModal);
+btnCancel.addEventListener('click', closeModal);
+window.addEventListener('click', e => {
+    if (e.target === modal) closeModal();
+});
+
+// 4) 확인 버튼
+btnConfirm.addEventListener('click', e => {
+    e.preventDefault();                   // ★ stop any form-submit
+    const userSign = modalSign.value.trim();
+    const realSign = document.querySelector('input[name="sign_dr"]').value.trim();
+    if (userSign !== realSign) {
+        modalError.textContent = '서명이 일치하지 않습니다. 다시 확인하세요.';
+        return;
+    }
+
+    // 완료된 환자 정보(이름 || 생년월일 || IV 여부) 저장
+    const name = document.querySelector('input[name="name"]').value.trim();
+    const birth = document.querySelector('input[name="birth_date"]').value.trim();
+    const ivRadio2 = document.querySelector('input[name="iv_order"]:checked');
+    const ivFlag = ivRadio2 ? ivRadio2.value : '';
+    sessionStorage.setItem('completedPatient', `${name}||${birth}||${ivFlag}`);
+
+    // 대시보드로 이동
+    window.location.href = '/dashboard';
+});
