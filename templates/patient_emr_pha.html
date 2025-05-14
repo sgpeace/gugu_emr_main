@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}약국 차트 조회 – GuGu Medical Center EMR{% endblock %}
+
+{% block content %}
+<a href="/dashboard" class="back-button">← 메인 대시보드</a>
+
+<div id="custom-toast" class="toast hidden"></div>
+
+<div class="patient-header">
+    <h1 class="patient-title">
+        {{ emr.patient.name }} 님 <span>({{ emr.patient.birth_date }})</span>
+    </h1>
+    <p>방문일: {{ emr.record_date.strftime('%Y-%m-%d') }}</p>
+</div>
+
+<div class="emr-layout">
+
+    <!-- 방문 기록 -->
+    <div class="emr-card visits-panel">
+        <h2>방문 기록</h2>
+        <ul>
+            {% for record in visit_records %}
+            <li data-visit-date="{{ record.record_date.strftime('%Y-%m-%d') }}">
+                <a href="#" class="record-link">{{ record.record_date.strftime('%Y-%m-%d') }}</a>
+            </li>
+            {% else %}
+            <li>진료 기록이 없습니다.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- 상세 진료 정보 (읽기 전용) + 서명란 -->
+    <div class="emr-card form-panel">
+        <h2>상세 진료 정보</h2>
+        <form action="/patient_emr_pha" method="post">
+            <input type="hidden" name="emr_id" value="{{ emr.id }}">
+
+            <!-- 1) Vital Signs & IV Order (4컬럼) -->
+            <fieldset class="section-fieldset">
+                <legend>Vital Signs / IV Order</legend>
+                <div class="no-wrap">
+                    <div class="inline-item">
+                        <label>혈압 (BP)</label>
+                        <div class="readonly-value">{{ emr.bp or '—' }}</div>
+                    </div>
+                    <div class="inline-item">
+                        <label>맥박 (HR)</label>
+                        <div class="readonly-value">{{ emr.hr or '—' }}</div>
+                    </div>
+                    <div class="inline-item">
+                        <label>식후 혈당 (BST)</label>
+                        <div class="readonly-value">{{ emr.bst or '—' }}</div>
+                    </div>
+                    <div class="inline-item">
+                        <label>수액처방 (IV Order)</label>
+                        <div class="readonly-value">{{ emr.iv_order or '—' }}</div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- 2) C.C. (주호소) -->
+            <fieldset class="section-fieldset">
+                <legend>주호소 (C.C.)</legend>
+                <div class="readonly-value">{{ emr.cc or '—' }}</div>
+            </fieldset>
+
+            <!-- 3) P.I. (병력) -->
+            <fieldset class="section-fieldset">
+                <legend>P.I. (병력)</legend>
+                <div class="readonly-value">{{ emr.pi or '—' }}</div>
+            </fieldset>
+
+            <!-- 4) Prescription — Plan -->
+            <fieldset class="form-section">
+                <legend>Plan</legend>
+                <table class="plan-table">
+                    <colgroup>
+                        <col class="col-num">
+                        <col class="col-desc">
+                        <col class="col-method">
+                        <col class="col-period">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Description</th>
+                            <th>Method</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in range(1,5) %}
+                        <tr>
+                            <td>{{ i }}</td>
+                            <td>
+                                <div class="readonly-value">{{ emr['plan_desc_' ~ i] or '' }}</div>
+                            </td>
+                            <td>
+                                <div class="readonly-value">{{ emr['plan_method_' ~ i] or '' }}</div>
+                            </td>
+                            <td>
+                                <div class="readonly-value">{{ emr['plan_period_' ~ i] or '' }}</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <!-- 파스, 비타민, 근육통, 발백선, 피부염 행도 동일하게 출력하려면 아래와 같이 추가 -->
+                        <tr>
+                            <td>5</td>
+                            <td>파스</td>
+                            <td>
+                                <div class="readonly-value">{{ emr.plan_pas_5 or '' }}</div>
+                            </td>
+                            <td>
+                                <div class="readonly-value">{{ emr.plan_pas_period_5 or '' }}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>삐콤</td>
+                            <td colspan="2">
+                                <div class="readonly-value">{{ emr.plan_bear_6 or '' }}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>근육통</td>
+                            <td>
+                                <div class="readonly-value">{{ emr.plan_anti_7 or '' }}</div>
+                            </td>
+                            <td>
+                                <div class="readonly-value">{{ emr.plan_ruma_7 or '' }}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>발백선 (site: {{ emr.plan_tinea_site_8 or '' }})</td>
+                            <td></td>
+                            <td>
+                                <div class="readonly-value">{{ emr.plan_tinea_8 or '' }}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>피부염 (site: {{ emr.plan_derma_site_9 or '' }})</td>
+                            <td></td>
+                            <td>
+                                <div class="readonly-value">{{ emr.plan_derma_9 or '' }}</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
+
+            <!-- 5) Medication Counseling -->
+            <fieldset class="form-section">
+                <legend>Medication Counseling</legend>
+                <div class="readonly-value">{{ emr.med_counseling or '—' }}</div>
+            </fieldset>
+
+            <!-- 6) 복약지도 / 약사 서명란 -->
+            <fieldset class="section-fieldset">
+                <legend>서명</legend>
+                <div class="form-group">
+                    <label for="sign_med_counsel">복약지도 서명</label>
+                    <input type="text" id="sign_med_counsel" name="sign_med_counsel" placeholder="서명">
+                </div>
+                <div class="form-group">
+                    <label for="sign_pharmacist">약사 서명</label>
+                    <input type="text" id="sign_pharmacist" name="sign_pharmacist" placeholder="서명">
+                </div>
+            </fieldset>
+
+            <div class="button-group">
+                <button type="submit" class="button">저장</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/patient_emr.js"></script>
+{% endblock %}

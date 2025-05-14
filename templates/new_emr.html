@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}기본 정보 조사 - GuGu Medical Center EMR{% endblock %}
+
+{% block styles %}
+  {{ super() }}
+  <style>
+    /* 흡연 파트 전용 레이아웃 */
+    .smoking-group .smoking-inputs {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.75rem;        /* 아이템 사이 간격 */
+    }
+    .smoking-group .smoking-item {
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.25rem;        /* input ↔ label 사이 간격 */
+    }
+    .smoking-group .smoking-item input {
+      width: 3rem;         /* 숫자 입력칸 너비 */
+      padding: 4px;
+      font-size: 0.9rem;
+    }
+    .smoking-group .smoking-item span {
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- 상단 버튼 그룹 -->
+  <div class="button-group top-buttons" style="margin-bottom:1rem;">
+    <a href="/dashboard" class="back-button">← 메인 대시보드</a>
+    <button type="button" class="button" id="back-button">뒤로가기</button>
+  </div>
+
+  <div class="card">
+    <h2>기본 정보 조사</h2>
+    <form id="basic-info-form"
+          action="/patient_emr/new_patient_chart/information"
+          method="post">
+
+      <div class="form-grid">
+        <!-- 1) 작성일/정보제공자/작성자 -->
+        <div class="form-grid-three">
+          <div class="form-group">
+            <label for="form_date">작성일</label>
+            <input type="date" id="form_date" name="form_date"
+                   value="{{ chart.form_date if chart else '' }}" required>
+          </div>
+          <div class="form-group">
+            <label for="provider">정보제공자</label>
+            <select id="provider" name="provider" required>
+              <option value="">— 선택 —</option>
+              <option value="본인" {% if chart and chart.provider=="본인" %}selected{% endif %}>본인</option>
+              <option value="보호자" {% if chart and chart.provider=="보호자" %}selected{% endif %}>보호자</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="author">작성자</label>
+            <input type="text" id="author" name="author"
+                   value="{{ chart.author if chart else '' }}"
+                   placeholder="작성자 이름" required>
+          </div>
+        </div>
+
+        <!-- 2) 기본 정보 -->
+        <fieldset>
+          <legend>기본 정보</legend>
+          <div class="three-col">
+            <div class="form-group">
+              <label for="name">성명</label>
+              <input type="text" id="name" name="name"
+                     value="{{ chart.name if chart else '' }}"
+                     placeholder="예) 홍길동">
+            </div>
+            <div class="form-group">
+              <label for="gender">성별</label>
+              <select id="gender" name="gender">
+                <option value="">— 선택 —</option>
+                <option value="M" {% if chart and chart.gender=="M" %}selected{% endif %}>M</option>
+                <option value="F" {% if chart and chart.gender=="F" %}selected{% endif %}>F</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="birth_date">생년월일</label>
+              <input type="date" id="birth_date" name="birth_date"
+                     value="{{ chart.birth_date if chart else '' }}">
+            </div>
+            <div class="form-group address">
+              <label for="address">주소</label>
+              <input type="text" id="address" name="address"
+                     value="{{ chart.address if chart else '' }}"
+                     placeholder="예) 서울시 강남구 ...">
+            </div>
+            <div class="form-group">
+              <label for="occupation">직업</label>
+              <input type="text" id="occupation" name="occupation"
+                     value="{{ chart.occupation if chart else '' }}"
+                     placeholder="예) 회사원, 학생 등">
+            </div>
+            <div class="form-group">
+              <label for="religion">종교</label>
+              <input type="text" id="religion" name="religion"
+                     value="{{ chart.religion if chart else '' }}"
+                     placeholder="예) 기독교, 불교 등">
+            </div>
+            <div class="form-group">
+              <label for="education">교육정도</label>
+              <input type="text" id="education" name="education"
+                     value="{{ chart.education if chart else '' }}"
+                     placeholder="최종 학력">
+            </div>
+            <div class="form-group">
+              <label for="marital_status">가족사항</label>
+              <input type="text" id="marital_status" name="marital_status"
+                     value="{{ chart.marital_status if chart else '' }}"
+                     placeholder="기혼/미혼 등">
+            </div>
+            <div class="form-group">
+              <label for="other_info">기타사항</label>
+              <input
+                type="text"
+                id="other_info"
+                name="other_info"
+                value="{{ chart.other_info if chart else '' }}"
+                placeholder=""
+              >
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 3) Vital Signs -->
+        <fieldset>
+          <legend>Vital Signs (V/S)</legend>
+          <div class="grid-six">
+            {% for fld in ["bt","pr","rr","bp","height","weight"] %}
+            <div class="form-group">
+              <label for="{{ fld }}">{{ fld|upper }}</label>
+              <input
+                type="{{ fld in ['bt','height','weight'] and 'number' or 'text' }}"
+                id="{{ fld }}" name="{{ fld }}"
+                value="{{ getattr(chart, fld) if chart else '' }}"
+                {% if fld=="bp" %} placeholder="예) 120/80"{% endif %}>
+            </div>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+         <!-- 4) 과거력 및 현 복용약 -->
+        <fieldset>
+          <legend>과거력 및 현 복용약</legend>
+          <div class="two-col">
+
+            <!-- Allergy -->
+            <div class="form-group">
+              <label for="allergy">Allergy</label>
+              <select id="allergy" name="allergy"
+                      class="conditional-select"
+                      data-target="allergy_detail_group">
+                <option value="">— 선택 —</option>
+                <option value="무" {% if chart and chart.allergy=="무" %}selected{% endif %}>무</option>
+                <option value="유" {% if chart and chart.allergy=="유" %}selected{% endif %}>유</option>
+              </select>
+            </div>
+            <div class="form-group detail-group" id="allergy_detail_group">
+              <label for="allergy_detail">Allergy 세부</label>
+              <input type="text" id="allergy_detail" name="allergy_detail"
+                     value="{{ chart.allergy_detail if chart else '' }}"
+                     placeholder="음식/약/기타">
+            </div>
+
+            <!-- DM, HTN, HEPA, TB, OA, ETC -->
+            {% for item, field in [
+                 ("당뇨", "history_DM"),
+                 ("고혈압", "history_HTN"),
+                 ("간염", "history_HEPA"),
+                 ("결핵", "history_TB"),
+                 ("관절염", "history_OA"),
+                 ("기타", "history_ETC")
+               ] %}
+            <div class="form-group">
+              <label for="{{ field }}">{{ item }}</label>
+              <select id="{{ field }}" name="{{ field }}"
+                      class="conditional-select"
+                      data-target="{{ field }}_detail_group">
+                <option value="">— 선택 —</option>
+                <option value="무" {% if chart and getattr(chart, field)=="무" %}selected{% endif %}>무</option>
+                <option value="유" {% if chart and getattr(chart, field)=="유" %}selected{% endif %}>유</option>
+              </select>
+            </div>
+            <div class="form-group detail-group" id="{{ field }}_detail_group">
+              <label for="{{ field }}_detail">{{ item }} 세부</label>
+              <input type="text"
+                     id="{{ field }}_detail"
+                     name="{{ field }}_detail"
+                     value="{{ getattr(chart, field + '_detail') if chart else '' }}"
+                     placeholder="진단 시기/치료/약">
+            </div>
+            {% endfor %}
+
+          </div>
+        </fieldset>
+         <!-- 5) 생활습관 -->
+        <fieldset>
+          <legend>생활습관</legend>
+
+          <!-- 흡연 -->
+          <div class="form-group">
+            <label for="smoking">흡연</label>
+            <select id="smoking" name="smoking"
+                    class="conditional-select"
+                    data-target="smoking_detail_group">
+              <option value="">— 선택 —</option>
+              <option value="무" {% if chart and chart.smoking=="무" %}selected{% endif %}>무</option>
+              <option value="유" {% if chart and chart.smoking=="유" %}selected{% endif %}>유</option>
+            </select>
+          </div>
+          <div class="form-group detail-group" id="smoking_detail_group">
+            <label for="smoking_detail">흡연 세부</label>
+            <input
+              type="text"
+              id="smoking_detail"
+              name="smoking_detail"
+              value="{{ chart.smoking_detail if chart else '' }}"
+              placeholder="pack/day, years, PY">
+          </div>
+
+          <!-- 음주 -->
+          <div class="form-group">
+            <label for="drinking">음주</label>
+            <select id="drinking" name="drinking"
+                    class="conditional-select"
+                    data-target="drinking_detail_group">
+              <option value="">— 선택 —</option>
+              <option value="무" {% if chart and chart.drinking=="무" %}selected{% endif %}>무</option>
+              <option value="유" {% if chart and chart.drinking=="유" %}selected{% endif %}>유</option>
+            </select>
+          </div>
+          <div class="form-group detail-group" id="drinking_detail_group">
+            <label for="drinking_detail">음주 세부</label>
+            <input
+              type="text"
+              id="drinking_detail"
+              name="drinking_detail"
+              value="{{ chart.drinking_detail if chart else '' }}"
+              placeholder="회/1달, 잔/병/1회, 종류: 소주·맥주·막걸리·양주·기타">
+          </div>
+
+          <!-- 식사 -->
+          <div class="form-group full-span">
+            <label for="diet">식사</label>
+            <input
+              type="text"
+              id="diet"
+              name="diet"
+              value="{{ chart.diet if chart else '' }}"
+              placeholder="끼/일, 주식, 육류/채소류/유제품/과일, 수분/소금/커피">
+          </div>
+
+          <!-- 운동 -->
+          <div class="form-group">
+            <label for="exercise">운동</label>
+            <input
+              type="text"
+              id="exercise"
+              name="exercise"
+              value="{{ chart.exercise if chart else '' }}"
+              placeholder="종류, 규칙성, 분/시간/1회">
+          </div>
+
+          <!-- 수면 -->
+          <div class="form-group">
+            <label for="sleep">수면</label>
+            <input
+              type="text"
+              id="sleep"
+              name="sleep"
+              value="{{ chart.sleep if chart else '' }}"
+              placeholder="시간/일, 문제여부">
+          </div>
+
+          <!-- 배뇨 -->
+          <div class="form-group">
+            <label for="urination">배뇨</label>
+            <input
+              type="text"
+              id="urination"
+              name="urination"
+              value="{{ chart.urination if chart else '' }}"
+              placeholder="규칙/불규칙, 회/일, 빈뇨/혈뇨/지연뇨">
+          </div>
+
+          <!-- 배변 -->
+          <div class="form-group">
+            <label for="defecation">배변</label>
+            <input
+              type="text"
+              id="defecation"
+              name="defecation"
+              value="{{ chart.defecation if chart else '' }}"
+              placeholder="규칙/불규칙, 문제여부">
+          </div>
+        </fieldset>
+        <!-- 6) 의식상태 및 정서 상태 -->  
+        <fieldset>
+          <legend>의식상태 및 정서 상태</legend>
+          <div class="two-col">
+            <div class="form-group">
+              <label for="consciousness">의식상태</label>
+              <select id="consciousness" name="consciousness">
+                <option value="">— 선택 —</option>
+                <option value="명료" {% if chart and chart.consciousness=="명료" %}selected{% endif %}>명료</option>
+                <option value="기면" {% if chart and chart.consciousness=="기면" %}selected{% endif %}>기면</option>
+                <option value="혼미" {% if chart and chart.consciousness=="혼미" %}selected{% endif %}>혼미</option>
+                <option value="반의식" {% if chart and chart.consciousness=="반의식" %}selected{% endif %}>반의식</option>
+                <option value="무의식" {% if chart and chart.consciousness=="무의식" %}selected{% endif %}>무의식</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="communication">의사소통</label>
+              <select id="communication" name="communication">
+                <option value="">— 선택 —</option>
+                <option value="원만" {% if chart and chart.communication=="원만" %}selected{% endif %}>원만</option>
+                <option value="곤란" {% if chart and chart.communication=="곤란" %}selected{% endif %}>곤란</option>
+                <option value="불가능" {% if chart and chart.communication=="불가능" %}selected{% endif %}>불가능</option>
+              </select>
+            </div>
+            <div class="form-group full-span">
+              <label for="emotional_state">정서상태</label>
+              <select id="emotional_state" name="emotional_state">
+                <option value="">— 선택 —</option>
+                <option value="안정" {% if chart and chart.emotional_state=="안정" %}selected{% endif %}>안정</option>
+                <option value="불안정" {% if chart and chart.emotional_state=="불안정" %}selected{% endif %}>불안정</option>
+                <option value="불안" {% if chart and chart.emotional_state=="불안" %}selected{% endif %}>불안</option>
+                <option value="우울" {% if chart and chart.emotional_state=="우울" %}selected{% endif %}>우울</option>
+                <option value="기타" {% if chart and chart.emotional_state=="기타" %}selected{% endif %}>기타</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 7) 버튼 그룹 -->
+        <div class="button-group">
+          <button type="submit" class="button" id="save-button">저장</button>
+          <button type="button" class="button" onclick="history.back()">취소</button>
+        </div>
+
+      </div><!-- /.form-grid -->
+    </form>
+  </div><!-- /.card -->
+</div><!-- /.container -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // conditional-select 토글
+  document.querySelectorAll('.conditional-select').forEach(function(sel){
+    const target = document.getElementById(sel.dataset.target);
+    function toggle(){ target.style.display = sel.value==='유' ? 'block' : 'none'; }
+    sel.addEventListener('change', toggle);
+    toggle();
+  });
+});
+</script>
+
+{% endblock %}

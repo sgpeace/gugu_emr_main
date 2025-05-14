@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - GuGu Medical Center EMR{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <span class="clinic-name">GuGu Medical Center EMR</span>
+</div>
+
+<!-- ✅ 왼쪽-오른쪽 레이아웃: 하나의 dashboard-container 안에 포함시킴 -->
+<div class="dashboard-container">
+  
+  <!-- 왼쪽: 오늘의 환자 리스트 -->
+  <div class="patient-list-section card">
+    <h2>오늘의 환자</h2>
+    <table class="patient-table">
+      <thead>
+        <tr>
+          <th>순번</th>
+          <th>이름</th>
+          <th>상태</th>
+          <th>입장</th>
+          <th class="delete-col">삭제</th>
+        </tr>
+      </thead>
+      <tbody id="patient-list">
+        <!-- 환자 목록 동적 추가 -->
+      </tbody>
+    </table>
+
+    <div class="patient-controls">
+      <input type="text" id="patient-search" placeholder="환자 등록">
+      <div id="new-patient-search"></div>
+    </div>
+
+    <div class="button-group">
+      <button id="confirm-patient" class="confirm-button">확인</button>
+      <button id="new-patient" class="new-button">신환 등록</button>
+      <button id="manage-button" class="manage-button">Admin</button>
+    </div>
+
+    <div class="patient-actions">
+      <div class="button-group">
+        <button id="reset-patients" class="reset-button">초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 오른쪽: 상태별 환자 (진료중, 수액중, 복약중) 및 환자 검색 -->
+  <div class="status-section card">
+    <div class="status-container">
+      <div class="status-box" id="in-treatment">
+        <h3>진료중</h3>
+        <ul id="treatment-list"></ul>
+      </div>
+      <div class="status-box" id="in-infusion">
+        <h3>수액중</h3>
+        <ul id="infusion-list"></ul>
+      </div>
+      <div class="status-box" id="in-medication">
+        <h3>복약중</h3>
+        <ul id="medication-list"></ul>
+      </div>
+    </div>
+
+    <div class="search-patient-section">
+      <input type="text" id="patient-name-search" placeholder="환자 이름 검색">
+      <button id="confirm-name-search">확인</button>
+      <div id="search-results"></div>
+    </div>
+  </div>
+
+</div> <!-- ✅ dashboard-container 끝 -->
+  
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/js/dashboard.js"></script>
+{% endblock %}
