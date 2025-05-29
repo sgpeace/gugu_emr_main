@@ -89,7 +89,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for i in range(1,5) %}
+                        {% for i in range(1,6) %}
                         <tr>
                             <td>{{ i }}</td>
                             <td>
@@ -105,46 +105,46 @@
                         {% endfor %}
                         <!-- 파스, 비타민, 근육통, 발백선, 피부염 행도 동일하게 출력하려면 아래와 같이 추가 -->
                         <tr>
-                            <td>5</td>
+                            <td>6</td>
                             <td>파스</td>
                             <td>
-                                <div class="readonly-value">{{ emr.plan_pas_5 or '' }}</div>
+                                <div class="readonly-value">{{ emr.plan_pas_6 or '' }}</div>
                             </td>
                             <td>
-                                <div class="readonly-value">{{ emr.plan_pas_period_5 or '' }}</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>6</td>
-                            <td>삐콤</td>
-                            <td colspan="2">
-                                <div class="readonly-value">{{ emr.plan_bear_6 or '' }}</div>
+                                <div class="readonly-value">{{ emr.plan_pas_period_6 or '' }}</div>
                             </td>
                         </tr>
                         <tr>
                             <td>7</td>
-                            <td>근육통</td>
-                            <td>
-                                <div class="readonly-value">{{ emr.plan_anti_7 or '' }}</div>
-                            </td>
-                            <td>
-                                <div class="readonly-value">{{ emr.plan_ruma_7 or '' }}</div>
+                            <td>삐콤</td>
+                            <td colspan="2">
+                                <div class="readonly-value">{{ emr.plan_bear_7 or '' }}</div>
                             </td>
                         </tr>
                         <tr>
                             <td>8</td>
-                            <td>발백선 (site: {{ emr.plan_tinea_site_8 or '' }})</td>
-                            <td></td>
+                            <td>근육통</td>
                             <td>
-                                <div class="readonly-value">{{ emr.plan_tinea_8 or '' }}</div>
+                                <div class="readonly-value">안티푸라민 {{ emr.plan_anti_8 or '' }}</div>
+                            </td>
+                            <td>
+                                <div class="readonly-value">루마겔 {{ emr.plan_ruma_8 or '' }}</div>
                             </td>
                         </tr>
                         <tr>
                             <td>9</td>
-                            <td>피부염 (site: {{ emr.plan_derma_site_9 or '' }})</td>
+                            <td>발백선 (site: {{ emr.plan_tinea_site_9 or '' }})</td>
                             <td></td>
                             <td>
-                                <div class="readonly-value">{{ emr.plan_derma_9 or '' }}</div>
+                                <div class="readonly-value">무조날 크림 {{ emr.plan_tinea_9 or '' }}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>피부염 (site: {{ emr.plan_derma_site_10 or '' }})</td>
+                            <td></td>
+                            <td>
+                                <div class="readonly-value">노바손 크림 {{ emr.plan_derma_10 or '' }}</div>
                             </td>
                         </tr>
                     </tbody>
@@ -161,11 +161,11 @@
             <fieldset class="section-fieldset">
                 <legend>서명</legend>
                 <div class="form-group">
-                    <label for="sign_med_counsel">복약지도 서명</label>
+                    <label for="sign_med_counsel">복약지도자</label>
                     <input type="text" id="sign_med_counsel" name="sign_med_counsel" placeholder="서명">
                 </div>
                 <div class="form-group">
-                    <label for="sign_pharmacist">약사 서명</label>
+                    <label for="sign_pharmacist">약국부장 서명</label>
                     <input type="text" id="sign_pharmacist" name="sign_pharmacist" placeholder="서명">
                 </div>
             </fieldset>

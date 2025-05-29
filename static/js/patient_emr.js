@@ -1,5 +1,6 @@
 // patient_emr.js
 
+// patient_emr.js
 document.addEventListener("DOMContentLoaded", function () {
     console.log("patient_emr.js loaded");
 
@@ -7,46 +8,58 @@ document.addEventListener("DOMContentLoaded", function () {
     const toast = document.getElementById("custom-toast");
 
     emrForm.addEventListener("submit", async function (e) {
+        // 1) HTML5 기본 검증
+        if (!emrForm.checkValidity()) {
+            emrForm.reportValidity();
+            return;
+        }
+
+        // 2) preventDefault 호출은 검증 통과 후
         e.preventDefault();
+
+        // 3) FormData 생성
         const formData = new FormData(emrForm);
+
+        // 4) 빈(optional) 필드 삭제
+        if (!formData.get("emr_id")) formData.delete("emr_id");
+        if (!formData.get("age")) formData.delete("age");
+        if (!formData.get("bt")) formData.delete("bt");
+        if (!formData.get("bp2")) formData.delete("bp2");
+        // …필요한 다른 optional 필드도 동일하게…
+
 
         try {
             const response = await fetch("/patient_emr/new_emr", {
                 method: "POST",
                 body: formData,
             });
+
+            // 서버 에러(500 등)라면 JSON이 아닐 가능성이 높으니 text() 로 읽어주기
+            if (!response.ok) {
+                const errText = await response.text();
+                console.error("서버 에러 응답:", errText);
+                showToast("저장 중 오류 발생: " + (errText || response.statusText), true);
+                return;
+            }
+
+            // OK면 JSON 파싱
             const result = await response.json();
 
-            if (response.ok) {
-                showToast(result.message || "저장되었습니다.");
-
-                // ★ 서버가 돌려준 emr_id를 쿼리로 붙여서 페이지 리로드
-                if (result.emr_id) {
-                    const name = encodeURIComponent(document.querySelector('input[name="name"]').value);
-                    const birth_date = encodeURIComponent(document.querySelector('input[name="birth_date"]').value);
-                    const emrId = result.emr_id;
-                    window.location.href = `/patient_emr?name=${name}&birth_date=${birth_date}&emr_id=${emrId}`;
-                }
-            } else {
-                showToast(result.message || "저장 중 오류 발생", true);
+            showToast(result.message || "저장되었습니다.");
+            if (result.emr_id) {
+                const name = encodeURIComponent(document.querySelector('input[name="name"]').value);
+                const birth_date = encodeURIComponent(document.querySelector('input[name="birth_date"]').value);
+                window.location.href = `/patient_emr?name=${name}&birth_date=${birth_date}&emr_id=${result.emr_id}`;
             }
-        } catch (error) {
-            console.error("저장 요청 실패:", error);
+
+        } catch (err) {
+            console.error("저장 요청 실패:", err);
             showToast("서버 오류가 발생했습니다.", true);
         }
     });
 
-    function showToast(message, isError = false) {
-        toast.textContent = message;
-        toast.classList.remove("hidden");
-        toast.classList.add(isError ? "error" : "success");
 
-        setTimeout(() => {
-            toast.classList.add("hidden");
-            toast.classList.remove("error", "success");
-        }, 3000);
-    }
-
+    // ★ showToast 함수는 한 번만 선언
     function showToast(message, isError = false) {
         toast.textContent = message;
         toast.classList.remove("hidden");
@@ -58,6 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 3000);
     }
 });
+
 
 document.addEventListener("DOMContentLoaded", function () {
     const dateInput = document.getElementById("record_date");
@@ -177,43 +191,43 @@ function populateFormWithData(data) {
     document.querySelector("input[name='gds']").value = data.gds || "";
 
     // (4-1) Free input rows #1–4
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
         document.querySelector(`input[name='plan_desc_${i}']`).value = data[`plan_desc_${i}`] || "";
         document.querySelector(`input[name='plan_method_${i}']`).value = data[`plan_method_${i}`] || "";
         document.querySelector(`input[name='plan_period_${i}']`).value = data[`plan_period_${i}`] || "";
     }
 
     // (4-2) 파스
-    if (data.plan_pas_5) {
-        document.querySelector(`input[name='plan_pas_5'][value='${data.plan_pas_5}']`).checked = true;
+    if (data.plan_pas_6) {
+        document.querySelector(`input[name='plan_pas_6'][value='${data.plan_pas_6}']`).checked = true;
     }
-    if (data.plan_pas_period_5) {
-        document.querySelector(`input[name='plan_pas_period_5'][value='${data.plan_pas_period_5}']`).checked = true;
+    if (data.plan_pas_period_6) {
+        document.querySelector(`input[name='plan_pas_period_6'][value='${data.plan_pas_period_6}']`).checked = true;
     }
 
     // (4-3) 비타민제(삐콤)
-    if (data.plan_bear_6) {
-        document.querySelector(`input[name='plan_bear_6'][value='${data.plan_bear_6}']`).checked = true;
+    if (data.plan_bear_7) {
+        document.querySelector(`input[name='plan_bear_7'][value='${data.plan_bear_7}']`).checked = true;
     }
 
     // (4-4) 근육통
-    if (data.plan_anti_7) {
-        document.querySelector(`input[name='plan_anti_7'][value='${data.plan_anti_7}']`).checked = true;
+    if (data.plan_anti_8) {
+        document.querySelector(`input[name='plan_anti_8'][value='${data.plan_anti_8}']`).checked = true;
     }
-    if (data.plan_ruma_7) {
-        document.querySelector(`input[name='plan_ruma_7'][value='${data.plan_ruma_7}']`).checked = true;
+    if (data.plan_ruma_8) {
+        document.querySelector(`input[name='plan_ruma_8'][value='${data.plan_ruma_8}']`).checked = true;
     }
 
     // (4-5) 발백선
-    document.querySelector("input[name='plan_tinea_site_8']").value = data.plan_tinea_site_8 || "";
-    if (data.plan_tinea_8) {
-        document.querySelector(`input[name='plan_tinea_8'][value='${data.plan_tinea_8}']`).checked = true;
+    document.querySelector("input[name='plan_tinea_site_9']").value = data.plan_tinea_site_9 || "";
+    if (data.plan_tinea_9) {
+        document.querySelector(`input[name='plan_tinea_9'][value='${data.plan_tinea_9}']`).checked = true;
     }
 
     // (4-6) 피부염
-    document.querySelector("input[name='plan_derma_site_9']").value = data.plan_derma_site_9 || "";
-    if (data.plan_derma_9) {
-        document.querySelector(`input[name='plan_derma_9'][value='${data.plan_derma_9}']`).checked = true;
+    document.querySelector("input[name='plan_derma_site_10']").value = data.plan_derma_site_10 || "";
+    if (data.plan_derma_10) {
+        document.querySelector(`input[name='plan_derma_10'][value='${data.plan_derma_10}']`).checked = true;
     }
 
     // (5) Medication Counseling
@@ -226,8 +240,6 @@ function populateFormWithData(data) {
 
     // (7) Signatures
     document.querySelector("input[name='sign_dr']").value = data.sign_dr || "";
-    document.querySelector("input[name='sign_nurse']").value = data.sign_nurse || "";
-    document.querySelector("input[name='sign_pharmacist']").value = data.sign_pharmacist || "";
 }
 
 

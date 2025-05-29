@@ -54,7 +54,7 @@ class EMR(Base):
     record_date = Column(Date, nullable=False)
     name = Column(String(100), nullable=False)  # 성명
     gender = Column(String(10), nullable=False)  # 성별
-    age = Column(String(20), nullable=False)  # 나이
+    age = Column(String(20), nullable=True)  # 나이
     bt = Column(Float)  # BT (체온)
     bp = Column(String(20))  # BP (혈압)
     hr = Column(Integer)  # HR (맥박)
@@ -84,23 +84,26 @@ class EMR(Base):
     plan_desc_2 = Column(Text, nullable = True)
     plan_desc_3 = Column(Text, nullable = True)
     plan_desc_4 = Column(Text, nullable = True)
+    plan_desc_5 = Column(Text, nullable = True)
     plan_method_1 = Column(Text, nullable = True)
     plan_method_2 = Column(Text, nullable = True)
     plan_method_3 = Column(Text, nullable = True)
     plan_method_4 = Column(Text, nullable = True)
+    plan_method_5 = Column(Text, nullable = True)
     plan_period_1 = Column(Text, nullable = True)
     plan_period_2 = Column(Text, nullable = True)
     plan_period_3 = Column(Text, nullable = True)
     plan_period_4 = Column(Text, nullable = True)
-    plan_pas_5 = Column(String(10), nullable = True)
-    plan_pas_period_5 = Column(String(10), nullable = True)
-    plan_bear_6 = Column(String(10), nullable = True)
-    plan_anti_7 = Column(String(10), nullable = True)
-    plan_ruma_7 = Column(String(10), nullable = True)
-    plan_tinea_site_8 = Column(Text, nullable = True)
-    plan_tinea_8 = Column(String(10), nullable = True)
-    plan_derma_site_9 = Column(Text, nullable = True)
-    plan_derma_9 = Column(String(10), nullable = True)
+    plan_period_5 = Column(Text, nullable = True)
+    plan_pas_6 = Column(String(10), nullable = True)
+    plan_pas_period_6 = Column(String(10), nullable = True)
+    plan_bear_7 = Column(String(10), nullable = True)
+    plan_anti_8 = Column(String(10), nullable = True)
+    plan_ruma_8 = Column(String(10), nullable = True)
+    plan_tinea_site_9 = Column(Text, nullable = True)
+    plan_tinea_9 = Column(String(10), nullable = True)
+    plan_derma_site_10 = Column(Text, nullable = True)
+    plan_derma_10 = Column(String(10), nullable = True)
     med_counseling = Column(Text, nullable = True)
     iv_order = Column(String(10), nullable = True)
     sign_dr = Column(String(100), nullable = True)
@@ -393,155 +396,185 @@ async def patient_emr(
         "cc": cc,
         "pi": pi
     })
-
 @app.post("/patient_emr/new_emr")
 async def create_new_emr(
-    name: str = Form(...),
-    birth_date: str = Form(...),
-    record_date: str = Form(...),
-    gender: str = Form(...),
-    age: str = Form(...),
-    bt: float = Form(None),
-    bp: str = Form(None),
-    hr: int = Form(None),
-    bp2: str = Form(None),
-    bst: int = Form(None),
-    post_bst: int = Form(None),
-    cc: str = Form(None),
-    onset: str = Form(None),
-    duration: str = Form(None),
-    assoc: str = Form(None),
-    medication_hx: str = Form(None),
-    pmhx: str = Form(None),
-    allergy: str = Form(None),
-    fhx: str = Form(None),
-    social: str = Form(None),
-    pi: str = Form(None),
-    ros: str = Form(None),
-    pe: str = Form(None),
-    problem_list: str = Form(None),
-    assessment: str = Form(None),
-    mmse: int = Form(None),
-    cdr: float = Form(None),
-    psqi: int = Form(None),
-    isi: int = Form(None),
-    gds: int = Form(None),
-    plan_desc_1: str = Form(None),
-    plan_desc_2: str = Form(None),
-    plan_desc_3: str = Form(None),
-    plan_desc_4: str = Form(None),
-    plan_method_1: str = Form(None),
-    plan_method_2: str = Form(None),
-    plan_method_3: str = Form(None),
-    plan_method_4: str = Form(None),
-    plan_period_1: str = Form(None),
-    plan_period_2: str = Form(None),
-    plan_period_3: str = Form(None),
-    plan_period_4: str = Form(None),
-    plan_pas_5: str = Form(None),
-    plan_pas_period_5: str = Form(None),
-    plan_bear_6: str = Form(None),
-    plan_anti_7: str = Form(None),
-    plan_ruma_7: str = Form(None),
-    plan_tinea_site_8: str = Form(None),
-    plan_tinea_8: str = Form(None),
-    plan_derma_site_9: str = Form(None),
-    plan_derma_9: str = Form(None),
-    med_counseling: str = Form(None),
-    iv_order: str = Form(None),
-    sign_dr: str = Form(None),
-    sign_nurse: str = Form(None),
-    sign_pharmacist: str = Form(None),
-    ne_cog: Optional[bool] = Form(False),
-    ne_sleep: Optional[bool] = Form(False),
-    ne_depress: Optional[bool] = Form(False),
-    iv_route: str = Form(None),
-    nursing_result: str = Form(None),
-    nurse_note: str = Form(None),
-    counseling_pharmacist: str = Form(None),
-    db: Session = Depends(get_db)
+    name: str                       = Form(...),
+    birth_date: str                 = Form(...),
+    record_date: str                = Form(...),       # ← str로 받음
+    gender: str                     = Form(...),
+    age: Optional[str]              = Form(None),      # ← Optional[str]
+    bt: Optional[str]               = Form(None),      # ← Optional[str]
+    bp: Optional[str]               = Form(None),
+    hr: Optional[str]               = Form(None),      # ← Optional[str]
+    bp2: Optional[str]              = Form(None),
+    bst: Optional[str]              = Form(None),      # ← Optional[str]
+    post_bst: Optional[str]         = Form(None),      # ← Optional[str]
+    cc: Optional[str]               = Form(None),
+    onset: Optional[str]            = Form(None),
+    duration: Optional[str]         = Form(None),
+    assoc: Optional[str]            = Form(None),
+    medication_hx: Optional[str]    = Form(None),
+    pmhx: Optional[str]             = Form(None),
+    allergy: Optional[str]          = Form(None),
+    fhx: Optional[str]              = Form(None),
+    social: Optional[str]           = Form(None),
+    pi: Optional[str]               = Form(None),
+    ros: Optional[str]              = Form(None),
+    pe: Optional[str]               = Form(None),
+    problem_list: Optional[str]     = Form(None),
+    assessment: Optional[str]       = Form(None),
+    mmse: Optional[str]             = Form(None),      # ← Optional[str]
+    cdr: Optional[str]              = Form(None),      # ← Optional[str]
+    psqi: Optional[str]             = Form(None),      # ← Optional[str]
+    isi: Optional[str]              = Form(None),      # ← Optional[str]
+    gds: Optional[str]              = Form(None),      # ← Optional[str]
+    plan_desc_1: Optional[str]      = Form(None),
+    plan_desc_2: Optional[str]      = Form(None),
+    plan_desc_3: Optional[str]      = Form(None),
+    plan_desc_4: Optional[str]      = Form(None),
+    plan_desc_5: Optional[str]      = Form(None),
+    plan_method_1: Optional[str]    = Form(None),
+    plan_method_2: Optional[str]    = Form(None),
+    plan_method_3: Optional[str]    = Form(None),
+    plan_method_4: Optional[str]    = Form(None),
+    plan_method_5: Optional[str]    = Form(None),
+    plan_period_1: Optional[str]    = Form(None),
+    plan_period_2: Optional[str]    = Form(None),
+    plan_period_3: Optional[str]    = Form(None),
+    plan_period_4: Optional[str]    = Form(None),
+    plan_period_5: Optional[str]    = Form(None),
+    plan_pas_6: Optional[str]       = Form(None),
+    plan_pas_period_6: Optional[str]= Form(None),
+    plan_bear_7: Optional[str]      = Form(None),
+    plan_anti_8: Optional[str]      = Form(None),
+    plan_ruma_8: Optional[str]      = Form(None),
+    plan_tinea_site_9: Optional[str]= Form(None),
+    plan_tinea_9: Optional[str]     = Form(None),
+    plan_derma_site_10: Optional[str]= Form(None),
+    plan_derma_10: Optional[str]     = Form(None),
+    med_counseling: Optional[str]   = Form(None),
+    iv_order: Optional[str]         = Form(None),
+    sign_dr: Optional[str]          = Form(None),
+    sign_nurse: Optional[str]       = Form(None),
+    sign_pharmacist: Optional[str]  = Form(None),
+    ne_cog: Optional[bool]          = Form(False),
+    ne_sleep: Optional[bool]        = Form(False),
+    ne_depress: Optional[bool]      = Form(False),
+    iv_route: Optional[str]         = Form(None),
+    nursing_result: Optional[str]   = Form(None),
+    nurse_note: Optional[str]       = Form(None),
+    counseling_pharmacist: Optional[str] = Form(None),
+    db: Session                     = Depends(get_db)
 ):
-    # 환자 찾기
-    patient = db.query(Patient).filter(Patient.name == name, Patient.birth_date == birth_date).first()
+    # 1) 환자 찾기
+    patient = (
+        db.query(Patient)
+          .filter(Patient.name == name, Patient.birth_date == birth_date)
+          .first()
+    )
     if not patient:
         raise HTTPException(status_code=404, detail="환자를 찾을 수 없습니다.")
-
-    # 날짜 파싱
+    
+    # 2) 날짜 파싱 (str → date)
     try:
         record_date_obj = datetime.strptime(record_date, "%Y-%m-%d").date()
     except ValueError:
-        raise HTTPException(status_code=400, detail="날짜 형식 오류")
+        raise HTTPException(status_code=400, detail="날짜 형식 오류 (YYYY-MM-DD)")
+    
+    # 3) 숫자 필드 파싱 (str → int/float)
+    def parse_int(x: Optional[str]) -> Optional[int]:
+        return int(x) if x and x.isdigit() else None
 
-    # EMR 저장
+    def parse_float(x: Optional[str]) -> Optional[float]:
+        return float(x) if x and x.replace('.', '', 1).isdigit() else None
+
+    age_val    = parse_int(age)
+    bt_val     = parse_float(bt)
+    hr_val     = parse_int(hr)
+    bst_val    = parse_int(bst)
+    post_bst_val = parse_int(post_bst)
+    mmse_val   = parse_int(mmse)
+    cdr_val    = parse_float(cdr)
+    psqi_val   = parse_int(psqi)
+    isi_val    = parse_int(isi)
+    gds_val    = parse_int(gds)
+
+    # 4) EMR 객체 생성
     new_emr = EMR(
-        patient_id=patient.id,
-        record_date=record_date_obj,
-        name=name,
-        gender=gender,
-        age=age,
-        bt=bt,
-        bp=bp,
-        hr=hr,
-        bp2=bp2,
-        bst=bst,
-        post_bst=post_bst,
-        cc=cc,
-        onset=onset,
-        duration=duration,
-        assoc=assoc,
-        medication_hx=medication_hx,
-        pmhx=pmhx,
-        allergy=allergy,
-        fhx=fhx,
-        social=social,
-        pi=pi,
-        ros=ros,
-        pe=pe,
-        problem_list=problem_list,
-        assessment=assessment,
-        mmse=mmse,
-        cdr=cdr,
-        psqi=psqi,
-        isi=isi,
-        gds=gds,
-        plan_desc_1=plan_desc_1,
-        plan_desc_2=plan_desc_2,
-        plan_desc_3=plan_desc_3,
-        plan_desc_4=plan_desc_4,
-        plan_method_1=plan_method_1,
-        plan_method_2=plan_method_2,
-        plan_method_3=plan_method_3,
-        plan_method_4=plan_method_4,
-        plan_period_1=plan_period_1,
-        plan_period_2=plan_period_2,
-        plan_period_3=plan_period_3,
-        plan_period_4=plan_period_4,
-        plan_pas_5=plan_pas_5,
-        plan_pas_period_5=plan_pas_period_5,
-        plan_bear_6=plan_bear_6,
-        plan_anti_7=plan_anti_7,
-        plan_ruma_7=plan_ruma_7,
-        plan_tinea_site_8=plan_tinea_site_8,
-        plan_tinea_8=plan_tinea_8,
-        plan_derma_site_9=plan_derma_site_9,
-        plan_derma_9=plan_derma_9,
-        med_counseling=med_counseling,
-        iv_order=iv_order,
-        sign_dr=sign_dr,
-        sign_nurse=sign_nurse,
-        sign_pharmacist=sign_pharmacist,
-        ne_cog=ne_cog,
-        ne_sleep=ne_sleep,
-        ne_depress=ne_depress,
-        iv_route=iv_route,
-        nursing_result=nursing_result,
-        nurse_note=nurse_note,
-        counseling_pharmacist=counseling_pharmacist
+        patient_id         = patient.id,
+        record_date        = record_date_obj,
+        name               = name,
+        gender             = gender,
+        age                = age_val,
+        bt                 = bt_val,
+        bp                 = bp,
+        hr                 = hr_val,
+        bp2                = bp2,
+        bst                = bst_val,
+        post_bst           = post_bst_val,
+        cc                 = cc,
+        onset              = onset,
+        duration           = duration,
+        assoc              = assoc,
+        medication_hx      = medication_hx,
+        pmhx               = pmhx,
+        allergy            = allergy,
+        fhx                = fhx,
+        social             = social,
+        pi                 = pi,
+        ros                = ros,
+        pe                 = pe,
+        problem_list       = problem_list,
+        assessment         = assessment,
+        mmse               = mmse_val,
+        cdr                = cdr_val,
+        psqi               = psqi_val,
+        isi                = isi_val,
+        gds                = gds_val,
+        plan_desc_1        = plan_desc_1,
+        plan_desc_2        = plan_desc_2,
+        plan_desc_3        = plan_desc_3,
+        plan_desc_4        = plan_desc_4,
+        plan_desc_5        = plan_desc_5,
+        plan_method_1      = plan_method_1,
+        plan_method_2      = plan_method_2,
+        plan_method_3      = plan_method_3,
+        plan_method_4      = plan_method_4,
+        plan_method_5      = plan_method_5,
+        plan_period_1      = plan_period_1,
+        plan_period_2      = plan_period_2,
+        plan_period_3      = plan_period_3,
+        plan_period_4      = plan_period_4,
+        plan_period_5      = plan_period_5,
+        plan_pas_6         = plan_pas_6,
+        plan_pas_period_6  = plan_pas_period_6,
+        plan_bear_7        = plan_bear_7,
+        plan_anti_8        = plan_anti_8,
+        plan_ruma_8        = plan_ruma_8,
+        plan_tinea_site_9  = plan_tinea_site_9,
+        plan_tinea_9       = plan_tinea_9,
+        plan_derma_site_10 = plan_derma_site_10,
+        plan_derma_10       = plan_derma_10,
+        med_counseling     = med_counseling,
+        iv_order           = iv_order,
+        sign_dr            = sign_dr,
+        sign_nurse         = sign_nurse,
+        sign_pharmacist    = sign_pharmacist,
+        ne_cog             = ne_cog,
+        ne_sleep           = ne_sleep,
+        ne_depress         = ne_depress,
+        iv_route           = iv_route,
+        nursing_result     = nursing_result,
+        nurse_note         = nurse_note,
+        counseling_pharmacist = counseling_pharmacist
     )
+    
+    # 5) DB 저장
     db.add(new_emr)
     db.commit()
     db.refresh(new_emr)
-
+    
+    # 6) 응답
     return JSONResponse(content={
         "message": "진료차트가 성공적으로 저장되었습니다.",
         "emr_id": new_emr.id
@@ -703,33 +736,47 @@ async def save_new_patient_chart(
 
 # ─── 간호부 EMR 폼 ───────────────────────────────────────
 # ─── 간호부 EMR 폼 ───────────────────────────────────────
+from typing import Optional
+
 @app.get("/patient_emr_nur", response_class=HTMLResponse)
 def patient_emr_nur(
     request: Request,
     name: str,
     birth_date: str,
+    emr_id: Optional[int] = None,           # ← emr_id 파라미터 추가
     db: Session = Depends(get_db)
 ):
-    # 1) 환자 조회 (없으면 404)
+    # 1) 환자 조회
     patient = db.query(Patient)\
                 .filter(Patient.name == name, Patient.birth_date == birth_date)\
                 .first()
     if not patient:
         raise HTTPException(404, "환자를 찾을 수 없습니다.")
 
-    # 2) 최신 EMR 조회 (없어도 에러 내지 않고 None 처리)
-    emr = db.query(EMR)\
-            .filter(EMR.patient_id == patient.id)\
-            .order_by(EMR.record_date.desc())\
-            .first()
+    # 2) 전체 EMR 목록 (방문 기록) 조회
+    visit_records = (
+        db.query(EMR)
+          .filter(EMR.patient_id == patient.id)
+          .order_by(EMR.record_date.desc())
+          .all()
+    )
 
-    # 3) 템플릿에 emr가 None일 수도 있게 넘김
+    # 3) 표시할 EMR 결정: emr_id가 있으면 그 레코드, 없으면 최신
+    if emr_id:
+        emr = db.query(EMR)\
+                .filter(EMR.id == emr_id, EMR.patient_id == patient.id)\
+                .first()
+    else:
+        emr = visit_records[0] if visit_records else None
+
     return templates.TemplateResponse("patient_emr_nur.html", {
-        "request":     request,
-        "name":        name,
-        "birth_date":  birth_date,
-        "emr":         emr      # emr == None 가능
+        "request":       request,
+        "name":          name,
+        "birth_date":    birth_date,
+        "visit_records": visit_records,
+        "emr":           emr      # 선택된(또는 최신) EMR
     })
+
 
 @app.post("/patient_emr_nur")
 def save_patient_emr_nur(
