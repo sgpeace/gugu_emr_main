@@ -72,6 +72,7 @@ function addPatientToTable(patient) {
           });
       });
 
+<<<<<<< Updated upstream
       function appendTreatmentLink(p) {
         const displayname = p.name || p.patient_name;
         const link = document.createElement("a");
@@ -83,6 +84,158 @@ function addPatientToTable(patient) {
         li.appendChild(link);
         document.getElementById('treatment-list').appendChild(li);
       }
+=======
+  });
+
+
+//오른쪽 아래 검색창
+document.getElementById("confirm-name-search").addEventListener("click", () => {
+  const nameToSearch = document.getElementById("patient-name-search").value.trim();
+  if (!nameToSearch) {
+    alert("검색할 환자 이름을 입력하세요.");
+    return;
+  }
+
+  fetch(`/dashboard/search?newname=${encodeURIComponent(nameToSearch)}`)
+    .then(res => {
+      if (!res.ok) throw new Error("검색 요청 실패");
+      return res.json();
+    })
+    .then(data => {
+      const resultsContainer = document.getElementById("search-results");
+      resultsContainer.innerHTML = "";
+
+      if (data.result.length === 0) {
+        resultsContainer.innerHTML = "<p class='no-result'>해당 이름의 환자를 찾을 수 없습니다.</p>";
+        return;
+      }
+
+      const ul = document.createElement("ul");
+      ul.classList.add("suggestion-list");
+      data.result.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.name} (${item.birth_date})`;
+        li.addEventListener("click", () => {
+          window.location.href = `/patient_emr?name=${encodeURIComponent(item.name)}&birth_date=${encodeURIComponent(item.birth_date)}`;
+        });
+        ul.appendChild(li);
+      });
+      resultsContainer.appendChild(ul);
+    })
+    .catch(err => {
+      console.error(err);
+      alert("환자 검색 중 오류가 발생했습니다.");
+    });
+});
+
+
+
+
+  // ─── E) New-patient popup ───
+  // 신환등록 버튼을 눌렀을 때 작용하는 코드들
+  document.getElementById("new-patient").addEventListener("click", function () {
+    const formHtml = `
+        <div class="popup-overlay">
+        <div id="new-patient-form" class="popup-form">
+            <h3>신환 등록</h3>
+            <label>
+            이름
+            <input type="text" id="new-patient-name" placeholder="이름을 입력하세요">
+            </label>
+            <label>
+            생년월일
+            <input type="text" id="new-patient-birth" maxlength="6" placeholder="6자리 입력">
+            </label>
+            <div class="button-group">
+            <button id="save-new-patient">저장</button>
+            <button id="cancel-new-patient">취소</button>
+            </div>
+        </div>
+        </div>
+        `;
+    const container = document.createElement("div");
+    container.innerHTML = formHtml;
+    document.body.appendChild(container);
+
+    function close() { document.body.removeChild(container); }
+
+container.querySelector("#save-new-patient").addEventListener("click", () => {
+  const name  = container.querySelector("#new-patient-name").value.trim();
+  const birth = container.querySelector("#new-patient-birth").value.trim();
+
+  // (백엔드에 이미 검증이 있으므로, 프론트엔드에서는 최소한 공백 체크 정도만 둬도 무방합니다)
+  if (!name || birth.length !== 6) {
+    return alert("이름과 생년월일(YYMMDD)을 정확히 입력하세요.");
+  }
+
+  fetch("/dashboard/add_new_patient", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ name, birth_date: birth })
+  })
+    .then(res => {
+      if (!res.ok) {
+        // ① res.status와 응답 JSON을 함께 던지도록 객체를 만든다
+        return res.json().then(data => {
+          // FastAPI의 HTTPException 메시지는 data.detail에 담겨 있다
+          throw {
+            status: res.status,
+            detail: data.detail || data.message || ""
+          };
+        });
+      }
+      return res.json();
+    })
+    .then(() => {
+      alert("환자가 성공적으로 등록되었습니다.");
+      close();
+    })
+    .catch(err => {
+      // ② err.status가 400이면 “올바른 생일을 입력해주세요”로, 그 외는 기존 메시지를 사용
+      if (err.status === 400) {
+        // 백엔드에서 “생년월일은 YYMMDD 형식” 또는 “유효한 생년월일을 입력하세요” 등을 던져도
+        // 여기서는 무조건 이 문구로 통일
+        alert("올바른 생일을 입력해주세요");
+      } else {
+        alert("등록 중 오류 발생");
+      }
+    });
+});
+
+    container.querySelector("#cancel-new-patient").addEventListener("click", close);
+    // 오버레이 외곽 클릭 시에도 닫기
+    container.querySelector(".popup-overlay").addEventListener("click", e => {
+      if (e.target === container.querySelector(".popup-overlay")) close();
+    });
+  });
+
+});
+
+
+
+
+// F) processCompletedPatient: sessionStorage에 남은 환자를 treatment→med/infusion으로 이동
+function processCompletedPatient() {
+  const completed = sessionStorage.getItem('completedPatient');
+  if (!completed) return;
+  const [name, birth, ivFlag] = completed.split('||');
+
+  const treatmentList  = document.getElementById('treatment-list');
+  const medicationList = document.getElementById('medication-list');
+  const infusionList   = document.getElementById('infusion-list');
+
+  // 2) treatment → medication-list
+  Array.from(treatmentList.children).forEach(li => {
+    if (li.textContent.includes(name)) {
+      // 기존 링크(li 안 a 태그)를 제거하고, 새로 name/birth로 href를 붙입니다.
+      const newLi = document.createElement('li');
+      const a     = document.createElement('a');
+      a.href      = `/patient_emr_pha?name=${encodeURIComponent(name)}&birth_date=${encodeURIComponent(birth)}`;
+      a.textContent = `${name} (${birth})`;
+      newLi.appendChild(a);
+      medicationList.appendChild(newLi);
+      treatmentList.removeChild(li);
+>>>>>>> Stashed changes
     }
 
 
@@ -270,6 +423,7 @@ function addPatientToTable(patient) {
 //         return;
 //     }
 
+<<<<<<< Updated upstream
 //     fetch("/dashboard/add_patient", {
 //         method: "POST",
 //         headers: {
@@ -317,3 +471,8 @@ function addPatientToTable(patient) {
 //             });
 //     });
 // });
+=======
+  // 4) 세션 정리
+  sessionStorage.removeItem('completedPatient');
+}
+>>>>>>> Stashed changes

@@ -13,7 +13,11 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import CheckConstraint
 from sqlalchemy import Float
 from pydantic import BaseModel
+<<<<<<< Updated upstream
 from typing import List
+=======
+from typing import List, Optional 
+>>>>>>> Stashed changes
 
 
 # === DATABASE SETUP ===
@@ -39,6 +43,7 @@ class Patient(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     birth_date = Column(String(6), nullable=False)  # 예: "000506"
+    notes = Column(Text, nullable=True, default="") #환자 비고 부분
     __table_args__ = (UniqueConstraint('name', 'birth_date', name='_name_birth_uc'),)
     
     # 한 환자가 여러 EMR 기록을 가질 수 있도록 설정
@@ -140,6 +145,11 @@ class NewPatientChart(Base):
     history_ETC = Column(String(10))
     history_ETC_detail = Column(Text)
 
+#환자 비고란을 위한 Class
+class NotesIn(BaseModel):
+    name: str
+    birth_date: str
+    notes: str
 
 # (추후Visit, Chart 등 추가 가능)
 
@@ -209,7 +219,17 @@ def search_patient(newname: str = None, db: Session = Depends(get_db)):
 
 # 신환등록 관련
 @app.post("/dashboard/add_new_patient")
-def add_new_patient(name: str = Form(...), birth_date: str = Form(...), db: Session = Depends(get_db)):
+def add_new_patient(name: str = Form(...), birth_date: str = Form(...), db: Session = Depends(get_db)):    
+    #생년월일 확인 메커니즘
+    # ① 길이가 6자리인지 확인
+    if len(birth_date) != 6:
+        raise HTTPException(400, "생년월일은 YYMMDD 형식의 6자리여야 합니다.")
+    # ② 파싱 시도: YYMMDD → date 객체
+    try:
+        parsed: datetime = datetime.strptime(birth_date, "%y%m%d")
+    except ValueError:
+        raise HTTPException(400, "유효한 생년월일을 입력하세요 (YYMMDD).")
+    
     # 이름과 생년월일 모두로 중복 체크
     existing_patient = db.query(Patient).filter(
         Patient.name == name,
@@ -369,6 +389,38 @@ async def patient_emr(
         "pi": pi
     })
 
+<<<<<<< Updated upstream
+=======
+# ── ① GET: 기존 환자 비고를 불러오는 엔드포인트 ─────────────────
+@app.get("/patient_emr/get_patient_notes")
+async def get_patient_notes(name: str, birth_date: str, db: Session = Depends(get_db)):
+    # 1) 해당 이름·생년월일의 Patient 조회
+    patient = db.query(Patient).filter(
+        Patient.name == name,
+        Patient.birth_date == birth_date
+    ).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="해당 환자를 찾을 수 없습니다.")
+    # 2) notes 컬럼이 비어 있으면 빈 문자열, 아니면 실제 메모 반환
+    return JSONResponse(content={"notes": patient.notes or ""})
+
+@app.post("/patient_emr/save_patient_notes")
+async def save_patient_notes(payload: NotesIn, db: Session = Depends(get_db)):
+    patient = db.query(Patient).filter(
+        Patient.name == payload.name,
+        Patient.birth_date == payload.birth_date
+    ).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="해당 환자를 찾을 수 없습니다.")
+    patient.notes = payload.notes
+    db.commit()
+    db.refresh(patient)
+    return JSONResponse(content={"message": "메모 저장 완료"})
+
+
+
+
+>>>>>>> Stashed changes
 @app.post("/patient_emr/new_emr")
 async def create_new_emr(
     name: str = Form(...),
