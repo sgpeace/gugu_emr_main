@@ -46,11 +46,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = await response.json();
 
             showToast(result.message || "저장되었습니다.");
-            if (result.emr_id) {
-                const name = encodeURIComponent(document.querySelector('input[name="name"]').value);
-                const birth_date = encodeURIComponent(document.querySelector('input[name="birth_date"]').value);
-                window.location.href = `/patient_emr?name=${name}&birth_date=${birth_date}&emr_id=${result.emr_id}`;
-            }
+            // if (result.emr_id) {
+            //     const name = encodeURIComponent(document.querySelector('input[name="name"]').value);
+            //     const birth_date = encodeURIComponent(document.querySelector('input[name="birth_date"]').value);
+            //     window.location.href = `/patient_emr?name=${name}&birth_date=${birth_date}&emr_id=${result.emr_id}`;
+            // }
 
         } catch (err) {
             console.error("저장 요청 실패:", err);
@@ -189,6 +189,9 @@ function populateFormWithData(data) {
     document.querySelector("input[name='psqi']").value = data.psqi || "";
     document.querySelector("input[name='isi']").value = data.isi || "";
     document.querySelector("input[name='gds']").value = data.gds || "";
+    document.querySelector("input[name='ne_cog']").value = data.gds || "";
+    document.querySelector("input[name='ne_sleep']").value = data.gds || "";
+    document.querySelector("input[name='ne_depress']").value = data.gds || "";
 
     // (4-1) Free input rows #1–4
     for (let i = 1; i <= 5; i++) {

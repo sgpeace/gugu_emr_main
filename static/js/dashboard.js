@@ -136,21 +136,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    fetch(`/dashboard/search?newname=${encodeURIComponent(patientName)}`)
-      .then(response => response.json())
-      .then(data => {
+    fetch(`/dashboard/search?newname=${encodeURIComponent(patientName)}`) // 서버에 환자 이름을 보내고 검색
+      .then(response => response.json()) // JSON 형태로 응답 받기
+      .then(data => { // 서버에서 받은 데이터를 처리
         const suggestionBox = document.getElementById("new-patient-search"); // new-patient-search는 결과를 저장할 요소
         suggestionBox.innerHTML = ""; // 기존 결과 초기화
-        if (data.result && data.result.length > 0) {
-          let list = document.createElement("ul");
-          list.classList.add("suggestion-list");
-          data.result.forEach(item => {
-            let li = document.createElement("li");
-            li.textContent = `${item.name} (${item.birth_date})`;
+        if (data.result && data.result.length > 0) { // 검색 결과가 있을 때
+          let list = document.createElement("ul"); // 결과를 담을 리스트 생성
+          list.classList.add("suggestion-list"); // 스타일링을 위한 클래스 추가
+          data.result.forEach(item => { // 각 검색 결과에 대해
+            let li = document.createElement("li"); // 리스트 아이템 생성
+            li.textContent = `${item.name} (${item.birth_date})`; // 환자 이름과 생년월일을 표시 
 
-            li.addEventListener("click", () => {
+            li.addEventListener("click", () => { // 클릭 시 작용하는 이벤트
               //1) Send to backend
-              fetch("/dashboard/registrations", {
+              fetch("/dashboard/registrations", { 
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -295,3 +295,44 @@ function processCompletedPatient() {
   // 4) 세션 정리
   sessionStorage.removeItem('completedPatient');
 }
+
+
+// 오른쪽 하단 환자 검색 버튼
+  document.getElementById("confirm-name-search").addEventListener("click", function() {
+    const query = document.getElementById("patient-name-search").value.trim();
+    if (!query) {
+      alert("환자 이름을 입력하세요.");
+      return;
+    }
+
+    fetch(`/dashboard/search?newname=${encodeURIComponent(query)}`)
+      .then(response => {
+        if (!response.ok) throw new Error("서버 응답 오류");
+        return response.json();
+      })
+      .then(data => {
+        const resultsDiv = document.getElementById("search-results");
+        resultsDiv.innerHTML = "";
+
+        if (data.result && data.result.length > 0) {
+          data.result.forEach(item => {
+            // div 대신 a 태그를 써서 클릭 시 바로 이동하게 만들어도 좋습니다.
+            const entry = document.createElement("div");
+            entry.textContent = `${item.name} (${item.birth_date})`;
+            entry.style.cursor = "pointer";
+            entry.addEventListener("click", () => {
+              // 클릭하면 patient_emr 페이지로 이동
+              const url = `/patient_emr?name=${encodeURIComponent(item.name)}&birth_date=${encodeURIComponent(item.birth_date)}`;
+              window.location.href = url;
+            });
+            resultsDiv.appendChild(entry);
+          });
+        } else {
+          resultsDiv.textContent = "검색 결과가 없습니다.";
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("데이터를 불러오는 중 오류가 발생했습니다.");
+      });
+  });

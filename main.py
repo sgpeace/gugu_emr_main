@@ -17,7 +17,7 @@ from typing import List, Optional
 
 
 # === DATABASE SETUP ===
-DATABASE_URL = "mysql+pymysql://root:134340@localhost/emr_db"
+DATABASE_URL = "mysql+pymysql://root:Tmdrnjs159!@localhost/emr_db"
 engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
 SessionLocal = sessionmaker(bind=engine)
@@ -55,13 +55,13 @@ class EMR(Base):
     name = Column(String(100), nullable=False)  # 성명
     gender = Column(String(10), nullable=False)  # 성별
     age = Column(String(20), nullable=True)  # 나이
-    bt = Column(Float)  # BT (체온)
-    bp = Column(String(20))  # BP (혈압)
-    hr = Column(Integer)  # HR (맥박)
-    bp2 = Column(String(20))  # 2차 BP
-    bst = Column(Integer)  # BST (혈당)
-    post_bst = Column(Integer)  # 식후(시간)
-    cc = Column(Text)  # 주호소
+    bt = Column(Float, nullable = True)  # BT (체온)
+    bp = Column(String(20), nullable = True)  # BP (혈압)
+    hr = Column(Integer, nullable = True)  # HR (맥박)
+    bp2 = Column(String(20), nullable = True)  # 2차 BP
+    bst = Column(Integer, nullable = True)  # BST (혈당)
+    post_bst = Column(Integer, nullable = True)  # 식후(시간)
+    cc = Column(Text, nullable = True)  # 주호소
     onset = Column(String(50), nullable = True)  # Onset
     duration = Column(String(50), nullable = True)  # Duration
     assoc = Column(String(100), nullable = True)  # Assoc. Sx.
@@ -107,9 +107,9 @@ class EMR(Base):
     med_counseling = Column(Text, nullable = True)
     iv_order = Column(String(10), nullable = True)
     sign_dr = Column(String(100), nullable = True)
-    ne_cog = Column(Boolean, default=False)  # 인지저하
-    ne_sleep = Column(Boolean, default=False)  # 수면장애
-    ne_depress = Column(Boolean, default=False)  # 우울감
+    ne_cog = Column(Boolean, default=False, nullable = True)  # 인지저하
+    ne_sleep = Column(Boolean, default=False, nullable = True)  # 수면장애
+    ne_depress = Column(Boolean, default=False, nullable = True)  # 우울감
     #  ─── 간호부 전용 필드 ───────────────────
     iv_route        = Column(String(100), nullable=True)   # IV 경로
     nursing_result  = Column(Text, nullable=True)          # 간호 수행 결과
@@ -427,7 +427,10 @@ async def create_new_emr(
     cdr: Optional[str]              = Form(None),      # ← Optional[str]
     psqi: Optional[str]             = Form(None),      # ← Optional[str]
     isi: Optional[str]              = Form(None),      # ← Optional[str]
-    gds: Optional[str]              = Form(None),      # ← Optional[str]
+    gds: Optional[str]              = Form(None),
+    ne_cog: Optional[str]          = Form(None),
+    ne_sleep: Optional[str]        = Form(None),
+    ne_depress: Optional[str]      = Form(None),
     plan_desc_1: Optional[str]      = Form(None),
     plan_desc_2: Optional[str]      = Form(None),
     plan_desc_3: Optional[str]      = Form(None),
@@ -457,15 +460,13 @@ async def create_new_emr(
     sign_dr: Optional[str]          = Form(None),
     sign_nurse: Optional[str]       = Form(None),
     sign_pharmacist: Optional[str]  = Form(None),
-    ne_cog: Optional[bool]          = Form(False),
-    ne_sleep: Optional[bool]        = Form(False),
-    ne_depress: Optional[bool]      = Form(False),
     iv_route: Optional[str]         = Form(None),
     nursing_result: Optional[str]   = Form(None),
     nurse_note: Optional[str]       = Form(None),
     counseling_pharmacist: Optional[str] = Form(None),
     db: Session                     = Depends(get_db)
 ):
+
     # 1) 환자 찾기
     patient = (
         db.query(Patient)
@@ -560,9 +561,6 @@ async def create_new_emr(
         sign_dr            = sign_dr,
         sign_nurse         = sign_nurse,
         sign_pharmacist    = sign_pharmacist,
-        ne_cog             = ne_cog,
-        ne_sleep           = ne_sleep,
-        ne_depress         = ne_depress,
         iv_route           = iv_route,
         nursing_result     = nursing_result,
         nurse_note         = nurse_note,
@@ -584,12 +582,10 @@ async def create_new_emr(
 @app.get("/patient_emr/past_emr")
 async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)):
     try:
-        # 방문 날짜를 파싱
         visit_date_obj = datetime.strptime(visit_date, "%Y-%m-%d").date()
     except ValueError:
         raise HTTPException(status_code=400, detail="잘못된 날짜 형식입니다.")
 
-    # 방문 날짜와 이름에 해당하는 EMR 기록 조회
     emr_record = (
         db.query(EMR)
         .join(Patient, EMR.patient_id == Patient.id)
@@ -599,7 +595,6 @@ async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)
     if not emr_record:
         raise HTTPException(status_code=404, detail="해당 날짜와 이름의 진료 기록을 찾을 수 없습니다.")
 
-    # 결과 반환 (JSONResponse 형식으로 수정)
     return JSONResponse(content={
         "message": "진료 기록이 성공적으로 조회되었습니다.",
         "emr_id": emr_record.id,
@@ -632,6 +627,51 @@ async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)
         "cdr": emr_record.cdr,
         "psqi": emr_record.psqi,
         "isi": emr_record.isi,
+
+        # (4-1) free input rows #1–5
+        "plan_desc_1": emr_record.plan_desc_1,
+        "plan_method_1": emr_record.plan_method_1,
+        "plan_period_1": emr_record.plan_period_1,
+        "plan_desc_2": emr_record.plan_desc_2,
+        "plan_method_2": emr_record.plan_method_2,
+        "plan_period_2": emr_record.plan_period_2,
+        "plan_desc_3": emr_record.plan_desc_3,
+        "plan_method_3": emr_record.plan_method_3,
+        "plan_period_3": emr_record.plan_period_3,
+        "plan_desc_4": emr_record.plan_desc_4,
+        "plan_method_4": emr_record.plan_method_4,
+        "plan_period_4": emr_record.plan_period_4,
+        "plan_desc_5": emr_record.plan_desc_5,
+        "plan_method_5": emr_record.plan_method_5,
+        "plan_period_5": emr_record.plan_period_5,
+
+        # (4-2) 파스
+        "plan_pas_6": emr_record.plan_pas_6,
+        "plan_pas_period_6": emr_record.plan_pas_period_6,
+
+        # (4-3) 비타민제(삐콤)
+        "plan_bear_7": emr_record.plan_bear_7,
+
+        # (4-4) 근육통
+        "plan_anti_8": emr_record.plan_anti_8,
+        "plan_ruma_8": emr_record.plan_ruma_8,
+
+        # (4-5) 발백선
+        "plan_tinea_site_9": emr_record.plan_tinea_site_9,
+        "plan_tinea_9": emr_record.plan_tinea_9,
+
+        # (4-6) 피부염
+        "plan_derma_site_10": emr_record.plan_derma_site_10,
+        "plan_derma_10": emr_record.plan_derma_10,
+
+        # (5) Medication Counseling
+        "med_counseling": emr_record.med_counseling,
+
+        # (6) IV Order
+        "iv_order": emr_record.iv_order,
+
+        # (7) Signatures
+        "sign_dr": emr_record.sign_dr,
     })
 
 @app.get("/patient_emr/new_patient_chart", response_class=HTMLResponse)
