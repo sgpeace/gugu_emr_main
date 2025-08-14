@@ -32,8 +32,12 @@
     <!-- 상세 진료 정보 (읽기 전용) + 서명란 -->
     <div class="emr-card form-panel">
         <h2>상세 진료 정보</h2>
-        <form action="/patient_emr_pha" method="post">
+        <form id="pha-form">
             <input type="hidden" name="emr_id" value="{{ emr.id }}">
+            <!-- ✅ 대시보드에서 제거할 때 쓸 환자 식별값 -->
+            <input type="hidden" id="patient_name"  value="{{ emr.patient.name }}">
+            <input type="hidden" id="patient_birth" value="{{ emr.patient.birth_date }}">
+
 
             <!-- 1) Vital Signs & IV Order (4컬럼) -->
             <fieldset class="section-fieldset">
@@ -178,5 +182,5 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/patient_emr.js"></script>
+<script src="/static/js/patient_emr_pha.js"></script>
 {% endblock %}

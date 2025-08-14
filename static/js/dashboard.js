@@ -25,6 +25,11 @@ function addPatientToTable(patient) {
     enterBtn.textContent = "-";
     appendTreatmentLink(patient);
   }
+  // ▶ If they’re already 완료, disable the button and DO NOT append any link
+  else if (patient.status === "완료") {
+    enterBtn.disabled = true;
+    enterBtn.textContent = "-";
+  }
 
   // ▶ When “+” is clicked, PATCH the new status first…
   enterBtn.addEventListener('click', () => {
@@ -103,6 +108,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       // ─── 이제 treatment-list가 채워졌으니 완료 처리 실행 ───
       processCompletedPatient();
+
+      // ✅ 추가: 약국 저장 후 '복약중' 제거 처리
+      processPharmacyCompletedPatient();
     })
     .catch(err => console.error("등록 목록 로드 실패:", err));
 
@@ -336,3 +344,43 @@ function processCompletedPatient() {
         alert("데이터를 불러오는 중 오류가 발생했습니다.");
       });
   });
+
+// ✅ 추가 함수: 약국 저장 완료 시 '복약중'에서 제거
+function processPharmacyCompletedPatient() {
+  const flag = sessionStorage.getItem('pharmacyCompleted');
+  if (!flag) return;
+
+  const [name, birth] = flag.split('||');
+  const medicationList = document.getElementById('medication-list');
+  const treatmentList  = document.getElementById('treatment-list');
+
+  // 1) 복약중에서 제거
+  Array.from(medicationList.children).forEach(li => {
+    if (li.textContent.includes(name) && li.textContent.includes(birth)) {
+      medicationList.removeChild(li);
+    }
+  });
+
+  // 2) 혹시 남아있다면 진료중에서도 제거 (중복 제거/재등장 방지 안전망)
+  Array.from(treatmentList.children).forEach(li => {
+    if (li.textContent.includes(name) && li.textContent.includes(birth)) {
+      treatmentList.removeChild(li);
+    }
+  });
+
+  // 3) 오늘의 환자 테이블에서도 버튼/상태 동기화 (enter '+' -> '-' , status -> '완료')
+  const table = document.getElementById('patient-list');
+  Array.from(table.children).forEach(tr => {
+    const nameCell = tr.children[1];
+    const statusCell = tr.querySelector('.status-cell');
+    const enterBtn = tr.querySelector('.enter-button');
+    if (!nameCell || !statusCell || !enterBtn) return;
+    if (nameCell.textContent.includes(name) && nameCell.textContent.includes(birth)) {
+      statusCell.textContent = '완료';
+      enterBtn.disabled = true;
+      enterBtn.textContent = '-';
+    }
+    });
+
+  // 한 번 처리했으면 비워주기
+  sessionStorage.removeItem('pharmacyCompleted');}

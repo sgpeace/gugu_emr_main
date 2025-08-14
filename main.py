@@ -339,7 +339,7 @@ def update_registration_status(
     if not reg:
         raise HTTPException(404, "등록된 환자를 찾을 수 없습니다.")
     new_status = payload.get("status")
-    if new_status not in ("대기", "진료"):
+    if new_status not in ("대기", "진료", "복약중", "완료"):
         raise HTTPException(400, "올바르지 않은 상태입니다.")
     reg.status = new_status
     db.commit()
@@ -827,19 +827,17 @@ def save_patient_emr_nur(
     nurse_note:     str     = Form(None),
     db:             Session = Depends(get_db)
 ):
-    # 1) 해당 EMR 레코드 조회
     emr = db.query(EMR).filter(EMR.id == emr_id).first()
     if not emr:
         raise HTTPException(status_code=404, detail="해당 진료기록을 찾을 수 없습니다.")
-    # 2) 간호부 전용 필드 업데이트
+
     emr.iv_route       = iv_route
     emr.nursing_result = nursing_result
     emr.sign_nurse     = sign_nurse
     emr.nurse_note     = nurse_note
-    # 3) DB 반영
     db.commit()
-    # 4) 저장 후 대시보드로 리다이렉트
-    return RedirectResponse(url="/dashboard", status_code=302)
+
+    return JSONResponse(content={"message": "저장이 완료되었습니다."})
 
 
 
@@ -882,6 +880,40 @@ async def patient_emr_pha(
         "visit_records": visit_records,
         "emr":           emr
     })
+
+@app.post("/patient_emr_pha")
+async def save_patient_emr_pha(
+    emr_id: int = Form(...),
+    sign_med_counsel: str = Form(None),
+    sign_pharmacist: str = Form(None),
+    db: Session = Depends(get_db),
+):
+    emr = db.query(EMR).filter(EMR.id == emr_id).first()
+    if not emr:
+        raise HTTPException(status_code=404, detail="EMR not found")
+
+        # ✅ 필드 매핑 수정: 폼의 sign_med_counsel → EMR.counseling_pharmacist
+    emr.counseling_pharmacist = sign_med_counsel
+    emr.sign_pharmacist       = sign_pharmacist
+
+    # ✅ 해당 환자의 가장 최근 Registration 상태를 '완료'로 갱신
+    patient = db.query(Patient).filter(Patient.id == emr.patient_id).first()
+    if patient:
+        reg = (
+            db.query(Registration)
+              .filter(
+                  Registration.patient_name == patient.name,
+                  Registration.birth_date == patient.birth_date,
+                  Registration.status != "완료"
+              )
+              .order_by(Registration.id.desc())
+              .first()
+        )
+        if reg:
+            reg.status = "완료"
+    db.commit()
+
+    return JSONResponse({"message": "저장이 완료되었습니다."})
 
 
 # @app.post("/patient_emr/complete_visit")
