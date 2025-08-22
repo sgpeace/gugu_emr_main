@@ -13,7 +13,42 @@ document.addEventListener("DOMContentLoaded", function () {
             return res.json();
         })
         .then(data => {
-            showToast(data.message || "저장이 완료되었습니다.");
+            // ✅ 상태 제거 로직 추가
+            const name = formData.get("name");
+            const birth = formData.get("birth_date");
+
+            fetch(`/dashboard/registrations`, {
+                method: "GET"
+            })
+            .then(r => r.json())
+            .then(regs => {
+                const latest = regs.find(r => r.patient_name === name && r.birth_date === birth);
+                if (!latest) return;
+
+                let currentStatus = latest.status || "";
+                let updatedStatus = currentStatus.replace("수액", "").replace(",", "").trim();
+                if (!updatedStatus) updatedStatus = "완료";
+
+                return fetch(`/dashboard/update_status_by_identity`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: name,
+                        birth_date: birth,
+                        status: updatedStatus
+                    })
+                });
+            })
+            .then(() => {
+                showToast(data.message || "저장이 완료되었습니다.");
+                // ✅ 필요시 자동 이동
+                // window.location.href = "/dashboard";
+            })
+            .catch(err => {
+                console.error("상태 업데이트 오류:", err);
+                showToast("저장 후 상태 업데이트에 실패했습니다.");
+            });
+
         })
         .catch(err => {
             console.error(err);

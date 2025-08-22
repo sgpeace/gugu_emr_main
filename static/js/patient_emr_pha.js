@@ -6,6 +6,26 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault(); // 기본 제출 막기
 
     try {
+      // ✅ 상태 처리: 복약 제거 → 없으면 완료
+      const currentStatus = document.getElementById("current_status").value || "";
+      let updatedStatus = currentStatus.replace("복약", "").trim();
+      if (!updatedStatus) updatedStatus = "완료";
+
+      // ✅ 변경된 상태를 form에 추가
+      const registrationId = document.getElementById("registration_id").value;
+      const statusInput = document.createElement("input");
+      statusInput.type = "hidden";
+      statusInput.name = "current_status";
+      statusInput.value = updatedStatus;
+      form.appendChild(statusInput);
+
+      const regIdInput = document.createElement("input");
+      regIdInput.type = "hidden";
+      regIdInput.name = "registration_id";
+      regIdInput.value = registrationId;
+      form.appendChild(regIdInput);
+
+      // ✅ 제출
       const res = await fetch("/patient_emr_pha", {
         method: "POST",
         body: new FormData(form),
@@ -20,12 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       showToast(data.message || "저장이 완료되었습니다.");
 
-      // ✅ 대시보드에서 제거할 환자 식별값 저장
-      const name  = document.getElementById("patient_name").value;
-      const birth = document.getElementById("patient_birth").value;
-      sessionStorage.setItem("pharmacyCompleted", `${name}||${birth}`);
-
-      // ✅ UX: 바로 대시보드로 이동 (원치 않으면 이 줄만 주석 처리)
+      // ✅ UX: 바로 대시보드로 이동
       setTimeout(() => { window.location.href = "/dashboard"; }, 600);
 
     } catch (err) {

@@ -40,6 +40,9 @@
       <input type="hidden" name="emr_id" value="{{ emr.id if emr else '' }}">
       <input type="hidden" name="name" value="{{ name }}">
       <input type="hidden" name="birth_date" value="{{ birth_date }}">
+      <!-- 아래 2줄을 form 태그 안에 추가 -->
+      <input type="hidden" name="name" value="{{ name }}">
+      <input type="hidden" name="birth_date" value="{{ birth_date }}">
 
       <!-- Read-only 기존 진료 정보 -->
       <fieldset class="section-fieldset">

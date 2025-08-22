@@ -293,8 +293,8 @@ window.addEventListener('click', e => {
 });
 
 // 4) 확인 버튼
-btnConfirm.addEventListener('click', e => {
-    e.preventDefault();  // 폼 서밋 방지
+btnConfirm.addEventListener('click', async e => {
+    e.preventDefault();
 
     const userSign = modalSign.value.trim();
     const realSign = document.querySelector('input[name="sign_dr"]').value.trim();
@@ -303,21 +303,37 @@ btnConfirm.addEventListener('click', e => {
         return;
     }
 
-    // URL query에서 emr_id 꺼내기
     const params = new URLSearchParams(window.location.search);
     const emrId = params.get('emr_id') || '';
 
     const name = document.querySelector('input[name="name"]').value;
     const birth = document.querySelector('input[name="birth_date"]').value;
-    const ivRadio2 = document.querySelector('input[name="iv_order"]:checked');
-    const ivFlag = ivRadio2 ? ivRadio2.value : '';
+    const ivRadio = document.querySelector('input[name="iv_order"]:checked');
+    const ivFlag = ivRadio ? ivRadio.value : '';
 
-    // 세션에 저장 (대시보드로 전달될 정보)
-    sessionStorage.setItem(
-        'completedPatient',
-        `${name}||${birth}||${ivFlag}||${emrId}`
-    );
+    // ✅ (1) 환자 상태 결정
+    const newStatus = (ivFlag === 'O') ? '수액 복약' : '복약';
 
-    // 대시보드로 이동
-    window.location.href = '/dashboard';
+    // ✅ (2) 서버에 상태 업데이트 요청
+    try {
+        const response = await fetch(`/dashboard/update_status_by_identity`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: name,
+                birth_date: birth,
+                status: newStatus
+            })
+        });
+
+        if (!response.ok) throw new Error('상태 업데이트 실패');
+
+        // ✅ (3) 세션 저장 후 이동
+        sessionStorage.setItem('completedPatient', `${name}||${birth}||${ivFlag}||${emrId}`);
+        window.location.href = '/dashboard';
+
+    } catch (error) {
+        console.error('상태 업데이트 오류:', error);
+        alert('환자 상태 업데이트에 실패했습니다.');
+    }
 });

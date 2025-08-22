@@ -38,6 +38,9 @@
             <input type="hidden" id="patient_name"  value="{{ emr.patient.name }}">
             <input type="hidden" id="patient_birth" value="{{ emr.patient.birth_date }}">
 
+            <!-- ✅ 상태 갱신을 위한 registration 정보 추가 -->
+            <input type="hidden" id="registration_id" name="registration_id" value="{{ registration.id }}">
+            <input type="hidden" id="current_status" name="current_status" value="{{ registration.status }}">
 
             <!-- 1) Vital Signs & IV Order (4컬럼) -->
             <fieldset class="section-fieldset">
@@ -107,7 +110,6 @@
                             </td>
                         </tr>
                         {% endfor %}
-                        <!-- 파스, 비타민, 근육통, 발백선, 피부염 행도 동일하게 출력하려면 아래와 같이 추가 -->
                         <tr>
                             <td>6</td>
                             <td>파스</td>
@@ -181,6 +183,7 @@
     </div>
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script src="/static/js/patient_emr_pha.js"></script>
 {% endblock %}
