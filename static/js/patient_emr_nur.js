@@ -41,8 +41,10 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(() => {
                 showToast(data.message || "저장이 완료되었습니다.");
-                // ✅ 필요시 자동 이동
-                // window.location.href = "/dashboard";
+                // ✅ 0.6초 뒤에 대시보드로 이동
+                setTimeout(() => {
+                    window.location.href = "/dashboard";
+                }, 600);
             })
             .catch(err => {
                 console.error("상태 업데이트 오류:", err);

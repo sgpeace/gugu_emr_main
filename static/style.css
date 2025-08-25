@@ -1053,17 +1053,7 @@ th {
     font-size: 14px;
 }
 
-.reset-button {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    background-color: #e2685f;
-    color: white;
-    padding: 10px 15px;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 14px;
-}
+
 
 
 
@@ -1310,3 +1300,32 @@ th {
     display: none;
 }
 
+.patient-list-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.export-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95rem;
+
+}
+
+.export-button:hover {
+    background-color: #218838;
+}
+
+.reset-button {
+    background-color: #e2685f;
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}

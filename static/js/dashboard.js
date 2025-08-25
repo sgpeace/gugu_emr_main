@@ -107,19 +107,39 @@ function addPatientToTable(patient) {
   });
 
   // ▶ 삭제 버튼
-  row.querySelector('.delete-button').addEventListener('click', () => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
+  // ▶ 삭제 버튼
+row.querySelector('.delete-button').addEventListener('click', () => {
+  if (!confirm("정말 삭제하시겠습니까?")) return;
 
-    fetch(`/dashboard/registrations/${patient.id}`, { method: 'DELETE' })
-      .then(res => {
-        if (!res.ok) throw new Error('삭제 실패');
-        row.remove();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('삭제에 실패했습니다.');
-      });
-  });
+  fetch(`/dashboard/registrations/${patient.id}`, { method: 'DELETE' })
+    .then(res => {
+      if (!res.ok) throw new Error('삭제 실패');
+
+      // 환자 테이블에서 삭제
+      row.remove();
+
+      // 이름과 생년월일 기반으로 리스트에서 삭제
+      const name = patient.name;
+      const birth = patient.birth_date;
+
+      const removeFromList = (listId) => {
+        const list = document.getElementById(listId);
+        Array.from(list.children).forEach(li => {
+          if (li.textContent.includes(name) && li.textContent.includes(birth)) {
+            list.removeChild(li);
+          }
+        });
+      };
+
+      removeFromList('treatment-list');
+      removeFromList('infusion-list');
+      removeFromList('medication-list');
+    })
+    .catch(err => {
+      console.error(err);
+      alert('삭제에 실패했습니다.');
+    });
+});
 }
 
 // ──────────────────────────────
@@ -296,3 +316,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 });
+
+
+

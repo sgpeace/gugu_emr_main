@@ -13,20 +13,22 @@
   <!-- 왼쪽: 오늘의 환자 리스트 -->
   <div class="patient-list-section card">
     <h2>오늘의 환자</h2>
-    <table class="patient-table">
-      <thead>
-        <tr>
-          <th>순번</th>
-          <th>이름</th>
-          <th>상태</th>
-          <th>입장</th>
-          <th class="delete-col">삭제</th>
-        </tr>
-      </thead>
-      <tbody id="patient-list">
-        <!-- 환자 목록 동적 추가 -->
-      </tbody>
-    </table>
+    <div class="patient-table-scroll" style="max-height: 780px; overflow-y: auto;">
+      <table class="patient-table" data-admin-mode="false">
+        <thead>
+          <tr>
+            <th>순번</th>
+            <th>이름</th>
+            <th>상태</th>
+            <th>입장</th>
+            <th>삭제</th>
+          </tr>
+        </thead>
+        <tbody id="patient-list">
+          <!-- 환자 목록 동적 추가 -->
+        </tbody>
+      </table>
+    </div>
 
     <div class="patient-controls">
       <input type="text" id="patient-search" placeholder="환자 등록">
@@ -36,11 +38,12 @@
     <div class="button-group">
       <button id="confirm-patient" class="confirm-button">확인</button>
       <button id="new-patient" class="new-button">신환 등록</button>
-      <button id="manage-button" class="manage-button">Admin</button>
+
     </div>
 
     <div class="patient-actions">
       <div class="button-group">
+        <button id="export-patients" class="export-button">내보내기</button>
         <button id="reset-patients" class="reset-button">초기화</button>
       </div>
     </div>
@@ -76,4 +79,5 @@
 
 {% block scripts %}
   <script src="/static/js/dashboard.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 {% endblock %}
