@@ -317,5 +317,43 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// 내보내기 버튼 클릭시 '오늘의 환자' 테이블을 엑셀 파일로 저장
+document.getElementById("export-patients").addEventListener("click", function () {
+  // 오늘의 환자 테이블 요소 선택
+  const table = document.querySelector(".patient-table");
+
+  if (!table) {
+    alert("환자 테이블을 찾을 수 없습니다.");
+    return;
+  }
+
+  const rows = [["이름", "생년월일"]];
+
+document.querySelectorAll("#patient-list tr").forEach(tr => {
+  const nameCell = tr.children[1].textContent.trim();
+  const birthMatch = nameCell.match(/\((.*?)\)/);
+  const birth = birthMatch ? birthMatch[1] : "";
+  const name = nameCell.replace(/\(.*?\)/, "").trim();
+  rows.push([name, birth]);
+});
+
+const worksheet = XLSX.utils.aoa_to_sheet(rows);
+const workbook = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(workbook, worksheet, "Today_Patients");
+
+// ✅ 오늘 날짜를 YYMMDD 형식으로 구하기
+const today = new Date();
+const y = String(today.getFullYear()).slice(-2); // '25'
+const m = String(today.getMonth() + 1).padStart(2, '0'); // '09'
+const d = String(today.getDate()).padStart(2, '0'); // '09'
+const dateStr = `${y}${m}${d}`; // '250909'
+
+// ✅ 파일 이름에 날짜 포함
+const filename = `today_patients_${dateStr}.xlsx`;
+
+// ✅ 엑셀 파일 다운로드
+XLSX.writeFile(workbook, filename);
+});
+
 
 

@@ -958,6 +958,24 @@ async def save_patient_emr_pha(
     db.commit()
     return JSONResponse({"message": "저장이 완료되었습니다."})
 
+from datetime import date, datetime
+
+def calculate_age(birth_date_str):
+    # birth_date_str 예: "930215" (YYMMDD)
+    yy = int(birth_date_str[:2])
+    mm = int(birth_date_str[2:4])
+    dd = int(birth_date_str[4:6])
+    year_prefix = 1900 if yy > int(str(date.today().year)[2:]) else 2000
+    full_year = year_prefix + yy
+    birth_date = date(full_year, mm, dd)
+
+    today = date.today()
+    intl_age = today.year - birth_date.year - (
+        (today.month, today.day) < (birth_date.month, birth_date.day)
+    )
+    kor_age = today.year - birth_date.year + 1
+    return f"{kor_age}세 (만{intl_age}세)"
+
 
 # @app.post("/patient_emr/complete_visit")
 # async def complete_visit(

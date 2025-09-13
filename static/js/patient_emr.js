@@ -22,9 +22,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // 4) 빈(optional) 필드 삭제
         if (!formData.get("emr_id")) formData.delete("emr_id");
-        if (!formData.get("age")) formData.delete("age");
         if (!formData.get("bt")) formData.delete("bt");
         if (!formData.get("bp2")) formData.delete("bp2");
+        if (!formData.get("age")) formData.delete("age");
         // …필요한 다른 optional 필드도 동일하게…
 
 
@@ -80,39 +80,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-document.addEventListener("DOMContentLoaded", function () {
-    // 날짜 선택 제한
-    const dateInput = document.getElementById("record_date");
-    const today = new Date().toISOString().split("T")[0];
-    dateInput.max = today;
-
-    // 나이 자동 계산
-    const birthRaw = document.querySelector('input[name="birth_date"]').value;  // "yymmdd"
-    if (birthRaw && birthRaw.length === 6) {
-        const yy = parseInt(birthRaw.slice(0, 2), 10);
-        const mm = parseInt(birthRaw.slice(2, 4), 10) - 1;  // JS월 0~11
-        const dd = parseInt(birthRaw.slice(4, 6), 10);
-        // 연도 보정: (00~현재)→2000대, 그 외→1900대
-        const fullYear = yy > new Date().getFullYear() % 100 ? 1900 + yy : 2000 + yy;
-        const birthDate = new Date(fullYear, mm, dd);
-        const now = new Date();
-
-        // 국제 나이 (만 나이)
-        let intlAge = now.getFullYear() - birthDate.getFullYear();
-        if (
-            now.getMonth() < birthDate.getMonth() ||
-            (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())
-        ) {
-            intlAge--;
-        }
-
-        // 한국 나이
-        const korAge = now.getFullYear() - birthDate.getFullYear() + 1;
-
-        document.getElementById("age").value = `${korAge}세 (만${intlAge}세)`;
-    }
-});
-
 
 
 document.querySelectorAll(".record-link").forEach(link => {
@@ -135,7 +102,7 @@ document.querySelectorAll(".record-link").forEach(link => {
             console.log("진료 기록 데이터:", data);
 
             // 받은 데이터를 폼에 채워 넣기
-            populateFormWithData(data);
+            populatePastForm(data);
         } catch (error) {
             console.error("진료 기록 조회 실패:", error);
             alert("진료 기록을 불러오는 데 실패했습니다.");
@@ -143,6 +110,123 @@ document.querySelectorAll(".record-link").forEach(link => {
     });
 });
 
+function populatePastForm(data) {
+    const pastForm = document.getElementById("past-emr-form");
+    if (!pastForm) return;
+
+    // Date
+    pastForm.querySelector("input[name='record_date']").value = data.record_date || "";
+
+    // Header
+    pastForm.querySelector("input[name='display_name']").value = data.name || "";
+    pastForm.querySelector("input[name='age']").value = data.age || "";
+
+    // 성별 select
+    const genderSelect = pastForm.querySelector("select[name='gender']");
+    if (genderSelect) {
+        Array.from(genderSelect.options).forEach(opt => {
+            opt.selected = (opt.text === data.gender);
+        });
+    }
+
+    // Vital signs
+    pastForm.querySelector("input[name='bt']").value = data.bt || "";
+    pastForm.querySelector("input[name='bp']").value = data.bp || "";
+    pastForm.querySelector("input[name='hr']").value = data.hr || "";
+    pastForm.querySelector("input[name='bp2']").value = data.bp2 || "";
+    pastForm.querySelector("input[name='bst']").value = data.bst || "";
+    pastForm.querySelector("input[name='post_bst']").value = data.post_bst || "";
+
+    // CC & onset/duration/assoc
+    pastForm.querySelector("textarea[name='cc']").value = data.cc || "";
+    pastForm.querySelector("input[name='onset']").value = data.onset || "";
+    pastForm.querySelector("input[name='duration']").value = data.duration || "";
+    pastForm.querySelector("input[name='assoc']").value = data.assoc || "";
+
+    // History
+    pastForm.querySelector("input[name='medication_hx']").value = data.medication_hx || "";
+    pastForm.querySelector("input[name='pmhx']").value = data.pmhx || "";
+    pastForm.querySelector("input[name='allergy']").value = data.allergy || "";
+    pastForm.querySelector("input[name='fhx']").value = data.fhx || "";
+    pastForm.querySelector("input[name='social']").value = data.social || "";
+
+    // PI, ROS, PE
+    pastForm.querySelector("textarea[name='pi']").value = data.pi || "";
+    pastForm.querySelector("input[name='ros']").value = data.ros || "";
+    pastForm.querySelector("input[name='pe']").value = data.pe || "";
+
+    // Problem list, Assessment
+    pastForm.querySelector("textarea[name='problem_list']").value = data.problem_list || "";
+    pastForm.querySelector("textarea[name='assessment']").value = data.assessment || "";
+
+    // N/Ex
+    pastForm.querySelector("input[name='mmse']").value = data.mmse || "";
+    pastForm.querySelector("input[name='cdr']").value = data.cdr || "";
+    pastForm.querySelector("input[name='psqi']").value = data.psqi || "";
+    pastForm.querySelector("input[name='isi']").value = data.isi || "";
+    pastForm.querySelector("input[name='gds']").value = data.gds || "";
+
+    if (data.ne_cog === "O") {
+        pastForm.querySelector("input[name='ne_cog'][value='O']").checked = true;
+    }
+    if (data.ne_sleep === "O") {
+        pastForm.querySelector("input[name='ne_sleep'][value='O']").checked = true;
+    }
+    if (data.ne_depress === "O") {
+        pastForm.querySelector("input[name='ne_depress'][value='O']").checked = true;
+    }
+
+    // Plan free input rows
+    for (let i = 1; i <= 5; i++) {
+        pastForm.querySelector(`input[name='plan_desc_${i}']`).value = data[`plan_desc_${i}`] || "";
+        pastForm.querySelector(`input[name='plan_method_${i}']`).value = data[`plan_method_${i}`] || "";
+        pastForm.querySelector(`input[name='plan_period_${i}']`).value = data[`plan_period_${i}`] || "";
+    }
+
+    // 파스
+    if (data.plan_pas_6) {
+        pastForm.querySelector(`input[name='plan_pas_6'][value='${data.plan_pas_6}']`).checked = true;
+    }
+    if (data.plan_pas_period_6) {
+        pastForm.querySelector(`input[name='plan_pas_period_6'][value='${data.plan_pas_period_6}']`).checked = true;
+    }
+
+    // 삐콤
+    if (data.plan_bear_7) {
+        pastForm.querySelector(`input[name='plan_bear_7'][value='${data.plan_bear_7}']`).checked = true;
+    }
+
+    // 근육통
+    if (data.plan_anti_8) {
+        pastForm.querySelector(`input[name='plan_anti_8'][value='${data.plan_anti_8}']`).checked = true;
+    }
+    if (data.plan_ruma_8) {
+        pastForm.querySelector(`input[name='plan_ruma_8'][value='${data.plan_ruma_8}']`).checked = true;
+    }
+
+    // 발백선
+    pastForm.querySelector("input[name='plan_tinea_site_9']").value = data.plan_tinea_site_9 || "";
+    if (data.plan_tinea_9) {
+        pastForm.querySelector(`input[name='plan_tinea_9'][value='${data.plan_tinea_9}']`).checked = true;
+    }
+
+    // 피부염
+    pastForm.querySelector("input[name='plan_derma_site_10']").value = data.plan_derma_site_10 || "";
+    if (data.plan_derma_10) {
+        pastForm.querySelector(`input[name='plan_derma_10'][value='${data.plan_derma_10}']`).checked = true;
+    }
+
+    // Medication counseling
+    pastForm.querySelector("textarea[name='med_counseling']").value = data.med_counseling || "";
+
+    // IV order
+    if (data.iv_order) {
+        pastForm.querySelector(`input[name='iv_order'][value='${data.iv_order}']`).checked = true;
+    }
+
+    // Signature
+    pastForm.querySelector("input[name='sign_dr']").value = data.sign_dr || "";
+}
 
 // 데이터를 폼에 채워 넣는 함수
 function populateFormWithData(data) {
@@ -154,6 +238,7 @@ function populateFormWithData(data) {
     document.querySelector("input[name='hr']").value = data.hr || "";
     document.querySelector("input[name='bst']").value = data.bst || "";
     document.querySelector("input[name='bt']").value = data.bt || "";
+    document.querySelector("input[name='age']").value = data.age || "";
 
     // Symptoms (C.C.)
     document.querySelector("textarea[name='cc']").value = data.cc || "";

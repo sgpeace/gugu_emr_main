@@ -558,7 +558,7 @@ ul {
   */
 .emr-layout {
     display: flex;
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     gap: 20px;
     padding: 20px;
@@ -579,7 +579,8 @@ ul {
 
 .emr-card h2 {
     margin-top: 0;
-    font-size: 1.2rem;
+    font-size: 2.0rem;
+    font-weight: bold;
     color: #333;
     margin-bottom: 15px;
 }
@@ -590,7 +591,7 @@ ul {
     ================================
   */
 .visits-panel {
-    flex: 1;
+    flex: 2;
     min-width: 180px;
 }
 
@@ -602,13 +603,18 @@ ul {
     text-decoration: underline;
 }
 
+.visits-panel .record-link {
+    font-size: 1.3rem;   /* 원하는 크기로 조정 (예: 0.9rem, 1.2rem) */
+    font-weight: 500;  /* 글씨 두께 */
+}
 /* 
     ================================
     가운데 패널: 새 진료차트 작성
     ================================
   */
 .form-panel {
-    flex: 6;
+    font-size: 1.3rem;
+    flex: 5;
 }
 
 .form-group {
@@ -872,7 +878,7 @@ ul {
     ================================
   */
 .recent-panel {
-    flex: 3;
+    flex: 5;
 }
 
 /* form-panel 안의 inline-group 스타일 */
