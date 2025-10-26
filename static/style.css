@@ -148,16 +148,26 @@ html {
 /* ========================= */
 
 /* 📌 메인 대시보드 레이아웃 */
+/* 대시보드 상단 타이틀 박스 */
 .dashboard-header {
-    width: 100%;
-    padding: 10px 20px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e0e0e0;
-    text-align: left;
-    font-size: 1rem;
-    color: #666;
-    font-weight: bold;
+  width: 100%;
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+
+  /* 중앙 정렬을 확실히 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  /* 글씨 키우고 굵게 */
+  font-size: clamp(1.6rem, 2.2vw + 0.5rem, 2.6rem);
+  font-weight: 800;
+  color: #333;
 }
+
+
 
 /* 왼쪽/오른쪽 레이아웃 */
 .dashboard-container {
@@ -1334,4 +1344,158 @@ th {
     text-decoration: none;
     border-radius: 4px;
     font-size: 14px;
+}
+
+/* Utility: generic hidden toggle */
+.hidden {
+    display: none !important;
+}
+
+/* ────────────────────────────── */
+/* 상단 타이틀: 가운데, 크게, 굵게 */
+/* ────────────────────────────── */
+.dashboard-header {
+  display: flex;               /* 가운데 정렬을 위해 flex 사용 */
+  justify-content: center;     /* 가로 가운데 */
+  align-items: center;          /* 세로 가운데(높이 변화에도 안정) */
+  padding: 16px 20px;           /* 살짝 여백 */
+  border-bottom: 1px solid #e0e0e0; /* 기존 경계 유지 */
+  background-color: #ffffff;    /* 기존 배경 유지 */
+}
+
+.dashboard-header .clinic-name {
+  font-size: 2.2rem;            /* 더 크게 */
+  font-weight: 800;             /* 볼드 */
+  color: #2b2f36;               /* 진한 톤 */
+  letter-spacing: 0.3px;        /* 가독성 */
+  text-align: center;           /* 혹시 모를 상속 덮기 */
+  display: block;               /* 줄 전체 사용 */
+}
+
+/* ────────────────────────────── */
+/* 진료중 / 수액중 / 복약중 제목 스타일 */
+/* ────────────────────────────── */
+.status-box h3 {
+  font-size: 1.5rem;            /* 크게 */
+  font-weight: 800;             /* 굵게 */
+  text-align: center;           /* 가운데 */
+  color: #2b2f36;
+  margin: 6px 0 12px;           /* 위아래 여백 */
+}
+
+/* 제목뿐 아니라 박스 내용도 중앙 정렬하고 싶다면(선택) */
+.status-box {
+  text-align: center;
+}
+
+/* 상태 리스트 항목 글자도 살짝 키우고 싶다면(선택) */
+.status-box ul li {
+  font-size: 1.05rem;
+}
+
+.patient-list-section h2 {
+  text-align: center;      /* 가운데 정렬 */
+  font-size: 1.8rem;       /* 글씨 크기 키움 */
+  font-weight: 800;        /* 굵게(Bold) */
+  color: #2b2f36;          /* 진한 글씨색 */
+  margin-top: 0;           /* 위 여백 제거 (균형) */
+  margin-bottom: 12px;     /* 아래 여백 약간 */
+  letter-spacing: 0.3px;   /* 글자 간격 */
+}
+
+/* ────────────────────────────── */
+/* ✅ 좌측 '확인' / '신환 등록' 버튼 크기 확대 */
+/* ────────────────────────────── */
+.confirm-button,
+.new-button {
+  font-size: 1.1rem;        /* 글씨 크기 키움 */
+  font-weight: 700;         /* 약간 굵게 */
+  padding: 10px 18px;       /* 버튼 내부 여백 확대 */
+  border-radius: 8px;       /* 모서리 둥글게 */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* hover 시 살짝 강조 효과 */
+.confirm-button:hover,
+.new-button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* 색상 통일 (원하면 조정 가능) */
+.confirm-button {
+  border: none;
+}
+
+.new-button {
+  border: none;
+  margin-left: 8px; /* 버튼 간격 */
+}
+
+/* ────────────────────────────── */
+/* 🧾 '오늘의 환자' 테이블 헤더 (순번 / 이름 / 상태 / 입장 / 삭제) */
+/* ────────────────────────────── */
+.patient-table th {
+  font-size: 1.2rem;       /* 글씨 크기 약간 키움 */
+  font-weight: 700;         /* 굵게 */
+  text-align: center;       /* 가운데 정렬 */
+  color: #2b2f36;           /* 진한 색상 */
+  padding: 10px 6px;        /* 상하 여백 조금 추가 */
+  border-bottom: 2px solid #ccc; /* 구분선 두껍게 */
+}
+
+/* ────────────────────────────── */
+/* 🔍 우측 하단 '확인' 버튼 스타일 확대 */
+/* ────────────────────────────── */
+#confirm-name-search {
+  font-size: 1.1rem;        /* 글씨 크기 키움 */
+  font-weight: 700;         /* 굵게 */
+  padding: 10px 18px;       /* 여백 확대 */
+  border-radius: 8px;       /* 둥근 모서리 */
+  border: none;             /* 테두리 제거 */
+  background-color: #2e7d32;/* 진한 파란색 */
+  color: #fff;              /* 흰색 글씨 */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* 마우스 올렸을 때 살짝 커지는 효과 */
+#confirm-name-search:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* ────────────────────────────── */
+/* 📦 내보내기 / 초기화 버튼 hover 효과 추가 */
+/* ────────────────────────────── */
+.export-button,
+.reset-button {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease; /* hover 애니메이션 부드럽게 */
+}
+
+/* 내보내기: 파란색 계열 */
+.export-button {
+  background-color: #2e7d32;
+  color: #fff;
+}
+
+/* 초기화: 붉은색 계열 */
+.reset-button {
+  background-color: #e53935;
+  color: #fff;
+  margin-left: 8px; /* 버튼 간격 */
+}
+
+/* 🖱 hover 효과 */
+.export-button:hover,
+.reset-button:hover {
+  transform: scale(1.05); /* 살짝 커지는 효과 */
+  opacity: 0.9;           /* 색상 약간 어두워짐 */
 }

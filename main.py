@@ -882,23 +882,22 @@ def save_patient_emr_nur(
 
 # ─── 약국부 EMR 폼 ───────────────────────────────────────
 # ─── 약국부 EMR 폼 ───────────────────────────────────────
+from typing import Optional
+
 @app.get("/patient_emr_pha", response_class=HTMLResponse)
 async def patient_emr_pha(
     request: Request,
     name: str,
     birth_date: str,
+    emr_id: Optional[int] = None,   # ✅ emr_id 추가
     db: Session = Depends(get_db),
 ):
-    # 1) Patient 조회
-    patient = (
-        db.query(Patient)
-          .filter(Patient.name == name, Patient.birth_date == birth_date)
-          .first()
-    )
+    # 1) Patient
+    patient = db.query(Patient).filter(Patient.name == name, Patient.birth_date == birth_date).first()
     if not patient:
         raise HTTPException(status_code=404, detail="환자를 찾을 수 없습니다.")
 
-    # 2) 해당 환자의 EMR 조회
+    # 2) 방문기록 전체
     visit_records = (
         db.query(EMR)
           .filter(EMR.patient_id == patient.id)
@@ -906,30 +905,29 @@ async def patient_emr_pha(
           .all()
     )
 
-    # 3) 최신 EMR 1건
-    emr = visit_records[0] if visit_records else None
+    # 3) 표시할 EMR: emr_id가 있으면 해당건, 없으면 최신
+    if emr_id:
+        emr = db.query(EMR).filter(EMR.id == emr_id, EMR.patient_id == patient.id).first()
+    else:
+        emr = visit_records[0] if visit_records else None
     if not emr:
         raise HTTPException(status_code=404, detail="아직 생성된 진료 기록이 없습니다.")
 
-    # ✅ 4) 최신 Registration 1건 조회 (status가 '완료'가 아닌 것 우선)
+    # 4) 최신 Registration 1건 (기존 로직 그대로)
     registration = (
         db.query(Registration)
-          .filter(
-              Registration.patient_name == name,
-              Registration.birth_date == birth_date
-          )
+          .filter(Registration.patient_name == name, Registration.birth_date == birth_date)
           .order_by(Registration.id.desc())
           .first()
     )
 
-    # 5) 템플릿 렌더
     return templates.TemplateResponse("patient_emr_pha.html", {
         "request":       request,
         "name":          name,
         "birth_date":    birth_date,
         "visit_records": visit_records,
-        "emr":           emr,
-        "registration":  registration,  # ✅ 템플릿에서 쓰기 위해 꼭 포함!
+        "emr":           emr,              # ✅ 선택된 EMR 전달
+        "registration":  registration,
     })
 
 @app.post("/patient_emr_pha")

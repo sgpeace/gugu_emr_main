@@ -50,8 +50,8 @@
 
         <label for="gender">&nbsp;&nbsp;성별</label>
         <select id="gender" name="gender">
-          <option>남</option>
-          <option>여</option>
+        <option value="남">남</option>
+        <option value="여">여</option>
         </select>
 
         <label for="age">&nbsp;&nbsp;나이</label>
@@ -347,7 +347,11 @@
 
   <!-- (3) 과거 진료 기록 -->
 <div class="emr-card form-panel" id="past-panel">
-  <h2>과거 진료 기록</h2>
+  <h2>
+    과거 진료 기록
+    <button type="button" id="toggle-past-btn" style="margin-left: 10px; font-size: 0.9rem;">숨기기</button>
+  </h2>
+  <div id="past-panel-body">
   <form id="past-emr-form">
     <input type="hidden" name="name" value="{{ name }}">
     <input type="hidden" name="birth_date" value="{{ birth_date }}">
@@ -611,6 +615,7 @@
       <label>Dr. <input type="text" name="sign_dr" readonly></label>
     </div>
   </form>
+  </div>
 </div>
 
   <!-- ─── 진료 완료 확인 모달 ─── -->

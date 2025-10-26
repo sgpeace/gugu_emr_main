@@ -15,19 +15,23 @@
 
 <div class="emr-layout">
 
-    <!-- 방문 기록 -->
-    <div class="emr-card visits-panel">
-        <h2>방문 기록</h2>
-        <ul>
-            {% for record in visit_records %}
-            <li data-visit-date="{{ record.record_date.strftime('%Y-%m-%d') }}">
-                <a href="#" class="record-link">{{ record.record_date.strftime('%Y-%m-%d') }}</a>
-            </li>
-            {% else %}
-            <li>진료 기록이 없습니다.</li>
-            {% endfor %}
-        </ul>
-    </div>
+<!-- (1) 방문 기록 - 약국부 페이지에서 아래처럼 변경 -->
+<div class="emr-card visits-panel">
+  <h2>방문 기록</h2>
+  <ul>
+    {% for record in visit_records %}
+    <li>
+      <a
+        href="/patient_emr_pha?name={{ name|urlencode }}&birth_date={{ birth_date|urlencode }}&emr_id={{ record.id }}">
+        {{ record.record_date.strftime('%Y-%m-%d') }}
+        {% if emr and record.id == emr.id %}<strong>&nbsp;✔</strong>{% endif %}
+      </a>
+    </li>
+    {% else %}
+    <li>진료 기록이 없습니다.</li>
+    {% endfor %}
+  </ul>
+</div>
 
     <!-- 상세 진료 정보 (읽기 전용) + 서명란 -->
     <div class="emr-card form-panel">
@@ -165,15 +169,27 @@
 
             <!-- 6) 복약지도 / 약사 서명란 -->
             <fieldset class="section-fieldset">
-                <legend>서명</legend>
-                <div class="form-group">
-                    <label for="sign_med_counsel">복약지도자</label>
-                    <input type="text" id="sign_med_counsel" name="sign_med_counsel" placeholder="서명">
-                </div>
-                <div class="form-group">
-                    <label for="sign_pharmacist">약국부장 서명</label>
-                    <input type="text" id="sign_pharmacist" name="sign_pharmacist" placeholder="서명">
-                </div>
+            <legend>서명</legend>
+
+            <div class="form-group">
+                <label for="sign_med_counsel">복약지도자</label>
+                <!-- ✅ DB 저장값을 화면에 미리 채움 -->
+                <input type="text"
+                    id="sign_med_counsel"
+                    name="sign_med_counsel"
+                    placeholder="서명"
+                    value="{{ emr.counseling_pharmacist or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="sign_pharmacist">약국부장 서명</label>
+                <!-- ✅ DB 저장값을 화면에 미리 채움 -->
+                <input type="text"
+                    id="sign_pharmacist"
+                    name="sign_pharmacist"
+                    placeholder="서명"
+                    value="{{ emr.sign_pharmacist or '' }}">
+            </div>
             </fieldset>
 
             <div class="button-group">

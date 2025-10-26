@@ -2,6 +2,55 @@
 // Helper Functions
 // ──────────────────────────────
 
+// ──────────────────────────────
+// Chart Picker Modal (동적 생성)
+// ──────────────────────────────
+let chartPickerModal, chartPickerClose, goMed, goPha, goNur;
+
+function ensureChartPickerModal() {
+  if (chartPickerModal) return; // 한 번만 생성
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = `
+    <div id="chart-picker-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:380px;">
+        <span class="close-button" id="chart-picker-close">&times;</span>
+        <h3 style="margin-top:0;">조회하려는 차트를 선택하시오.</h3>
+        <p style="color:#666; margin:6px 0 16px;">부서를 선택하면 해당 차트로 이동합니다.</p>
+        <div class="button-group" style="justify-content:space-between;">
+          <a id="go-med" class="button" style="flex:1;">진료부</a>
+          <a id="go-pha" class="button" style="flex:1; background:#6c63ff;">약국부</a>
+          <a id="go-nur" class="button" style="flex:1; background:#ff7f50;">간호부</a>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrapper);
+
+  chartPickerModal = document.getElementById('chart-picker-modal');
+  chartPickerClose = document.getElementById('chart-picker-close');
+  goMed = document.getElementById('go-med');
+  goPha = document.getElementById('go-pha');
+  goNur = document.getElementById('go-nur');
+
+  chartPickerClose.addEventListener('click', closeChartPicker);
+  window.addEventListener('click', (e) => { if (e.target === chartPickerModal) closeChartPicker(); });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeChartPicker(); });
+}
+
+function openChartPicker(name, birth) {
+  ensureChartPickerModal();
+  const n = encodeURIComponent(name);
+  const b = encodeURIComponent(birth);
+  goMed.setAttribute('href', `/patient_emr?name=${n}&birth_date=${b}`);
+  goPha.setAttribute('href', `/patient_emr_pha?name=${n}&birth_date=${b}`);
+  goNur.setAttribute('href', `/patient_emr_nur?name=${n}&birth_date=${b}`);
+  chartPickerModal.style.display = 'block';
+}
+
+function closeChartPicker() {
+  if (chartPickerModal) chartPickerModal.style.display = 'none';
+}
+
 // ▶ 진료 링크: 진료 중인 환자의 링크를 만들어 treatment-list에 추가
 function appendTreatmentLink(p) {
   const displayname = p.name || p.patient_name;
@@ -241,22 +290,30 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.result && data.result.length > 0) {
           data.result.forEach(item => {
             const entry = document.createElement("div");
-            entry.textContent = `${item.name} (${item.birth_date})`;
-            entry.style.cursor = "pointer";
-            entry.addEventListener("click", () => {
-              window.location.href = `/patient_emr?name=${encodeURIComponent(item.name)}&birth_date=${encodeURIComponent(item.birth_date)}`;
-            });
-            resultsDiv.appendChild(entry);
+            entry.innerHTML = `
+            <a href="#" class="open-chart-picker"
+               data-name="${item.name}"
+               data-birth="${item.birth_date}">
+               ${item.name} <span class="small-birthdate">(${item.birth_date})</span>
+            </a>`;
+          entry.addEventListener("click", (e) => {
+            const a = e.target.closest('.open-chart-picker');
+            if (!a) return;
+            e.preventDefault();
+            openChartPicker(a.getAttribute('data-name'), a.getAttribute('data-birth'));
           });
-        } else {
-          resultsDiv.textContent = "검색 결과가 없습니다.";
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        alert("데이터를 불러오는 중 오류가 발생했습니다.");
-      });
-  });
+
+          resultsDiv.appendChild(entry);
+        });
+      } else {
+        resultsDiv.textContent = "검색 결과가 없습니다.";
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("데이터를 불러오는 중 오류가 발생했습니다.");
+    });
+});
 
   // ▶ 상단 '확인' 버튼 클릭 시 환자 리스트 표시
   document.getElementById("confirm-patient").addEventListener("click", () => {

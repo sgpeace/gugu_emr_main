@@ -70,6 +70,17 @@ document.addEventListener("DOMContentLoaded", function () {
             toast.classList.remove("error", "success");
         }, 3000);
     }
+
+    // 과거 진료 기록 토글
+    const pastPanel = document.getElementById("past-panel-body");
+    const togglePastBtn = document.getElementById("toggle-past-btn");
+    if (pastPanel && togglePastBtn) {
+        togglePastBtn.addEventListener("click", () => {
+            pastPanel.classList.toggle("hidden");
+            const isHidden = pastPanel.classList.contains("hidden");
+            togglePastBtn.textContent = isHidden ? "보이기" : "숨기기";
+        });
+    }
 });
 
 
