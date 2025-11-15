@@ -206,6 +206,10 @@ class NewPatientChart(Base):
 # === FASTAPI SETUP ===
 app = FastAPI()
 
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
+
 # 정적파일 경로 설정
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
