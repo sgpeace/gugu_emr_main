@@ -1499,3 +1499,660 @@ th {
   transform: scale(1.05); /* 살짝 커지는 효과 */
   opacity: 0.9;           /* 색상 약간 어두워짐 */
 }
+
+
+/* =========================================================
+   ✅ 2026 Modern Dashboard Override (붙여넣기 전용)
+   - 파일 분리 없이, 기존 스타일을 "아래에서 덮어쓰기"
+   - 적용 범위: 전체 공통 + dashboard 중심
+   ========================================================= */
+
+/* 0) Design tokens (톤/여백/라운드/그림자 통일) */
+:root{
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+
+  --text: #111827;
+  --muted: #6b7280;
+  --border: rgba(17, 24, 39, 0.10);
+
+  --primary: #2563eb;         /* 파란 계열(현대적) */
+  --primary-600: #1d4ed8;
+  --success: #16a34a;
+  --danger: #ef4444;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 10px 30px rgba(17,24,39,0.08);
+
+  --ring: 0 0 0 4px rgba(37,99,235,0.18);
+
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+}
+
+/* 1) Global baseline (중복 body 규칙 안정화) */
+html, body {
+  height: 100%;
+}
+
+body{
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Noto Sans KR', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  line-height: 1.45;
+}
+
+/* 링크/텍스트 */
+a{ color: inherit; }
+small, .small, .small-birthdate { color: var(--muted) !important; }
+
+/* 2) 공통 카드 느낌 통일 */
+.card,
+.patient-list-section,
+.status-box,
+.emr-card,
+.login-box,
+.popup-form {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* 3) 공통 입력창/셀렉트/텍스트 영역 (대시보드 입력 포함) */
+input[type="text"],
+input[type="date"],
+input[type="number"],
+select,
+textarea{
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease;
+  font-size: 0.98rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color: rgba(37,99,235,0.45);
+  box-shadow: var(--ring);
+}
+
+/* readonly/disabled 톤 */
+input[readonly],
+textarea[readonly],
+select:disabled,
+input:disabled{
+  background: var(--surface-2) !important;
+  color: #374151 !important;
+}
+
+/* 4) 공통 버튼 톤 (기존 버튼 클래스들 덮기) */
+button,
+.button,
+.confirm-button,
+.new-button,
+.export-button,
+.reset-button,
+.manage-button,
+.status-box button,
+#confirm-name-search {
+  border: 1px solid transparent;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease, background-color .15s ease;
+}
+
+button:hover,
+.button:hover,
+.confirm-button:hover,
+.new-button:hover,
+.export-button:hover,
+.reset-button:hover,
+.manage-button:hover,
+.status-box button:hover,
+#confirm-name-search:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(17,24,39,0.10);
+  opacity: 0.98;
+}
+
+button:active,
+.button:active,
+.confirm-button:active,
+.new-button:active,
+.export-button:active,
+.reset-button:active{
+  transform: translateY(0px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ✅ 버튼 색상 재정의 */
+.confirm-button,
+#confirm-name-search,
+.export-button{
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+.confirm-button:hover,
+#confirm-name-search:hover,
+.export-button:hover{
+  background: var(--primary-600) !important;
+}
+
+.new-button,
+.manage-button{
+  background: #111827 !important;
+  color: #fff !important;
+}
+
+.reset-button{
+  background: var(--danger) !important;
+  color: #fff !important;
+}
+
+/* 5) Dashboard header: 더 modern하게 */
+.dashboard-header{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(246,247,251,0.80) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border) !important;
+  padding: 18px 20px !important;
+}
+
+.dashboard-header .clinic-name{
+  font-size: clamp(1.4rem, 1.3vw + 1rem, 2.1rem) !important;
+  letter-spacing: 0.2px;
+  color: var(--text) !important;
+}
+
+/* 6) Dashboard layout spacing */
+.dashboard-container{
+  gap: 18px !important;
+  padding: 18px !important;
+}
+
+/* 좌측/우측 섹션을 "정보 카드"처럼 */
+.patient-list-section{
+  padding: 18px !important;
+  box-shadow: var(--shadow) !important;
+}
+
+.status-section{
+  gap: 18px !important;
+}
+
+/* status-box: 제목/내용 정돈 + 시각적 계층 */
+.status-box{
+  padding: 16px !important;
+  box-shadow: var(--shadow) !important;
+  border-radius: var(--radius) !important;
+}
+
+.status-box h3{
+  border-bottom: 1px solid var(--border) !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 12px !important;
+  font-size: 1.15rem !important;
+  color: var(--text) !important;
+}
+
+/* status list 항목: pill 느낌 */
+.status-box ul li{
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 10px 10px !important;
+}
+
+/* 7) 환자 테이블: "현대적 데이터 테이블" 느낌 */
+.patient-table{
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.patient-table th{
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 12px 10px !important;
+}
+
+.patient-table td{
+  border-bottom: 1px solid var(--border) !important;
+  padding: 11px 10px !important;
+  background: #fff;
+}
+
+.patient-table tr:hover td{
+  background: #f8fafc;
+}
+
+/* 8) Search 영역: 검색창을 “컴포넌트”처럼 */
+.patient-controls input#patient-search,
+.search-patient-section input,
+#new-patient-search{
+  border-radius: 14px !important;
+}
+
+/* suggestion list: dropdown 느낌 */
+.suggestion-list{
+  border-radius: 12px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
+  margin-top: 6px !important;
+}
+
+.suggestion-list li{
+  padding: 10px 12px !important;
+}
+
+.suggestion-list li:hover{
+  background: #eff6ff !important;
+}
+
+/* 9) toast: 더 세련된 알림 */
+.toast{
+  border-radius: 14px !important;
+  box-shadow: var(--shadow) !important;
+  border: 1px solid rgba(255,255,255,0.20);
+}
+
+.toast.success{ background: var(--success) !important; }
+.toast.error{ background: var(--danger) !important; }
+
+/* 10) 반응형: 대시보드도 좁아지면 세로 스택 */
+@media (max-width: 1100px){
+  .dashboard-container{
+    flex-direction: column;
+  }
+  .patient-list-section,
+  .status-section{
+    width: 100% !important;
+  }
+  .status-container{
+    flex-direction: column;
+  }
+}
+
+/* =========================================================
+   ✅ Button palette override (톤다운 + 조화)
+   - 붙여넣기: style.css 맨 아래
+   ========================================================= */
+
+:root{
+  /* 버튼 전용 팔레트: 병원/EMR 톤 (차분한 슬레이트-블루) */
+  --btn-primary-bg: #3b5b7a;      /* 메인: muted navy */
+  --btn-primary-bg-hover: #334f6b;
+
+  --btn-neutral-bg: #eef2f6;      /* 중립: light slate */
+  --btn-neutral-bg-hover: #e4eaf1;
+  --btn-neutral-text: #233042;
+
+  --btn-danger-bg: #b4534f;       /* 위험: muted red */
+  --btn-danger-bg-hover: #9f4744;
+
+  --btn-border: rgba(17, 24, 39, 0.12);
+  --btn-shadow: 0 8px 18px rgba(17,24,39,0.10);
+}
+
+/* 공통 버튼 기본 톤(채도 낮추고 통일) */
+button,
+.button,
+.confirm-button,
+.new-button,
+.export-button,
+.reset-button,
+.manage-button,
+.status-box button,
+#confirm-name-search {
+  border-radius: 12px !important;
+  border: 1px solid var(--btn-border) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  font-weight: 700 !important;
+}
+
+/* hover 시에도 “쨍함” 대신 은은한 상승감 */
+button:hover,
+.button:hover,
+.confirm-button:hover,
+.new-button:hover,
+.export-button:hover,
+.reset-button:hover,
+.manage-button:hover,
+.status-box button:hover,
+#confirm-name-search:hover {
+  box-shadow: var(--btn-shadow) !important;
+  transform: translateY(-1px) !important;
+  opacity: 1 !important;
+}
+
+/* =========================
+   ✅ 역할별 버튼 컬러 매핑
+   ========================= */
+
+/* (1) 기본 확인/검색/주요 액션 = Primary (차분한 네이비) */
+.confirm-button,
+#confirm-name-search {
+  background: var(--btn-primary-bg) !important;
+  color: #fff !important;
+}
+.confirm-button:hover,
+#confirm-name-search:hover {
+  background: var(--btn-primary-bg-hover) !important;
+}
+
+/* (2) 내보내기 = Primary와 같은 계열로 통일 (강조는 유지, 채도만 낮춤) */
+.export-button{
+  background: var(--btn-primary-bg) !important;
+  color: #fff !important;
+}
+.export-button:hover{
+  background: var(--btn-primary-bg-hover) !important;
+}
+
+/* (3) 신환 등록 / 관리 버튼 = Neutral (튀지 않게) */
+.new-button,
+.manage-button {
+  background: var(--btn-neutral-bg) !important;
+  color: var(--btn-neutral-text) !important;
+}
+.new-button:hover,
+.manage-button:hover {
+  background: var(--btn-neutral-bg-hover) !important;
+}
+
+/* (4) 초기화 = Danger (하지만 muted) */
+.reset-button{
+  background: var(--btn-danger-bg) !important;
+  color: #fff !important;
+}
+.reset-button:hover{
+  background: var(--btn-danger-bg-hover) !important;
+}
+
+/* (5) 상태 박스 안의 작은 버튼도 동일한 톤으로(현재 초록 계열 제거) */
+.status-box button{
+  background: var(--btn-neutral-bg) !important;
+  color: var(--btn-neutral-text) !important;
+}
+.status-box button:hover{
+  background: var(--btn-neutral-bg-hover) !important;
+}
+
+/* (선택) 작은 버튼들 크기 균형: 너무 아기자기해 보이면 정렬감 */
+.patient-list-actions button,
+.patient-list-actions .export-button,
+.patient-list-actions .reset-button {
+  padding: 10px 14px !important;
+}
+
+/* =========================================================
+   ✅ Button palette override v2
+   - 기본 버튼: '메인대시보드/저장'과 유사한 청록 톤
+   - 내보내기: 연두 톤
+   - 붙여넣기: style.css 맨 아래
+   ========================================================= */
+
+:root{
+  /* 메인대시보드/저장 톤에 맞춘 청록(블루그린) */
+  --btn-primary-bg: #3f7f93;        /* teal */
+  --btn-primary-bg-hover: #356f81;
+
+  /* 연두(내보내기 전용) */
+  --btn-export-bg: #8bc34a;         /* light green */
+  --btn-export-bg-hover: #7cb342;
+
+  /* 위험(초기화/삭제) */
+  --btn-danger-bg: #e07a73;         /* muted coral */
+  --btn-danger-bg-hover: #d46b64;
+
+  /* 중립(신환등록/관리 등) */
+  --btn-neutral-bg: #eef3f6;
+  --btn-neutral-bg-hover: #e4edf2;
+  --btn-neutral-text: #22313f;
+
+  --btn-border: rgba(17, 24, 39, 0.12);
+  --btn-shadow: 0 10px 22px rgba(17,24,39,0.10);
+}
+
+/* 공통: 둥글게 + 과한 그림자 제거 + 통일감 */
+button,
+.button,
+.confirm-button,
+.new-button,
+.export-button,
+.reset-button,
+.manage-button,
+.status-box button,
+#confirm-name-search,
+.back-button,
+.btn-submit,
+.btn-complete {
+  border-radius: 12px !important;
+  border: 1px solid var(--btn-border) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  font-weight: 700 !important;
+  transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease, opacity .18s ease !important;
+}
+
+button:hover,
+.button:hover,
+.confirm-button:hover,
+.new-button:hover,
+.export-button:hover,
+.reset-button:hover,
+.manage-button:hover,
+.status-box button:hover,
+#confirm-name-search:hover,
+.back-button:hover,
+.btn-submit:hover,
+.btn-complete:hover {
+  box-shadow: var(--btn-shadow) !important;
+  transform: translateY(-1px) !important;
+  opacity: 1 !important;
+}
+
+/* =========================
+   ✅ Primary(기본): 청록 톤
+   ========================= */
+.confirm-button,
+#confirm-name-search,
+.back-button,
+.btn-submit,
+.btn-complete {
+  background: var(--btn-primary-bg) !important;
+  color: #fff !important;
+}
+.confirm-button:hover,
+#confirm-name-search:hover,
+.back-button:hover,
+.btn-submit:hover,
+.btn-complete:hover {
+  background: var(--btn-primary-bg-hover) !important;
+}
+
+/* =========================
+   ✅ Export(내보내기): 연두 톤
+   ========================= */
+.export-button{
+  background: var(--btn-export-bg) !important;
+  color: #103014 !important; /* 연두 위에서 글자 가독성 */
+  border-color: rgba(16,48,20,0.18) !important;
+}
+.export-button:hover{
+  background: var(--btn-export-bg-hover) !important;
+}
+
+/* =========================
+   ✅ Neutral(신환등록/관리/상태버튼): 튀지 않게
+   ========================= */
+.new-button,
+.manage-button,
+.status-box button {
+  background: var(--btn-neutral-bg) !important;
+  color: var(--btn-neutral-text) !important;
+}
+.new-button:hover,
+.manage-button:hover,
+.status-box button:hover {
+  background: var(--btn-neutral-bg-hover) !important;
+}
+
+/* =========================
+   ✅ Danger(초기화/삭제): 너무 쨍하지 않은 코랄
+   ========================= */
+.reset-button,
+.delete-button {
+  background: var(--btn-danger-bg) !important;
+  color: #fff !important;
+  border-color: rgba(120, 26, 20, 0.18) !important;
+}
+.reset-button:hover,
+.delete-button:hover {
+  background: var(--btn-danger-bg-hover) !important;
+}
+
+/* (선택) 버튼 높이/정렬감 통일 */
+.confirm-button,
+.new-button,
+.export-button,
+.reset-button,
+#confirm-name-search {
+  padding: 10px 16px !important;
+}
+
+/* =========================================================
+   ✅ Make ALL buttons look like "신환 등록" (neutral outline)
+   - 붙여넣기: style.css 맨 아래
+   ========================================================= */
+
+:root{
+  --btn-bg: #eef3f6;            /* 신환등록 느낌의 연한 회색 */
+  --btn-bg-hover: #e4edf2;
+  --btn-text: #22313f;
+  --btn-border: rgba(17, 24, 39, 0.16);
+  --btn-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  --btn-shadow-hover: 0 10px 22px rgba(17,24,39,0.10);
+}
+
+/* 🔥 모든 버튼/버튼 역할 요소를 동일 디자인으로 강제 */
+button,
+input[type="button"],
+input[type="submit"],
+a.back-button,
+.button,
+.confirm-button,
+.new-button,
+.export-button,
+.reset-button,
+.manage-button,
+.status-box button,
+.btn-submit,
+.btn-complete,
+#confirm-name-search,
+.update-button,
+.delete-button,
+#save-new-patient,
+#cancel-new-patient,
+#confirm-complete,
+#cancel-complete,
+#toggle-past-btn,
+#save-vitals-btn,
+.btn-chart {
+  background: var(--btn-bg) !important;
+  color: var(--btn-text) !important;
+  border: 1px solid var(--btn-border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--btn-shadow) !important;
+
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  padding: 10px 16px !important;
+
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease, opacity .18s ease !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+/* hover/focus 통일 */
+button:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover,
+a.back-button:hover,
+.button:hover,
+.confirm-button:hover,
+.new-button:hover,
+.export-button:hover,
+.reset-button:hover,
+.manage-button:hover,
+.status-box button:hover,
+.btn-submit:hover,
+.btn-complete:hover,
+#confirm-name-search:hover,
+.update-button:hover,
+.delete-button:hover,
+#save-new-patient:hover,
+#cancel-new-patient:hover,
+#confirm-complete:hover,
+#cancel-complete:hover,
+#toggle-past-btn:hover,
+#save-vitals-btn:hover,
+.btn-chart:hover {
+  background: var(--btn-bg-hover) !important;
+  box-shadow: var(--btn-shadow-hover) !important;
+  transform: translateY(-1px) !important;
+  opacity: 1 !important;
+}
+
+/* 키보드 포커스도 깔끔하게 */
+button:focus,
+input[type="button"]:focus,
+input[type="submit"]:focus,
+a.back-button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(63, 127, 147, 0.18), var(--btn-shadow) !important;
+}
+
+/* 비활성화 */
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* 작은 버튼(테이블 안 update/delete 등) 너무 커 보이면 약간만 줄임 */
+.update-button,
+.delete-button,
+#toggle-past-btn {
+  padding: 8px 12px !important;
+  font-size: 0.95rem !important;
+}
+

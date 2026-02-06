@@ -40,9 +40,7 @@
       <input type="hidden" name="emr_id" value="{{ emr.id if emr else '' }}">
       <input type="hidden" name="name" value="{{ name }}">
       <input type="hidden" name="birth_date" value="{{ birth_date }}">
-      <!-- 아래 2줄을 form 태그 안에 추가 -->
-      <input type="hidden" name="name" value="{{ name }}">
-      <input type="hidden" name="birth_date" value="{{ birth_date }}">
+
 
       <!-- Read-only 기존 진료 정보 -->
       <fieldset class="section-fieldset">
@@ -65,30 +63,66 @@
 
       <!-- 간호부 입력란 -->
       <fieldset class="section-fieldset">
-        <legend>간호 기록</legend>
-        <div class="no-wrap">
-          <div class="inline-item" style="flex:2;">
-            <label for="iv_route">IV 경로</label>
-            <input type="text" id="iv_route" name="iv_route" value="{{ emr.iv_route or '' }}">
-          </div>
-          <div class="inline-item" style="flex:1;">
-            <label for="nursing_result">결과</label>
-            <input type="text" id="nursing_result" name="nursing_result" value="{{ emr.nursing_result or '' }}"
-              placeholder="성공/실패">
-          </div>
-          <div class="inline-item" style="flex:1;">
-            <label for="sign_nurse">SN</label>
-            <input type="text" id="sign_nurse" name="sign_nurse" value="{{ emr.sign_nurse or '' }}" placeholder="서명">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="nurse_note">메모 / 특이사항</label>
-          <textarea id="nurse_note" name="nurse_note" rows="2">{{ emr.nurse_note or '' }}</textarea>
-        </div>
-      </fieldset>
+  <legend>간호 기록</legend>
+
+  <!-- 1차 -->
+  <div class="no-wrap" style="margin-bottom:8px;">
+    <div class="inline-item" style="flex:2;">
+      <label for="iv_route_1">1차시도 IV 경로</label>
+      <input type="text" id="iv_route_1" name="iv_route_1" value="{{ emr.iv_route_1 or '' }}">
+    </div>
+    <div class="inline-item" style="flex:1;">
+      <label for="nursing_result_1">1차시도 결과</label>
+      <input type="text" id="nursing_result_1" name="nursing_result_1" value="{{ emr.nursing_result_1 or '' }}" placeholder="성공/실패">
+    </div>
+    <div class="inline-item" style="flex:1;">
+      <label for="sign_nurse_1">1차시도 SN</label>
+      <input type="text" id="sign_nurse_1" name="sign_nurse_1" value="{{ emr.sign_nurse_1 or '' }}" placeholder="서명">
+    </div>
+  </div>
+
+  <!-- 2차 -->
+  <div class="no-wrap" style="margin-bottom:8px;">
+    <div class="inline-item" style="flex:2;">
+      <label for="iv_route_2">2차시도 IV 경로</label>
+      <input type="text" id="iv_route_2" name="iv_route_2" value="{{ emr.iv_route_2 or '' }}">
+    </div>
+    <div class="inline-item" style="flex:1;">
+      <label for="nursing_result_2">2차시도 결과</label>
+      <input type="text" id="nursing_result_2" name="nursing_result_2" value="{{ emr.nursing_result_2 or '' }}" placeholder="성공/실패">
+    </div>
+    <div class="inline-item" style="flex:1;">
+      <label for="sign_nurse_2">2차시도 SN</label>
+      <input type="text" id="sign_nurse_2" name="sign_nurse_2" value="{{ emr.sign_nurse_2 or '' }}" placeholder="서명">
+    </div>
+  </div>
+
+  <!-- 3차 -->
+  <div class="no-wrap">
+    <div class="inline-item" style="flex:2;">
+      <label for="iv_route_3">3차시도 IV 경로</label>
+      <input type="text" id="iv_route_3" name="iv_route_3" value="{{ emr.iv_route_3 or '' }}">
+    </div>
+    <div class="inline-item" style="flex:1;">
+      <label for="nursing_result_3">3차시도 결과</label>
+      <input type="text" id="nursing_result_3" name="nursing_result_3" value="{{ emr.nursing_result_3 or '' }}" placeholder="성공/실패">
+    </div>
+    <div class="inline-item" style="flex:1;">
+      <label for="sign_nurse_3">3차시도 SN</label>
+      <input type="text" id="sign_nurse_3" name="sign_nurse_3" value="{{ emr.sign_nurse_3 or '' }}" placeholder="서명">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="nurse_note">메모 / 특이사항</label>
+    <textarea id="nurse_note" name="nurse_note" rows="2">{{ emr.nurse_note or '' }}</textarea>
+  </div>
+</fieldset>
+        
 
       <div class="button-group">
         <button type="submit" class="button">저장</button>
+        <button type="button" class="button" id="nur-complete-btn" style="background:#444;" disabled>완료</button>
       </div>
     </form>
   </div>
@@ -96,30 +130,52 @@
   <!-- (3) 이전 간호 기록 요약 -->
   <div class="emr-card recent-panel">
     <h2>이전 간호 기록</h2>
-    <table class="ne-table">
-      <thead>
-        <tr>
-          <th>날짜</th>
-          <th>IV 경로</th>
-          <th>결과</th>
-          <th>메모</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for rec in visit_records %}
-        <tr>
-          <td>{{ rec.record_date.strftime('%y%m%d') }}</td>
-          <td>{{ rec.iv_route or '—' }}</td>
-          <td>{{ rec.nursing_result or '—' }}</td>
-          <td>{{ rec.nurse_note or '—' }}</td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="4">기록이 없습니다.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <table class="table table-sm table-bordered align-middle">
+  <thead>
+    <tr>
+      <th rowspan="2">날짜</th>
+      <th colspan="3">1차</th>
+      <th colspan="3">2차</th>
+      <th colspan="3">3차</th>
+      <th rowspan="2">메모</th>
+    </tr>
+    <tr>
+      <th>IV 경로</th><th>결과</th><th>SN</th>
+      <th>IV 경로</th><th>결과</th><th>SN</th>
+      <th>IV 경로</th><th>결과</th><th>SN</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% set ns = namespace(has_rows=false) %}
+
+  {% for r in visit_records %}
+    {% set ns.has_rows = true %}
+    <tr {% if selected_emr_id and r.id == selected_emr_id %}class="table-active"{% endif %}>
+      <td>{{ r.record_date.strftime('%y%m%d') if r.record_date else '-' }}</td>
+
+      <td>{{ r.iv_route_1 or '-' }}</td>
+      <td>{{ r.nursing_result_1 or '-' }}</td>
+      <td>{{ r.sign_nurse_1 or '-' }}</td>
+
+      <td>{{ r.iv_route_2 or '-' }}</td>
+      <td>{{ r.nursing_result_2 or '-' }}</td>
+      <td>{{ r.sign_nurse_2 or '-' }}</td>
+
+      <td>{{ r.iv_route_3 or '-' }}</td>
+      <td>{{ r.nursing_result_3 or '-' }}</td>
+      <td>{{ r.sign_nurse_3 or '-' }}</td>
+
+      <td>{{ r.nurse_note or '-' }}</td>
+    </tr>
+  {% endfor %}
+
+  {% if not ns.has_rows %}
+    <tr>
+      <td colspan="11" class="text-center text-muted">이전 간호 기록이 없습니다.</td>
+    </tr>
+  {% endif %}
+</tbody>
+</table>
   </div>
 </div>
 {% endblock %}

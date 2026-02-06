@@ -17,7 +17,7 @@ from typing import List, Optional
 
 
 # === DATABASE SETUP ===
-DATABASE_URL = "mysql+pymysql://root:1234@localhost/emr_db"
+DATABASE_URL = "mysql+pymysql://root:Tmdrnjs159!@localhost/emr_db"
 engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
 SessionLocal = sessionmaker(bind=engine)
@@ -111,14 +111,38 @@ class EMR(Base):
     ne_sleep = Column(Boolean, default=False, nullable = True)  # 수면장애
     ne_depress = Column(Boolean, default=False, nullable = True)  # 우울감
     #  ─── 간호부 전용 필드 ───────────────────
-    iv_route        = Column(String(100), nullable=True)   # IV 경로
-    nursing_result  = Column(Text, nullable=True)          # 간호 수행 결과
-    nurse_note      = Column(Text, nullable=True)           # 메모/특이사항
-    sign_nurse = Column(String(100), nullable=True)       # 학생 간호사
+    #  ─── 간호부 전용 필드 ───────────────────
+    iv_route_1       = Column(String(100), nullable=True)
+    nursing_result_1 = Column(Text, nullable=True)
+    sign_nurse_1     = Column(String(100), nullable=True)
+
+    iv_route_2       = Column(String(100), nullable=True)
+    nursing_result_2 = Column(Text, nullable=True)
+    sign_nurse_2     = Column(String(100), nullable=True)
+
+    iv_route_3       = Column(String(100), nullable=True)
+    nursing_result_3 = Column(Text, nullable=True)
+    sign_nurse_3     = Column(String(100), nullable=True)
+
+    nurse_note       = Column(Text, nullable=True)
     # ──── 약국부 전용 필드 ──────────────────
     counseling_pharmacist = Column(String(100), nullable=True)  # 복약지도 담당
     sign_pharmacist = Column(String(100), nullable=True)        # 약국부장
     patient = relationship("Patient", back_populates="emrs")
+
+class VitalsUpdate(BaseModel):
+    name: str
+    birth_date: str
+    record_date: str                # "YYYY-MM-DD"
+    gender: str
+    age: Optional[str] = None
+
+    bt: Optional[str] = None
+    bp: Optional[str] = None
+    hr: Optional[str] = None
+    bp2: Optional[str] = None
+    bst: Optional[str] = None
+    post_bst: Optional[str] = None
 
 # Registration 모델: 접수 대기 환자 목록을 저장
 class Registration(Base):
@@ -333,6 +357,82 @@ def reset_registrations(db: Session = Depends(get_db)):
 
 from fastapi import Body
 
+@app.patch("/patient_emr/vitals")
+async def upsert_vitals(
+    payload: VitalsUpdate,
+    db: Session = Depends(get_db)
+):
+    # 1) 환자 조회
+    patient = db.query(Patient).filter(
+        Patient.name == payload.name,
+        Patient.birth_date == payload.birth_date
+    ).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="환자를 찾을 수 없습니다.")
+
+    # 2) 날짜 파싱
+    try:
+        record_date_obj = datetime.strptime(payload.record_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="날짜 형식 오류 (YYYY-MM-DD)")
+
+    # 3) 파싱 함수
+    def parse_int(x: Optional[str]) -> Optional[int]:
+        if x is None: 
+            return None
+        x = x.strip()
+        if x == "":
+            return None
+        try:
+            return int(x)
+        except:
+            return None
+
+    def parse_float(x: Optional[str]) -> Optional[float]:
+        if x is None:
+            return None
+        x = x.strip()
+        if x == "":
+            return None
+        try:
+            return float(x)
+        except:
+            return None
+
+    # 4) 오늘자 EMR 찾기 (없으면 생성: Vital 먼저 입력하는 플로우 지원)
+    emr = db.query(EMR).filter(
+        EMR.patient_id == patient.id,
+        EMR.record_date == record_date_obj
+    ).first()
+
+    if not emr:
+        emr = EMR(
+            patient_id=patient.id,
+            record_date=record_date_obj,
+            name=payload.name,
+            gender=payload.gender,
+            age=parse_int(payload.age) if payload.age else None,
+        )
+        db.add(emr)
+        db.flush()  # emr.id 확보
+
+    # 5) Vital 업데이트 (빈값이면 None 처리)
+    emr.bt = parse_float(payload.bt)
+    emr.bp = payload.bp.strip() if payload.bp else None
+    emr.hr = parse_int(payload.hr)
+    emr.bp2 = payload.bp2.strip() if payload.bp2 else None
+    emr.bst = parse_int(payload.bst)
+    emr.post_bst = parse_int(payload.post_bst)
+
+    db.commit()
+    db.refresh(emr)
+
+    return {
+        "message": "Vital signs 저장 완료",
+        "emr_id": emr.id,
+        "record_date": emr.record_date.strftime("%Y-%m-%d")
+    }
+
 @app.patch("/dashboard/registrations/{reg_id}", response_model=RegistrationOut)
 def update_registration_status(
     reg_id: int,
@@ -372,7 +472,17 @@ async def update_status_by_identity(
         raise HTTPException(status_code=400, detail="모든 필드(name, birth_date, status)가 필요합니다.")
 
     # 상태값 유효성 검증
-    valid_statuses = {"대기", "진료", "복약", "수액", "수액 복약", "복약 수액", "완료"}
+    valid_statuses = {
+    "대기", "진료", "복약", "완료",
+
+    # 레거시
+    "수액", "수액 복약", "복약 수액",
+
+    # 신규: 수액대기중/수액중
+    "수액대기중", "수액중",
+    "수액대기중 복약", "복약 수액대기중",
+    "수액중 복약", "복약 수액중",
+}
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"올바르지 않은 상태입니다: {status}")
 
@@ -391,6 +501,8 @@ async def update_status_by_identity(
 
 
 # === 3. 환자 개별 페이지 (환자 방문 기록 및 진료 입력) ===
+from datetime import date  # ✅ 추가 (파일 상단에 이미 있으면 중복 추가 X)
+
 @app.get("/patient_emr", response_class=HTMLResponse)
 async def patient_emr(
     request: Request,
@@ -398,64 +510,88 @@ async def patient_emr(
     birth_date: str,
     db: Session = Depends(get_db)
 ):
+    # ✅ birth_date는 여기서는 검증만 하고, parsed_birth_date는 사용하지 않으므로(현재 코드 기준) 유지/삭제 선택 가능
     try:
         if len(birth_date) == 6:
-            parsed_birth_date = datetime.strptime(birth_date, "%y%m%d").date()
+            _ = datetime.strptime(birth_date, "%y%m%d").date()
         else:
-            parsed_birth_date = datetime.strptime(birth_date, "%Y-%m-%d").date()
+            _ = datetime.strptime(birth_date, "%Y-%m-%d").date()
     except ValueError as e:
         print("생년월일 파싱 오류:", e)
         raise HTTPException(status_code=400, detail="잘못된 생년월일 형식입니다.")
 
-    # 환자 조회
-    patient = db.query(Patient).filter(Patient.name == name, Patient.birth_date == birth_date).first()
+    # 1) 환자 조회
+    patient = db.query(Patient).filter(
+        Patient.name == name,
+        Patient.birth_date == birth_date
+    ).first()
     if not patient:
         print("환자 조회 실패:", name, birth_date)
         raise HTTPException(status_code=404, detail="해당 환자를 찾을 수 없습니다.")
 
-    # 환자의 진료 기록 조회
-    visit_records = db.query(EMR).filter(EMR.patient_id == patient.id).order_by(EMR.record_date.desc()).all()
-    if visit_records:
-        latest_record = visit_records[0]
-        # latest_record의 날짜와 환자의 이름으로 cc와 pi 조회
-        cc = latest_record.cc
-        pi = latest_record.pi
-    else:
-        visit_records = []
-        latest_record = None
-        cc = None
-        pi = None
+    # 2) 환자의 전체 진료 기록(방문 기록) 조회: 왼쪽 방문기록 리스트용 (항상 최신순)
+    visit_records = (
+        db.query(EMR)
+          .filter(EMR.patient_id == patient.id)
+          .order_by(EMR.record_date.desc())
+          .all()
+    )
+    latest_record = visit_records[0] if visit_records else None
 
-    print("환자 조회 성공:", patient, "진료 기록 수:", len(visit_records))
+    # 3) ✅ “오늘 날짜” EMR이 있을 때만 폼에 자동 채우기
+    today = date.today()
+    today_emr = (
+        db.query(EMR)
+          .filter(EMR.patient_id == patient.id, EMR.record_date == today)
+          .first()
+    )
+
+    # 폼에 들어갈 emr: 오늘 기록이 있으면 그걸, 없으면 None(빈 폼)
+    emr_for_form = today_emr
+
+    # cc/pi도 “폼 기준(오늘 기록)”으로 보여주고 싶으면 이렇게
+    cc = emr_for_form.cc if emr_for_form else None
+    pi = emr_for_form.pi if emr_for_form else None
+
+    print(
+        "환자 조회 성공:", patient,
+        "진료 기록 수:", len(visit_records),
+        "오늘 기록 존재:", bool(today_emr)
+    )
 
     return templates.TemplateResponse("patient_emr.html", {
         "request": request,
         "name": name,
         "birth_date": birth_date,
         "patient": patient,
-        "visit_records": visit_records,
-        "latest_record": latest_record,
-        "emr": latest_record,   
+        "visit_records": visit_records,   # 방문기록 리스트는 그대로 전체
+        "latest_record": latest_record,   # (참고용) 최신기록도 유지
+        "emr": emr_for_form,              # ✅ 핵심: 오늘 기록 있을 때만 자동 채움
         "cc": cc,
-        "pi": pi
+        "pi": pi,
+        "getattr": getattr,               # ✅ 템플릿에서 getattr 사용 시 필수
     })
+
+from fastapi.responses import JSONResponse
+from datetime import datetime
+from typing import Optional
+from sqlalchemy.orm import Session
+from fastapi import Form, Depends, HTTPException
+
 @app.post("/patient_emr/new_emr")
 async def create_new_emr(
     name: str                       = Form(...),
     birth_date: str                 = Form(...),
-    record_date: str                = Form(...),       # ← str로 받음
+    record_date: str                = Form(...),       # "YYYY-MM-DD"
     gender: str                     = Form(...),
-    age: Optional[str]              = Form(None),      # ← Optional[str]
-    bt: Optional[str]               = Form(None),      # ← Optional[str]
+    age: Optional[str]              = Form(None),
+    bt: Optional[str]               = Form(None),
     bp: Optional[str]               = Form(None),
-    hr: Optional[str]               = Form(None),      # ← Optional[str]
+    hr: Optional[str]               = Form(None),
     bp2: Optional[str]              = Form(None),
-    bst: Optional[str]              = Form(None),      # ← Optional[str]
-    post_bst: Optional[str]         = Form(None),      # ← Optional[str]
+    bst: Optional[str]              = Form(None),
+    post_bst: Optional[str]         = Form(None),
     cc: Optional[str]               = Form(None),
-    onset: Optional[str]            = Form(None),
-    duration: Optional[str]         = Form(None),
-    assoc: Optional[str]            = Form(None),
     medication_hx: Optional[str]    = Form(None),
     pmhx: Optional[str]             = Form(None),
     allergy: Optional[str]          = Form(None),
@@ -466,14 +602,15 @@ async def create_new_emr(
     pe: Optional[str]               = Form(None),
     problem_list: Optional[str]     = Form(None),
     assessment: Optional[str]       = Form(None),
-    mmse: Optional[str]             = Form(None),      # ← Optional[str]
-    cdr: Optional[str]              = Form(None),      # ← Optional[str]
-    psqi: Optional[str]             = Form(None),      # ← Optional[str]
-    isi: Optional[str]              = Form(None),      # ← Optional[str]
+    mmse: Optional[str]             = Form(None),
+    cdr: Optional[str]              = Form(None),
+    psqi: Optional[str]             = Form(None),
+    isi: Optional[str]              = Form(None),
     gds: Optional[str]              = Form(None),
-    ne_cog: Optional[str]          = Form(None),
-    ne_sleep: Optional[str]        = Form(None),
-    ne_depress: Optional[str]      = Form(None),
+    ne_cog: Optional[str]           = Form(None),
+    ne_sleep: Optional[str]         = Form(None),
+    ne_depress: Optional[str]       = Form(None),
+
     plan_desc_1: Optional[str]      = Form(None),
     plan_desc_2: Optional[str]      = Form(None),
     plan_desc_3: Optional[str]      = Form(None),
@@ -489,155 +626,207 @@ async def create_new_emr(
     plan_period_3: Optional[str]    = Form(None),
     plan_period_4: Optional[str]    = Form(None),
     plan_period_5: Optional[str]    = Form(None),
+
     plan_pas_6: Optional[str]       = Form(None),
     plan_pas_period_6: Optional[str]= Form(None),
     plan_bear_7: Optional[str]      = Form(None),
     plan_anti_8: Optional[str]      = Form(None),
     plan_ruma_8: Optional[str]      = Form(None),
+
     plan_tinea_site_9: Optional[str]= Form(None),
     plan_tinea_9: Optional[str]     = Form(None),
     plan_derma_site_10: Optional[str]= Form(None),
-    plan_derma_10: Optional[str]     = Form(None),
+    plan_derma_10: Optional[str]    = Form(None),
+
     med_counseling: Optional[str]   = Form(None),
     iv_order: Optional[str]         = Form(None),
+
     sign_dr: Optional[str]          = Form(None),
-    sign_nurse: Optional[str]       = Form(None),
     sign_pharmacist: Optional[str]  = Form(None),
-    iv_route: Optional[str]         = Form(None),
-    nursing_result: Optional[str]   = Form(None),
-    nurse_note: Optional[str]       = Form(None),
     counseling_pharmacist: Optional[str] = Form(None),
+
     db: Session                     = Depends(get_db)
 ):
-
     # 1) 환자 찾기
-    patient = (
-        db.query(Patient)
-          .filter(Patient.name == name, Patient.birth_date == birth_date)
-          .first()
-    )
+    patient = db.query(Patient).filter(
+        Patient.name == name,
+        Patient.birth_date == birth_date
+    ).first()
     if not patient:
         raise HTTPException(status_code=404, detail="환자를 찾을 수 없습니다.")
-    
-    # 2) 날짜 파싱 (str → date)
+
+    # 2) 날짜 파싱
     try:
         record_date_obj = datetime.strptime(record_date, "%Y-%m-%d").date()
     except ValueError:
         raise HTTPException(status_code=400, detail="날짜 형식 오류 (YYYY-MM-DD)")
-    
-    # 3) 숫자 필드 파싱 (str → int/float)
+
+    # 3) 숫자 파싱 헬퍼
     def parse_int(x: Optional[str]) -> Optional[int]:
-        return int(x) if x and x.isdigit() else None
+        if x is None:
+            return None
+        x = x.strip()
+        if x == "":
+            return None
+        # 음수/공백 등은 여기서는 무시(필요 시 확장)
+        if not x.isdigit():
+            return None
+        return int(x)
 
     def parse_float(x: Optional[str]) -> Optional[float]:
-        return float(x) if x and x.replace('.', '', 1).isdigit() else None
+        if x is None:
+            return None
+        x = x.strip()
+        if x == "":
+            return None
+        try:
+            return float(x)
+        except:
+            return None
 
-    age_val    = parse_int(age)
-    bt_val     = parse_float(bt)
-    hr_val     = parse_int(hr)
-    bst_val    = parse_int(bst)
-    post_bst_val = parse_int(post_bst)
-    mmse_val   = parse_int(mmse)
-    cdr_val    = parse_float(cdr)
-    psqi_val   = parse_int(psqi)
-    isi_val    = parse_int(isi)
-    gds_val    = parse_int(gds)
+    age_val       = parse_int(age)
+    bt_val        = parse_float(bt)
+    hr_val        = parse_int(hr)
+    bst_val       = parse_int(bst)
+    post_bst_val  = parse_int(post_bst)
+    mmse_val      = parse_int(mmse)
+    cdr_val       = parse_float(cdr)
+    psqi_val      = parse_int(psqi)
+    isi_val       = parse_int(isi)
+    gds_val       = parse_int(gds)
 
-    # 4) EMR 객체 생성
-    new_emr = EMR(
-        patient_id         = patient.id,
-        record_date        = record_date_obj,
-        name               = name,
-        gender             = gender,
-        age                = age_val,
-        bt                 = bt_val,
-        bp                 = bp,
-        hr                 = hr_val,
-        bp2                = bp2,
-        bst                = bst_val,
-        post_bst           = post_bst_val,
-        cc                 = cc,
-        onset              = onset,
-        duration           = duration,
-        assoc              = assoc,
-        medication_hx      = medication_hx,
-        pmhx               = pmhx,
-        allergy            = allergy,
-        fhx                = fhx,
-        social             = social,
-        pi                 = pi,
-        ros                = ros,
-        pe                 = pe,
-        problem_list       = problem_list,
-        assessment         = assessment,
-        mmse               = mmse_val,
-        cdr                = cdr_val,
-        psqi               = psqi_val,
-        isi                = isi_val,
-        gds                = gds_val,
-        plan_desc_1        = plan_desc_1,
-        plan_desc_2        = plan_desc_2,
-        plan_desc_3        = plan_desc_3,
-        plan_desc_4        = plan_desc_4,
-        plan_desc_5        = plan_desc_5,
-        plan_method_1      = plan_method_1,
-        plan_method_2      = plan_method_2,
-        plan_method_3      = plan_method_3,
-        plan_method_4      = plan_method_4,
-        plan_method_5      = plan_method_5,
-        plan_period_1      = plan_period_1,
-        plan_period_2      = plan_period_2,
-        plan_period_3      = plan_period_3,
-        plan_period_4      = plan_period_4,
-        plan_period_5      = plan_period_5,
-        plan_pas_6         = plan_pas_6,
-        plan_pas_period_6  = plan_pas_period_6,
-        plan_bear_7        = plan_bear_7,
-        plan_anti_8        = plan_anti_8,
-        plan_ruma_8        = plan_ruma_8,
-        plan_tinea_site_9  = plan_tinea_site_9,
-        plan_tinea_9       = plan_tinea_9,
-        plan_derma_site_10 = plan_derma_site_10,
-        plan_derma_10       = plan_derma_10,
-        med_counseling     = med_counseling,
-        iv_order           = iv_order,
-        sign_dr            = sign_dr,
-        sign_nurse         = sign_nurse,
-        sign_pharmacist    = sign_pharmacist,
-        iv_route           = iv_route,
-        nursing_result     = nursing_result,
-        nurse_note         = nurse_note,
-        counseling_pharmacist = counseling_pharmacist
-    )
-    
-    # 5) DB 저장
-    db.add(new_emr)
+    # 4) ✅ 업서트 핵심: 오늘자 EMR 있으면 UPDATE, 없으면 INSERT
+    emr = db.query(EMR).filter(
+        EMR.patient_id == patient.id,
+        EMR.record_date == record_date_obj
+    ).first()
+
+    created = False
+    if not emr:
+        emr = EMR(
+            patient_id=patient.id,
+            record_date=record_date_obj,
+            name=name,
+            gender=gender,
+            age=age_val
+        )
+        db.add(emr)
+        created = True
+
+    # 5) 필드 업데이트(있던 레코드든 새 레코드든 동일 적용)
+    emr.name = name
+    emr.gender = gender
+    emr.age = age_val
+
+    emr.bt = bt_val
+    emr.bp = bp.strip() if bp else None
+    emr.hr = hr_val
+    emr.bp2 = bp2.strip() if bp2 else None
+    emr.bst = bst_val
+    emr.post_bst = post_bst_val
+
+    emr.cc = cc
+    emr.medication_hx = medication_hx
+    emr.pmhx = pmhx
+    emr.allergy = allergy
+    emr.fhx = fhx
+    emr.social = social
+    emr.pi = pi
+    emr.ros = ros
+    emr.pe = pe
+    emr.problem_list = problem_list
+    emr.assessment = assessment
+
+    emr.mmse = mmse_val
+    emr.cdr = cdr_val
+    emr.psqi = psqi_val
+    emr.isi = isi_val
+    emr.gds = gds_val
+
+    # Boolean(체크박스) 처리: HTML 폼에서 체크되면 보통 "on"이 들어옴
+    truthy = {"on", "true", "1", "yes", "o"}
+    emr.ne_cog     = True if (ne_cog and ne_cog.lower() in truthy) else False
+    emr.ne_sleep   = True if (ne_sleep and ne_sleep.lower() in truthy) else False
+    emr.ne_depress = True if (ne_depress and ne_depress.lower() in truthy) else False
+
+    emr.plan_desc_1 = plan_desc_1
+    emr.plan_desc_2 = plan_desc_2
+    emr.plan_desc_3 = plan_desc_3
+    emr.plan_desc_4 = plan_desc_4
+    emr.plan_desc_5 = plan_desc_5
+
+    emr.plan_method_1 = plan_method_1
+    emr.plan_method_2 = plan_method_2
+    emr.plan_method_3 = plan_method_3
+    emr.plan_method_4 = plan_method_4
+    emr.plan_method_5 = plan_method_5
+
+    emr.plan_period_1 = plan_period_1
+    emr.plan_period_2 = plan_period_2
+    emr.plan_period_3 = plan_period_3
+    emr.plan_period_4 = plan_period_4
+    emr.plan_period_5 = plan_period_5
+
+    emr.plan_pas_6 = plan_pas_6
+    emr.plan_pas_period_6 = plan_pas_period_6
+    emr.plan_bear_7 = plan_bear_7
+    emr.plan_anti_8 = plan_anti_8
+    emr.plan_ruma_8 = plan_ruma_8
+
+    emr.plan_tinea_site_9 = plan_tinea_site_9
+    emr.plan_tinea_9 = plan_tinea_9
+    emr.plan_derma_site_10 = plan_derma_site_10
+    emr.plan_derma_10 = plan_derma_10
+
+    emr.med_counseling = med_counseling
+    emr.iv_order = iv_order
+
+    emr.sign_dr = sign_dr
+    emr.sign_pharmacist = sign_pharmacist
+    emr.counseling_pharmacist = counseling_pharmacist
+
+    # 6) 저장
     db.commit()
-    db.refresh(new_emr)
-    
-    # 6) 응답
+    db.refresh(emr)
+
     return JSONResponse(content={
-        "message": "진료차트가 성공적으로 저장되었습니다.",
-        "emr_id": new_emr.id
+        "message": "진료차트가 성공적으로 저장되었습니다." if created else "진료차트가 성공적으로 업데이트되었습니다.",
+        "emr_id": emr.id,
+        "record_date": emr.record_date.strftime("%Y-%m-%d")
     })
 
 # 과거 EMR 기록 불러오기
 @app.get("/patient_emr/past_emr")
-async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)):
+async def get_past_emr(
+    visit_date: str,
+    name: str,
+    birth_date: str,              # ✅ 추가
+    db: Session = Depends(get_db)
+):
+    # 1) 날짜 파싱
     try:
         visit_date_obj = datetime.strptime(visit_date, "%Y-%m-%d").date()
     except ValueError:
         raise HTTPException(status_code=400, detail="잘못된 날짜 형식입니다.")
 
-    emr_record = (
-        db.query(EMR)
-        .join(Patient, EMR.patient_id == Patient.id)
-        .filter(EMR.record_date == visit_date_obj, Patient.name == name)
-        .first()
-    )
-    if not emr_record:
-        raise HTTPException(status_code=404, detail="해당 날짜와 이름의 진료 기록을 찾을 수 없습니다.")
+    # 2) 환자 조회 (name + birth_date)
+    patient = db.query(Patient).filter(
+        Patient.name == name,
+        Patient.birth_date == birth_date
+    ).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="환자를 찾을 수 없습니다.")
 
+    # 3) EMR 조회 (patient_id + record_date)
+    emr_record = db.query(EMR).filter(
+        EMR.patient_id == patient.id,
+        EMR.record_date == visit_date_obj
+    ).first()
+
+    if not emr_record:
+        raise HTTPException(status_code=404, detail="해당 날짜의 진료 기록을 찾을 수 없습니다.")
+
+    # 4) JSON 리턴 (기존 content 그대로 유지)
     return JSONResponse(content={
         "message": "진료 기록이 성공적으로 조회되었습니다.",
         "emr_id": emr_record.id,
@@ -653,9 +842,6 @@ async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)
         "bst": emr_record.bst,
         "post_bst": emr_record.post_bst,
         "cc": emr_record.cc,
-        "onset": emr_record.onset,
-        "duration": emr_record.duration,
-        "assoc": emr_record.assoc,
         "medication_hx": emr_record.medication_hx,
         "pmhx": emr_record.pmhx,
         "allergy": emr_record.allergy,
@@ -670,8 +856,11 @@ async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)
         "cdr": emr_record.cdr,
         "psqi": emr_record.psqi,
         "isi": emr_record.isi,
+        "gds": emr_record.gds,
+        "ne_cog": emr_record.ne_cog,
+        "ne_sleep": emr_record.ne_sleep,
+        "ne_depress": emr_record.ne_depress,
 
-        # (4-1) free input rows #1–5
         "plan_desc_1": emr_record.plan_desc_1,
         "plan_method_1": emr_record.plan_method_1,
         "plan_period_1": emr_record.plan_period_1,
@@ -688,32 +877,18 @@ async def get_past_emr(visit_date: str, name: str, db: Session = Depends(get_db)
         "plan_method_5": emr_record.plan_method_5,
         "plan_period_5": emr_record.plan_period_5,
 
-        # (4-2) 파스
         "plan_pas_6": emr_record.plan_pas_6,
         "plan_pas_period_6": emr_record.plan_pas_period_6,
-
-        # (4-3) 비타민제(삐콤)
         "plan_bear_7": emr_record.plan_bear_7,
-
-        # (4-4) 근육통
         "plan_anti_8": emr_record.plan_anti_8,
         "plan_ruma_8": emr_record.plan_ruma_8,
-
-        # (4-5) 발백선
         "plan_tinea_site_9": emr_record.plan_tinea_site_9,
         "plan_tinea_9": emr_record.plan_tinea_9,
-
-        # (4-6) 피부염
         "plan_derma_site_10": emr_record.plan_derma_site_10,
         "plan_derma_10": emr_record.plan_derma_10,
 
-        # (5) Medication Counseling
         "med_counseling": emr_record.med_counseling,
-
-        # (6) IV Order
         "iv_order": emr_record.iv_order,
-
-        # (7) Signatures
         "sign_dr": emr_record.sign_dr,
     })
 
@@ -816,6 +991,71 @@ async def save_new_patient_chart(
     db.refresh(new_chart)
     return {"message": "환자 정보가 성공적으로 저장되었습니다.", "id": new_chart.id}
 
+@app.post("/patient_emr/vitals")
+async def save_vitals(
+    name: str = Form(...),
+    birth_date: str = Form(...),
+    record_date: str = Form(...),
+    gender: str = Form(...),
+    age: Optional[str] = Form(None),
+
+    bt: Optional[str] = Form(None),
+    bp: Optional[str] = Form(None),
+    hr: Optional[str] = Form(None),
+    bp2: Optional[str] = Form(None),
+    bst: Optional[str] = Form(None),
+    post_bst: Optional[str] = Form(None),
+
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.name == name, Patient.birth_date == birth_date).first()
+    if not patient:
+        raise HTTPException(404, "환자를 찾을 수 없습니다.")
+
+    try:
+        record_date_obj = datetime.strptime(record_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(400, "날짜 형식 오류 (YYYY-MM-DD)")
+
+    def parse_int(x: Optional[str]) -> Optional[int]:
+        return int(x) if x and x.strip().isdigit() else None
+
+    def parse_float(x: Optional[str]) -> Optional[float]:
+        if not x: return None
+        x = x.strip()
+        try:
+            return float(x)
+        except:
+            return None
+
+    # ✅ 오늘자(해당 record_date) EMR 찾기
+    emr = db.query(EMR).filter(EMR.patient_id == patient.id, EMR.record_date == record_date_obj).first()
+
+    if not emr:
+        # ✅ 최소 필수값으로 새로 생성
+        emr = EMR(
+            patient_id=patient.id,
+            record_date=record_date_obj,
+            name=name,
+            gender=gender,
+            age=parse_int(age) if age else None,
+        )
+        db.add(emr)
+        db.flush()  # id 확보
+
+    # ✅ Vital update
+    emr.bt = parse_float(bt)
+    emr.bp = bp
+    emr.hr = parse_int(hr)
+    emr.bp2 = bp2
+    emr.bst = parse_int(bst)
+    emr.post_bst = parse_int(post_bst)
+
+    db.commit()
+    db.refresh(emr)
+
+    return {"message": "Vital signs 저장 완료", "emr_id": emr.id}
+
 
 # ─── 간호부 EMR 폼 ───────────────────────────────────────
 # ─── 간호부 EMR 폼 ───────────────────────────────────────
@@ -857,27 +1097,47 @@ def patient_emr_nur(
         "name":          name,
         "birth_date":    birth_date,
         "visit_records": visit_records,
-        "emr":           emr      # 선택된(또는 최신) EMR
+        "emr":           emr,
+        "selected_emr_id": emr.id if emr else None      # 선택된(또는 최신) EMR
     })
 
 
 @app.post("/patient_emr_nur")
 def save_patient_emr_nur(
-    emr_id:         int     = Form(...),
-    iv_route:       str     = Form(None),
-    nursing_result: str     = Form(None),
-    sign_nurse:     str     = Form(None),
-    nurse_note:     str     = Form(None),
-    db:             Session = Depends(get_db)
+    emr_id: int = Form(...),
+
+    iv_route_1: str = Form(None),
+    nursing_result_1: str = Form(None),
+    sign_nurse_1: str = Form(None),
+
+    iv_route_2: str = Form(None),
+    nursing_result_2: str = Form(None),
+    sign_nurse_2: str = Form(None),
+
+    iv_route_3: str = Form(None),
+    nursing_result_3: str = Form(None),
+    sign_nurse_3: str = Form(None),
+
+    nurse_note: str = Form(None),
+    db: Session = Depends(get_db)
 ):
     emr = db.query(EMR).filter(EMR.id == emr_id).first()
     if not emr:
         raise HTTPException(status_code=404, detail="해당 진료기록을 찾을 수 없습니다.")
 
-    emr.iv_route       = iv_route
-    emr.nursing_result = nursing_result
-    emr.sign_nurse     = sign_nurse
-    emr.nurse_note     = nurse_note
+    emr.iv_route_1 = iv_route_1
+    emr.nursing_result_1 = nursing_result_1
+    emr.sign_nurse_1 = sign_nurse_1
+
+    emr.iv_route_2 = iv_route_2
+    emr.nursing_result_2 = nursing_result_2
+    emr.sign_nurse_2 = sign_nurse_2
+
+    emr.iv_route_3 = iv_route_3
+    emr.nursing_result_3 = nursing_result_3
+    emr.sign_nurse_3 = sign_nurse_3
+
+    emr.nurse_note = nurse_note
     db.commit()
 
     return JSONResponse(content={"message": "저장이 완료되었습니다."})

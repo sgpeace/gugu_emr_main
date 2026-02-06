@@ -74,14 +74,24 @@ function appendToMedicationList(patient) {
   document.getElementById('medication-list').appendChild(li);
 }
 
-// ▶ 수액중 링크: 수액 중인 환자의 링크를 만들어 infusion-list에 추가
-function appendToInfusionList(patient) {
+// ▶ 수액대기중 링크
+function appendToInfusionWaitingList(patient) {
   const li = document.createElement("li");
   const a = document.createElement("a");
   a.href = `/patient_emr_nur?name=${encodeURIComponent(patient.name)}&birth_date=${encodeURIComponent(patient.birth_date)}`;
   a.textContent = `${patient.name} (${patient.birth_date})`;
   li.appendChild(a);
-  document.getElementById('infusion-list').appendChild(li);
+  document.getElementById('infusion-waiting-list').appendChild(li);
+}
+
+// ▶ 수액중 링크
+function appendToInfusionInProgressList(patient) {
+  const li = document.createElement("li");
+  const a = document.createElement("a");
+  a.href = `/patient_emr_nur?name=${encodeURIComponent(patient.name)}&birth_date=${encodeURIComponent(patient.birth_date)}`;
+  a.textContent = `${patient.name} (${patient.birth_date})`;
+  li.appendChild(a);
+  document.getElementById('infusion-inprogress-list').appendChild(li);
 }
 
 // ──────────────────────────────
@@ -122,9 +132,16 @@ function addPatientToTable(patient) {
     if (patient.status.includes("복약")) {
       appendToMedicationList(patient);
     }
-    if (patient.status.includes("수액")) {
-      appendToInfusionList(patient);
-    }
+   // ✅ 수액 상태 분기
+const st = String(patient.status || "");
+if (st.includes("수액대기중")) {
+  appendToInfusionWaitingList(patient);
+} else if (st.includes("수액중")) {
+  appendToInfusionInProgressList(patient);
+} else if (st.includes("수액")) {
+  // (과거 데이터 호환: "수액 복약" 같은 레거시 상태는 수액중으로 취급)
+  appendToInfusionInProgressList(patient);
+}
   }
 
   // ▶ 진료 시작 버튼
@@ -181,7 +198,8 @@ row.querySelector('.delete-button').addEventListener('click', () => {
       };
 
       removeFromList('treatment-list');
-      removeFromList('infusion-list');
+      removeFromList('infusion-waiting-list');
+      removeFromList('infusion-inprogress-list');
       removeFromList('medication-list');
     })
     .catch(err => {

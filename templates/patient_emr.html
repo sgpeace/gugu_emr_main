@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}환자 상세 정보 – GuGu Medical Center EMR{% endblock %}
+{% block title %}환자 상세 정보 – GuGu Medical Center EMR{% endblock %}
 
 {% block content %}
-<a href="/dashboard" class="back-button">← 메인 대시보드</a>
+<a href="/dashboard" class="back-button">← 메인 대시보드</a>
 
 <div id="custom-toast" class="toast hidden"></div>
 <div class="patient-header">
-  <h1 class="patient-title">{{ name }}&nbsp;님 <span>({{ birth_date }})</span></h1>
+  <h1 class="patient-title">{{ name }} 님 <span>({{ birth_date }})</span></h1>
 </div>
 
 <div class="emr-layout">
@@ -27,35 +27,38 @@
   <div class="emr-card form-panel" id="new-panel">
     <h2>일일기록지 작성</h2>
     <div class="btn-chart-container">
-      <a class="btn-chart" , href="/patient_emr/new_patient_chart?name={{ name }}&birth_date={{ birth_date }}">
+      <a class="btn-chart" href="/patient_emr/new_patient_chart?name={{ name }}&birth_date={{ birth_date }}">
         신환 차트
       </a>
     </div>
+
     <form id="new-emr-form" action="/patient_emr/new_emr" method="post">
       <input type="hidden" name="name" value="{{ name }}">
       <input type="hidden" name="birth_date" value="{{ birth_date }}">
-      <input type="hidden" id="emr_id" name="emr_id" value="{{ emr.id }}">
+      <!-- ✅ emr이 없을 수도 있으므로 안전하게 -->
+      <input type="hidden" id="emr_id" name="emr_id" value="{{ emr.id if emr else '' }}">
 
       <!-- 1. Date -->
       <div class="form-group date-inline">
         <label for="record_date">Date</label>
-        <input type="date" id="record_date" name="record_date" required>
+        <input type="date" id="record_date" name="record_date" required
+               value="{{ emr.record_date.strftime('%Y-%m-%d') if emr and emr.record_date else '' }}">
       </div>
 
-
-      <!-- 2. 성명 / 성별 / 나이 -->
+      <!-- 2. 성명 / 성별 / 나이 -->
       <div class="form-group header-group">
         <label for="display_name">&nbsp;성명</label>
         <input type="text" id="display_name" name="display_name" value="{{ name }}" readonly>
 
         <label for="gender">&nbsp;&nbsp;성별</label>
         <select id="gender" name="gender">
-        <option value="남">남</option>
-        <option value="여">여</option>
+          <option value="남" {% if emr and emr.gender=='남' %}selected{% endif %}>남</option>
+          <option value="여" {% if emr and emr.gender=='여' %}selected{% endif %}>여</option>
         </select>
 
         <label for="age">&nbsp;&nbsp;나이</label>
-        <input type="text" id="age" name="age" placeholder="나이 입력">
+        <input type="text" id="age" name="age" placeholder="나이 입력"
+               value="{{ emr.age if emr and emr.age is not none else '' }}">
       </div>
 
       <!-- 3. Vital Signs -->
@@ -63,129 +66,161 @@
         <legend>Vital Signs (V/S)</legend>
         <div class="vitals-grid">
           <div class="vital-item">
-            <label for="bt">BT (°C)</label>
-            <input type="text" id="bt" name="bt" placeholder="36.5">
+            <label>BT (°C)</label>
+            <input type="text" name="bt" value="{{ emr.bt if emr and emr.bt is not none else '' }}">
           </div>
+
           <div class="vital-item">
-            <label for="bp">BP (mmHg)</label>
-            <input type="text" id="bp" name="bp" placeholder="120/80">
+            <label>BP (mmHg)</label>
+            <input type="text" name="bp" value="{{ emr.bp if emr and emr.bp is not none else '' }}">
           </div>
+
           <div class="vital-item">
-            <label for="hr">HR (bpm)</label>
-            <input type="text" id="hr" name="hr" placeholder="72">
+            <label>HR (bpm)</label>
+            <input type="text" name="hr" value="{{ emr.hr if emr and emr.hr is not none else '' }}">
           </div>
+
           <div class="vital-item">
-            <label for="bp2">2차 BP</label>
-            <input type="text" id="bp2" name="bp2" placeholder="--">
+            <label>2차 BP</label>
+            <input type="text" name="bp2" value="{{ emr.bp2 if emr and emr.bp2 is not none else '' }}">
           </div>
+
           <div class="vital-item">
-            <label for="bst">BST</label>
-            <input type="text" id="bst" name="bst" placeholder="110">
+            <label>BST</label>
+            <input type="text" name="bst" value="{{ emr.bst if emr and emr.bst is not none else '' }}">
           </div>
+
           <div class="vital-item">
-            <label for="post_bst">식후(시간)</label>
-            <input type="text" id="post_bst" name="post_bst" placeholder="2">
+            <label>식후(시간)</label>
+            <input type="text" name="post_bst" value="{{ emr.post_bst if emr and emr.post_bst is not none else '' }}">
           </div>
         </div>
       </fieldset>
 
-      <!-- 4. C.C. + Onset/Duration/Assoc.Sx -->
-      <fieldset class="section-fieldset cc-fieldset">
-        <legend>C.C. (주호소)</legend>
-        <div class="form-group">
-          <textarea id="cc" name="cc" placeholder="환자 주호소를 입력하세요"></textarea>
-        </div>
-        <div class="form-group inline-group no-wrap">
-          <div class="inline-item">
-            <label for="onset">Onset</label>
-            <input type="text" id="onset" name="onset" placeholder="ex: 2일 전">
-          </div>
-          <div class="inline-item">
-            <label for="duration">Duration</label>
-            <input type="text" id="duration" name="duration" placeholder="ex: 1일">
-          </div>
-          <div class="inline-item">
-            <label for="assoc">Assoc. Sx.</label>
-            <input type="text" id="assoc" name="assoc" placeholder="관련 증상">
-          </div>
-        </div>
-      </fieldset>
+      <!-- ✅ Vital Signs 저장 버튼 -->
+      <button type="button" id="save-vitals-btn" class="btn btn-sm btn-primary">
+        Vital 저장
+      </button>
 
-      <!-- 5. History -->
-      <fieldset class="section-fieldset">
-        <legend>History</legend>
-        <div class="form-group">
-          <label for="med_hx">Medication Hx.</label>
-          <input type="text" id="med_hx" name="medication_hx" placeholder="복용 중인 약물">
-        </div>
-        <div class="form-group">
-          <label for="pmhx">PMHx.</label>
-          <input type="text" id="pmhx" name="pmhx" placeholder="과거 병력">
-        </div>
-        <div class="form-group inline-group no-wrap">
-          <div class="inline-item">
-            <label for="allergy">Allergy</label>
-            <input type="text" id="allergy" name="allergy" placeholder="유/무">
-          </div>
-          <div class="inline-item">
-            <label for="fhx">FHx.</label>
-            <input type="text" id="fhx" name="fhx" placeholder="가족력">
-          </div>
-          <div class="inline-item">
-            <label for="social">Social</label>
-            <input type="text" id="social" name="social" placeholder="흡연/음주">
-          </div>
-        </div>
-      </fieldset>
+      <!-- 4. C.C. -->
+      <div class="form-group">
+        <label for="cc">C.C. (주호소)</label>
+        <textarea id="cc" name="cc" rows="3">{{ emr.cc if emr and emr.cc is not none else '' }}</textarea>
+      </div>
+      
 
       <!-- 6. P.I. -->
       <div class="form-group">
         <label for="pi">P.I. (병력)</label>
-        <textarea id="pi" name="pi" rows="3"></textarea>
+        <textarea id="pi" name="pi" rows="7">{{ emr.pi if emr and emr.pi is not none else '' }}</textarea>
       </div>
 
       <!-- 7. ROS -->
       <div class="form-group">
         <label for="ros">ROS</label>
-        <input type="text" id="ros" name="ros" placeholder="Review of Systems">
+        <textarea id="ros" name="ros" rows="5">{{ emr.ros if emr and emr.ros is not none else '' }}</textarea>
       </div>
+      
+
+      <!-- History -->
+      <fieldset class="section-fieldset">
+        <legend>History</legend>
+        <div class="form-group">
+          <label for="pmhx">PMHx.</label>
+          <textarea id="pmhx" name="pmhx" rows="2">{{ emr.pmhx if emr and emr.pmhx is not none else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="med_hx">Medication Hx.</label>
+          <textarea id="med_hx" name="medication_hx" rows="2">{{ emr.medication_hx if emr and emr.medication_hx is not none else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="social">Social Hx.</label>
+          <textarea id="social" name="social" rows="2">{{ emr.social if emr and emr.social is not none else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="fhx">FHx.</label>
+          <textarea id="fhx" name="fhx" rows="2">{{ emr.fhx if emr and emr.fhx is not none else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="allergy">Allergy</label>
+          <textarea id="allergy" name="allergy" rows="2">{{ emr.allergy if emr and emr.allergy is not none else '' }}</textarea>
+        </div>
+      </fieldset>
 
       <!-- 8. P/E -->
       <div class="form-group">
         <label for="pe">P/E</label>
-        <input type="text" id="pe" name="pe" placeholder="Physical Exam">
+        <textarea id="pe" name="pe" rows="2">{{ emr.pe if emr and emr.pe is not none else '' }}</textarea>
       </div>
 
       <!-- 9. Problem list / Assessment -->
       <div class="form-group">
         <label for="problems">Problem list</label>
-        <textarea id="problems" name="problem_list" rows="2"></textarea>
+        <textarea id="problems" name="problem_list" rows="5">{{ emr.problem_list if emr and emr.problem_list is not none else '' }}</textarea>
       </div>
       <div class="form-group">
         <label for="assessment">Assessment</label>
-        <textarea id="assessment" name="assessment" rows="2"></textarea>
+        <textarea id="assessment" name="assessment" rows="5">{{ emr.assessment if emr and emr.assessment is not none else '' }}</textarea>
       </div>
-
 
       <!-- 10. N/Ex. -->
       <fieldset class="section-fieldset">
         <legend>N/Ex.</legend>
         <table class="ne-table">
           <tr>
-            <td><label><input type="radio" name="ne_cog" value="O">인지저하</label></td>
-            <td>MMSE <input type="text" name="mmse" style="width:50px;"> /30</td>
-            <td>CDR <input type="text" name="cdr" style="width:50px;"></td>
-          </tr>
-          <tr>
-            <td><label><input type="radio" name="ne_sleep" value="O">수면장애</label></td>
-            <td colspan="2">
-              PSQI <input type="text" name="psqi" style="width:60px;">
-              or ISI <input type="text" name="isi" style="width:60px;">
+            <td>
+              <label>
+                <input type="radio" name="ne_cog" value="O"
+                       {% if emr and emr.ne_cog %}checked{% endif %}>
+                인지저하
+              </label>
+            </td>
+            <td>
+              MMSE
+              <input type="text" name="mmse" style="width:50px;"
+                     value="{{ emr.mmse if emr and emr.mmse is not none else '' }}">
+              /30
+            </td>
+            <td>
+              CDR
+              <input type="text" name="cdr" style="width:50px;"
+                     value="{{ emr.cdr if emr and emr.cdr is not none else '' }}">
             </td>
           </tr>
           <tr>
-            <td><label><input type="radio" name="ne_depress", value="O">우울감</label></td>
-            <td colspan="2">GDS<input type="text" name="gds" style="width:60px;"></td>
+            <td>
+              <label>
+                <input type="radio" name="ne_sleep" value="O"
+                       {% if emr and emr.ne_sleep %}checked{% endif %}>
+                수면장애
+              </label>
+            </td>
+            <td colspan="2">
+              PSQI
+              <input type="text" name="psqi" style="width:60px;"
+                     value="{{ emr.psqi if emr and emr.psqi is not none else '' }}">
+              or ISI
+              <input type="text" name="isi" style="width:60px;"
+                     value="{{ emr.isi if emr and emr.isi is not none else '' }}">
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label>
+                <input type="radio" name="ne_depress" value="O"
+                       {% if emr and emr.ne_depress %}checked{% endif %}>
+                우울감
+              </label>
+            </td>
+            <td colspan="2">
+              GDS
+              <input type="text" name="gds" style="width:60px;"
+                     value="{{ emr.gds if emr and emr.gds is not none else '' }}">
+            </td>
           </tr>
         </table>
       </fieldset>
@@ -214,25 +249,19 @@
             <tr>
               <td>{{ i }}</td>
               <td>
-                {% if i == 1 %}
-                <input type="text" name="plan_desc_{{i}}" placeholder="처방 내용을 입력하세요">
-                {% else %}
-                <input type="text" name="plan_desc_{{i}}">
-                {% endif %}
+                <input type="text" name="plan_desc_{{i}}"
+                       value="{{ (getattr(emr, 'plan_desc_' ~ i) or '') if emr else '' }}"
+                       {% if i == 1 and not emr %}placeholder="처방 내용을 입력하세요"{% endif %}>
               </td>
               <td>
-                {% if i == 1 %}
-                <input type="text" name="plan_method_{{i}}" placeholder="복용 방법">
-                {% else %}
-                <input type="text" name="plan_method_{{i}}">
-                {% endif %}
+                <input type="text" name="plan_method_{{i}}"
+                       value="{{ (getattr(emr, 'plan_method_' ~ i) or '') if emr else '' }}"
+                       {% if i == 1 and not emr %}placeholder="복용 방법"{% endif %}>
               </td>
               <td>
-                {% if i == 1 %}
-                <input type="text" name="plan_period_{{i}}" placeholder="처방 기간">
-                {% else %}
-                <input type="text" name="plan_period_{{i}}">
-                {% endif %}
+                <input type="text" name="plan_period_{{i}}"
+                       value="{{ (getattr(emr, 'plan_period_' ~ i) or '') if emr else '' }}"
+                       {% if i == 1 and not emr %}placeholder="처방 기간"{% endif %}>
               </td>
             </tr>
             {% endfor %}
@@ -242,12 +271,16 @@
               <td>6</td>
               <td>파스</td>
               <td>
-                <label><input type="radio" name="plan_pas_6" value="O">O</label>
-                <label><input type="radio" name="plan_pas_6" value="X">X</label>
+                <label><input type="radio" name="plan_pas_6" value="O"
+                              {% if emr and emr.plan_pas_6=='O' %}checked{% endif %}>O</label>
+                <label><input type="radio" name="plan_pas_6" value="X"
+                              {% if emr and emr.plan_pas_6=='X' %}checked{% endif %}>X</label>
               </td>
               <td>
-                <label><input type="radio" name="plan_pas_period_6" value="Cool">Cool</label>
-                <label><input type="radio" name="plan_pas_period_6" value="Hot">Hot</label>
+                <label><input type="radio" name="plan_pas_period_6" value="Cool"
+                              {% if emr and emr.plan_pas_period_6=='Cool' %}checked{% endif %}>Cool</label>
+                <label><input type="radio" name="plan_pas_period_6" value="Hot"
+                              {% if emr and emr.plan_pas_period_6=='Hot' %}checked{% endif %}>Hot</label>
               </td>
             </tr>
 
@@ -256,8 +289,10 @@
               <td>7</td>
               <td>삐콤</td>
               <td colspan="2">
-                <label><input type="radio" name="plan_bear_7" value="O">O</label>
-                <label><input type="radio" name="plan_bear_7" value="X">X</label>
+                <label><input type="radio" name="plan_bear_7" value="O"
+                              {% if emr and emr.plan_bear_7=='O' %}checked{% endif %}>O</label>
+                <label><input type="radio" name="plan_bear_7" value="X"
+                              {% if emr and emr.plan_bear_7=='X' %}checked{% endif %}>X</label>
               </td>
             </tr>
 
@@ -267,43 +302,53 @@
               <td>근육통</td>
               <td>
                 안티푸라민<br>
-                <label><input type="radio" name="plan_anti_8" value="O">O</label>
-                <label><input type="radio" name="plan_anti_8" value="X">X</label>
+                <label><input type="radio" name="plan_anti_8" value="O"
+                              {% if emr and emr.plan_anti_8=='O' %}checked{% endif %}>O</label>
+                <label><input type="radio" name="plan_anti_8" value="X"
+                              {% if emr and emr.plan_anti_8=='X' %}checked{% endif %}>X</label>
               </td>
               <td>
                 루마겔<br>
-                <label><input type="radio" name="plan_ruma_8" value="O">O</label>
-                <label><input type="radio" name="plan_ruma_8" value="X">X</label>
+                <label><input type="radio" name="plan_ruma_8" value="O"
+                              {% if emr and emr.plan_ruma_8=='O' %}checked{% endif %}>O</label>
+                <label><input type="radio" name="plan_ruma_8" value="X"
+                              {% if emr and emr.plan_ruma_8=='X' %}checked{% endif %}>X</label>
               </td>
             </tr>
 
-            <!-- (4-5) 발백선: colspan 제거, 빈 셀로 메서드 칸 채움 -->
+            <!-- (4-5) 발백선 -->
             <tr>
               <td>9</td>
               <td class="site-row">
                 &nbsp;발백선 (site:
-                <input type="text" name="plan_tinea_site_9" placeholder="부위">
-                )
-              </td>
-              <td></td> <!-- Method 칸 빈 셀 -->
-              <td>
-                <label><input type="radio" name="plan_tinea_9" value="O">O</label>
-                <label><input type="radio" name="plan_tinea_9" value="X">X</label>
-              </td>
-            </tr>
-
-            <!-- (4-6) 피부염: 동일하게 -->
-            <tr>
-              <td>10</td>
-              <td class="site-row">
-                &nbsp;피부염 (site:
-                <input type="text" name="plan_derma_site_10" placeholder="부위">
+                <input type="text" name="plan_tinea_site_9" placeholder="부위"
+                       value="{{ emr.plan_tinea_site_9 if emr and emr.plan_tinea_site_9 is not none else '' }}">
                 )
               </td>
               <td></td>
               <td>
-                <label><input type="radio" name="plan_derma_10" value="O">O</label>
-                <label><input type="radio" name="plan_derma_10" value="X">X</label>
+                <label><input type="radio" name="plan_tinea_9" value="O"
+                              {% if emr and emr.plan_tinea_9=='O' %}checked{% endif %}>O</label>
+                <label><input type="radio" name="plan_tinea_9" value="X"
+                              {% if emr and emr.plan_tinea_9=='X' %}checked{% endif %}>X</label>
+              </td>
+            </tr>
+
+            <!-- (4-6) 피부염 -->
+            <tr>
+              <td>10</td>
+              <td class="site-row">
+                &nbsp;피부염 (site:
+                <input type="text" name="plan_derma_site_10" placeholder="부위"
+                       value="{{ emr.plan_derma_site_10 if emr and emr.plan_derma_site_10 is not none else '' }}">
+                )
+              </td>
+              <td></td>
+              <td>
+                <label><input type="radio" name="plan_derma_10" value="O"
+                              {% if emr and emr.plan_derma_10=='O' %}checked{% endif %}>O</label>
+                <label><input type="radio" name="plan_derma_10" value="X"
+                              {% if emr and emr.plan_derma_10=='X' %}checked{% endif %}>X</label>
               </td>
             </tr>
           </tbody>
@@ -313,7 +358,8 @@
       <!-- (5) Medication Counseling -->
       <fieldset class="form-section">
         <legend>Medication Counseling</legend>
-        <textarea name="med_counseling" class="med-counsel" rows="2" placeholder="복약 상담 내용을 입력하세요"></textarea>
+        <textarea name="med_counseling" class="med-counsel" rows="2"
+                  placeholder="복약 상담 내용을 입력하세요">{{ emr.med_counseling if emr and emr.med_counseling is not none else '' }}</textarea>
       </fieldset>
 
       <!-- (6) IV Order -->
@@ -324,18 +370,19 @@
             N/S 500 ml + Vit B/C 2 mL ×4 amp (인당 15–20 mL)
           </span>
           <span class="iv-choice">
-            <label><input type="radio" name="iv_order" value="O">O</label>
-            <label><input type="radio" name="iv_order" value="X">X</label>
+            <label><input type="radio" name="iv_order" value="O"
+                          {% if emr and emr.iv_order=='O' %}checked{% endif %}>O</label>
+            <label><input type="radio" name="iv_order" value="X"
+                          {% if emr and emr.iv_order=='X' %}checked{% endif %}>X</label>
           </span>
         </div>
       </fieldset>
 
       <!-- (7) Signatures -->
       <div class="signature-block">
-        <label>Dr. <input type="text" name="sign_dr" placeholder="서명" required></label>
+        <label>Dr. <input type="text" name="sign_dr" placeholder="서명" required
+                          value="{{ emr.sign_dr if emr and emr.sign_dr is not none else '' }}"></label>
       </div>
-
-
 
       <!-- 저장/완료 버튼 -->
       <div class="button-group">
@@ -346,277 +393,264 @@
   </div>
 
   <!-- (3) 과거 진료 기록 -->
-<div class="emr-card form-panel" id="past-panel">
-  <h2>
-    과거 진료 기록
-    <button type="button" id="toggle-past-btn" style="margin-left: 10px; font-size: 0.9rem;">숨기기</button>
-  </h2>
-  <div id="past-panel-body">
-  <form id="past-emr-form">
-    <input type="hidden" name="name" value="{{ name }}">
-    <input type="hidden" name="birth_date" value="{{ birth_date }}">
+  <div class="emr-card form-panel" id="past-panel">
+    <h2>
+      과거 진료 기록
+      <button type="button" id="toggle-past-btn" style="margin-left: 10px; font-size: 0.9rem;">숨기기</button>
+    </h2>
+    <div id="past-panel-body">
+      <form id="past-emr-form">
+        <input type="hidden" name="name" value="{{ name }}">
+        <input type="hidden" name="birth_date" value="{{ birth_date }}">
 
-    <!-- 1. Date -->
-    <div class="form-group date-inline">
-      <label>Date</label>
-      <input type="date" name="record_date" readonly>
+        <!-- 1. Date -->
+        <div class="form-group date-inline">
+          <label>Date</label>
+          <input type="date" name="record_date" readonly>
+        </div>
+
+        <!-- 2. 성명 / 성별 / 나이 -->
+        <div class="form-group header-group">
+          <label>&nbsp;성명</label>
+          <input type="text" name="display_name" value="{{ name }}" readonly>
+
+          <label>&nbsp;&nbsp;성별</label>
+          <select name="gender" disabled>
+            <option>남</option>
+            <option>여</option>
+          </select>
+
+          <label>&nbsp;&nbsp;나이</label>
+          <input type="text" name="age" readonly>
+        </div>
+
+        <!-- 3. Vital Signs -->
+        <fieldset class="section-fieldset">
+          <legend>Vital Signs (V/S)</legend>
+          <div class="vitals-grid">
+            <div class="vital-item">
+              <label>BT (°C)</label>
+              <input type="text" name="bt" readonly>
+            </div>
+            <div class="vital-item">
+              <label>BP (mmHg)</label>
+              <input type="text" name="bp" readonly>
+            </div>
+            <div class="vital-item">
+              <label>HR (bpm)</label>
+              <input type="text" name="hr" readonly>
+            </div>
+            <div class="vital-item">
+              <label>2차 BP</label>
+              <input type="text" name="bp2" readonly>
+            </div>
+            <div class="vital-item">
+              <label>BST</label>
+              <input type="text" name="bst" readonly>
+            </div>
+            <div class="vital-item">
+              <label>식후(시간)</label>
+              <input type="text" name="post_bst" readonly>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 4. C.C. -->
+        <div class="form-group">
+          <label>C.C. (주호소)</label>
+          <textarea name="cc" row="3" readonly></textarea>
+        </div>
+        
+
+        <!-- 6. P.I. -->
+        <div class="form-group">
+          <label>P.I. (병력)</label>
+          <textarea name="pi" rows="7" readonly></textarea>
+        </div>
+
+        <!-- 7. ROS -->
+        <div class="form-group">
+          <label>ROS</label>
+          <textarea name="ros" rows="5" readonly></textarea>
+        </div>
+
+        <!-- History (과거 패널은 JS로 채우므로 placeholder 유지 가능) -->
+        <fieldset class="section-fieldset">
+          <legend>History</legend>
+          <div class="form-group">
+            <label for="pmhx_past">PMHx.</label>
+            <textarea id="pmhx_past" name="pmhx" readonly></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="med_hx_past">Medication Hx.</label>
+            <textarea id="med_hx_past" name="medication_hx" readonly></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="social_past">Social Hx.</label>
+            <textarea id="social_past" name="social"  readonly></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="fhx_past">FHx.</label>
+            <textarea id="fhx_past" name="fhx" readonly></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="allergy_past">Allergy</label>
+            <textarea id="allergy_past" name="allergy" readonly></textarea>
+          </div>
+        </fieldset>
+
+        <!-- 8. P/E -->
+        <div class="form-group">
+          <label>P/E</label>
+          <textarea name="pe" rows="2" readonly></textarea>
+        </div>
+
+        <!-- 9. Problem list / Assessment -->
+        <div class="form-group">
+          <label>Problem list</label>
+          <textarea name="problem_list" rows="5" readonly></textarea>
+        </div>
+        <div class="form-group">
+          <label>Assessment</label>
+          <textarea name="assessment" rows="5" readonly></textarea>
+        </div>
+
+        <!-- 10. N/Ex. -->
+        <fieldset class="section-fieldset">
+          <legend>N/Ex.</legend>
+          <table class="ne-table">
+            <tr>
+              <td><label><input type="radio" name="ne_cog" value="O" disabled>인지저하</label></td>
+              <td>MMSE <input type="text" name="mmse" style="width:50px;" readonly> /30</td>
+              <td>CDR <input type="text" name="cdr" style="width:50px;" readonly></td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="ne_sleep" value="O" disabled>수면장애</label></td>
+              <td colspan="2">
+                PSQI <input type="text" name="psqi" style="width:60px;" readonly>
+                or ISI <input type="text" name="isi" style="width:60px;" readonly>
+              </td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="ne_depress" value="O" disabled>우울감</label></td>
+              <td colspan="2">GDS<input type="text" name="gds" style="width:60px;" readonly></td>
+            </tr>
+          </table>
+        </fieldset>
+
+        <!-- (4) Plan -->
+        <fieldset class="form-section">
+          <legend>Plan</legend>
+          <table class="plan-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Description to P</th>
+                <th>Method</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in range(1,6) %}
+              <tr>
+                <td>{{ i }}</td>
+                <td><input type="text" name="plan_desc_{{i}}" readonly></td>
+                <td><input type="text" name="plan_method_{{i}}" readonly></td>
+                <td><input type="text" name="plan_period_{{i}}" readonly></td>
+              </tr>
+              {% endfor %}
+
+              <tr>
+                <td>6</td>
+                <td>파스</td>
+                <td>
+                  <label><input type="radio" name="plan_pas_6" value="O" disabled>O</label>
+                  <label><input type="radio" name="plan_pas_6" value="X" disabled>X</label>
+                </td>
+                <td>
+                  <label><input type="radio" name="plan_pas_period_6" value="Cool" disabled>Cool</label>
+                  <label><input type="radio" name="plan_pas_period_6" value="Hot" disabled>Hot</label>
+                </td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>삐콤</td>
+                <td colspan="2">
+                  <label><input type="radio" name="plan_bear_7" value="O" disabled>O</label>
+                  <label><input type="radio" name="plan_bear_7" value="X" disabled>X</label>
+                </td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>근육통</td>
+                <td>
+                  안티푸라민<br>
+                  <label><input type="radio" name="plan_anti_8" value="O" disabled>O</label>
+                  <label><input type="radio" name="plan_anti_8" value="X" disabled>X</label>
+                </td>
+                <td>
+                  루마겔<br>
+                  <label><input type="radio" name="plan_ruma_8" value="O" disabled>O</label>
+                  <label><input type="radio" name="plan_ruma_8" value="X" disabled>X</label>
+                </td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td class="site-row">
+                  발백선 (site: <input type="text" name="plan_tinea_site_9" readonly>)
+                </td>
+                <td></td>
+                <td>
+                  <label><input type="radio" name="plan_tinea_9" value="O" disabled>O</label>
+                  <label><input type="radio" name="plan_tinea_9" value="X" disabled>X</label>
+                </td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td class="site-row">
+                  피부염 (site: <input type="text" name="plan_derma_site_10" readonly>)
+                </td>
+                <td></td>
+                <td>
+                  <label><input type="radio" name="plan_derma_10" value="O" disabled>O</label>
+                  <label><input type="radio" name="plan_derma_10" value="X" disabled>X</label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
+
+        <!-- (5) Medication Counseling -->
+        <fieldset class="form-section">
+          <legend>Medication Counseling</legend>
+          <textarea name="med_counseling" rows="2" readonly></textarea>
+        </fieldset>
+
+        <!-- (6) IV Order -->
+        <fieldset class="form-section">
+          <legend>IV Order</legend>
+          <div class="iv-order">
+            <span class="iv-desc">
+              N/S 500 ml + Vit B/C 2 mL ×4 amp (인당 15–20 mL)
+            </span>
+            <span class="iv-choice">
+              <label><input type="radio" name="iv_order" value="O" disabled>O</label>
+              <label><input type="radio" name="iv_order" value="X" disabled>X</label>
+            </span>
+          </div>
+        </fieldset>
+
+        <!-- (7) Signatures -->
+        <div class="signature-block">
+          <label>Dr. <input type="text" name="sign_dr" readonly></label>
+        </div>
+      </form>
     </div>
-
-    <!-- 2. 성명 / 성별 / 나이 -->
-    <div class="form-group header-group">
-      <label>&nbsp;성명</label>
-      <input type="text" name="display_name" value="{{ name }}" readonly>
-
-      <label>&nbsp;&nbsp;성별</label>
-      <select name="gender" disabled>
-        <option>남</option>
-        <option>여</option>
-      </select>
-
-      <label>&nbsp;&nbsp;나이</label>
-      <input type="text" name="age" readonly>
-    </div>
-
-    <!-- 3. Vital Signs -->
-    <fieldset class="section-fieldset">
-      <legend>Vital Signs (V/S)</legend>
-      <div class="vitals-grid">
-        <div class="vital-item">
-          <label>BT (°C)</label>
-          <input type="text" name="bt" readonly>
-        </div>
-        <div class="vital-item">
-          <label>BP (mmHg)</label>
-          <input type="text" name="bp" readonly>
-        </div>
-        <div class="vital-item">
-          <label>HR (bpm)</label>
-          <input type="text" name="hr" readonly>
-        </div>
-        <div class="vital-item">
-          <label>2차 BP</label>
-          <input type="text" name="bp2" readonly>
-        </div>
-        <div class="vital-item">
-          <label>BST</label>
-          <input type="text" name="bst" readonly>
-        </div>
-        <div class="vital-item">
-          <label>식후(시간)</label>
-          <input type="text" name="post_bst" readonly>
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- 4. C.C. -->
-    <fieldset class="section-fieldset cc-fieldset">
-      <legend>C.C. (주호소)</legend>
-      <div class="form-group">
-        <textarea name="cc" readonly></textarea>
-      </div>
-      <div class="form-group inline-group no-wrap">
-        <div class="inline-item">
-          <label>Onset</label>
-          <input type="text" name="onset" readonly>
-        </div>
-        <div class="inline-item">
-          <label>Duration</label>
-          <input type="text" name="duration" readonly>
-        </div>
-        <div class="inline-item">
-          <label>Assoc. Sx.</label>
-          <input type="text" name="assoc" readonly>
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- 5. History -->
-    <fieldset class="section-fieldset">
-      <legend>History</legend>
-      <div class="form-group">
-        <label>Medication Hx.</label>
-        <input type="text" name="medication_hx" readonly>
-      </div>
-      <div class="form-group">
-        <label>PMHx.</label>
-        <input type="text" name="pmhx" readonly>
-      </div>
-      <div class="form-group inline-group no-wrap">
-        <div class="inline-item">
-          <label>Allergy</label>
-          <input type="text" name="allergy" readonly>
-        </div>
-        <div class="inline-item">
-          <label>FHx.</label>
-          <input type="text" name="fhx" readonly>
-        </div>
-        <div class="inline-item">
-          <label>Social</label>
-          <input type="text" name="social" readonly>
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- 6. P.I. -->
-    <div class="form-group">
-      <label>P.I. (병력)</label>
-      <textarea name="pi" rows="3" readonly></textarea>
-    </div>
-
-    <!-- 7. ROS -->
-    <div class="form-group">
-      <label>ROS</label>
-      <input type="text" name="ros" readonly>
-    </div>
-
-    <!-- 8. P/E -->
-    <div class="form-group">
-      <label>P/E</label>
-      <input type="text" name="pe" readonly>
-    </div>
-
-    <!-- 9. Problem list / Assessment -->
-    <div class="form-group">
-      <label>Problem list</label>
-      <textarea name="problem_list" rows="2" readonly></textarea>
-    </div>
-    <div class="form-group">
-      <label>Assessment</label>
-      <textarea name="assessment" rows="2" readonly></textarea>
-    </div>
-
-    <!-- 10. N/Ex. -->
-    <fieldset class="section-fieldset">
-      <legend>N/Ex.</legend>
-      <table class="ne-table">
-        <tr>
-          <td><label><input type="radio" name="ne_cog" value="O" disabled>인지저하</label></td>
-          <td>MMSE <input type="text" name="mmse" style="width:50px;" readonly> /30</td>
-          <td>CDR <input type="text" name="cdr" style="width:50px;" readonly></td>
-        </tr>
-        <tr>
-          <td><label><input type="radio" name="ne_sleep" value="O" disabled>수면장애</label></td>
-          <td colspan="2">
-            PSQI <input type="text" name="psqi" style="width:60px;" readonly>
-            or ISI <input type="text" name="isi" style="width:60px;" readonly>
-          </td>
-        </tr>
-        <tr>
-          <td><label><input type="radio" name="ne_depress" value="O" disabled>우울감</label></td>
-          <td colspan="2">GDS<input type="text" name="gds" style="width:60px;" readonly></td>
-        </tr>
-      </table>
-    </fieldset>
-
-    <!-- (4) Plan -->
-    <fieldset class="form-section">
-      <legend>Plan</legend>
-      <table class="plan-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Description to P</th>
-            <th>Method</th>
-            <th>Duration</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for i in range(1,6) %}
-          <tr>
-            <td>{{ i }}</td>
-            <td><input type="text" name="plan_desc_{{i}}" readonly></td>
-            <td><input type="text" name="plan_method_{{i}}" readonly></td>
-            <td><input type="text" name="plan_period_{{i}}" readonly></td>
-          </tr>
-          {% endfor %}
-
-          <tr>
-            <td>6</td>
-            <td>파스</td>
-            <td>
-              <label><input type="radio" name="plan_pas_6" value="O" disabled>O</label>
-              <label><input type="radio" name="plan_pas_6" value="X" disabled>X</label>
-            </td>
-            <td>
-              <label><input type="radio" name="plan_pas_period_6" value="Cool" disabled>Cool</label>
-              <label><input type="radio" name="plan_pas_period_6" value="Hot" disabled>Hot</label>
-            </td>
-          </tr>
-          <tr>
-            <td>7</td>
-            <td>삐콤</td>
-            <td colspan="2">
-              <label><input type="radio" name="plan_bear_7" value="O" disabled>O</label>
-              <label><input type="radio" name="plan_bear_7" value="X" disabled>X</label>
-            </td>
-          </tr>
-          <tr>
-            <td>8</td>
-            <td>근육통</td>
-            <td>
-              안티푸라민<br>
-              <label><input type="radio" name="plan_anti_8" value="O" disabled>O</label>
-              <label><input type="radio" name="plan_anti_8" value="X" disabled>X</label>
-            </td>
-            <td>
-              루마겔<br>
-              <label><input type="radio" name="plan_ruma_8" value="O" disabled>O</label>
-              <label><input type="radio" name="plan_ruma_8" value="X" disabled>X</label>
-            </td>
-          </tr>
-          <tr>
-            <td>9</td>
-            <td class="site-row">
-              발백선 (site: <input type="text" name="plan_tinea_site_9" readonly>)
-            </td>
-            <td></td>
-            <td>
-              <label><input type="radio" name="plan_tinea_9" value="O" disabled>O</label>
-              <label><input type="radio" name="plan_tinea_9" value="X" disabled>X</label>
-            </td>
-          </tr>
-          <tr>
-            <td>10</td>
-            <td class="site-row">
-              피부염 (site: <input type="text" name="plan_derma_site_10" readonly>)
-            </td>
-            <td></td>
-            <td>
-              <label><input type="radio" name="plan_derma_10" value="O" disabled>O</label>
-              <label><input type="radio" name="plan_derma_10" value="X" disabled>X</label>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </fieldset>
-
-    <!-- (5) Medication Counseling -->
-    <fieldset class="form-section">
-      <legend>Medication Counseling</legend>
-      <textarea name="med_counseling" rows="2" readonly></textarea>
-    </fieldset>
-
-    <!-- (6) IV Order -->
-    <fieldset class="form-section">
-      <legend>IV Order</legend>
-      <div class="iv-order">
-        <span class="iv-desc">
-          N/S 500 ml + Vit B/C 2 mL ×4 amp (인당 15–20 mL)
-        </span>
-        <span class="iv-choice">
-          <label><input type="radio" name="iv_order" value="O" disabled>O</label>
-          <label><input type="radio" name="iv_order" value="X" disabled>X</label>
-        </span>
-      </div>
-    </fieldset>
-
-    <!-- (7) Signatures -->
-    <div class="signature-block">
-      <label>Dr. <input type="text" name="sign_dr" readonly></label>
-    </div>
-  </form>
   </div>
-</div>
 
   <!-- ─── 진료 완료 확인 모달 ─── -->
   <div id="complete-modal" class="modal">
@@ -631,7 +665,8 @@
         <p>위 내용이 맞습니까? <span class="note">(완료 전 저장 필수)</span></p>
       </div>
       <div class="modal-section">
-        <br> <label>서명 확인 (Dr.): <input type="text" id="modal-sign" placeholder="서명"></label>
+        <br>
+        <label>서명 확인 (Dr.): <input type="text" id="modal-sign" placeholder="서명"></label>
         <span id="modal-error" class="error-message"></span>
       </div>
       <div class="modal-buttons">

@@ -171,6 +171,15 @@
             <fieldset class="section-fieldset">
             <legend>서명</legend>
 
+            <!-- ✅ 추가: 의사 서명 (읽기 전용) -->
+            <div class="form-group">
+                <label for="sign_dr_display">진료의(Dr.)</label>
+                <input type="text"
+                id="sign_dr_display"
+                value="{{ emr.sign_dr or '' }}"
+                readonly>
+            </div>
+
             <div class="form-group">
                 <label for="sign_med_counsel">복약지도자</label>
                 <!-- ✅ DB 저장값을 화면에 미리 채움 -->

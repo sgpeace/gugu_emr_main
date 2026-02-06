@@ -52,19 +52,27 @@
   <!-- 오른쪽: 상태별 환자 (진료중, 수액중, 복약중) 및 환자 검색 -->
   <div class="status-section card">
     <div class="status-container">
-      <div class="status-box" id="in-treatment">
-        <h3>진료중</h3>
-        <ul id="treatment-list"></ul>
-      </div>
-      <div class="status-box" id="in-infusion">
-        <h3>수액중</h3>
-        <ul id="infusion-list"></ul>
-      </div>
-      <div class="status-box" id="in-medication">
-        <h3>복약중</h3>
-        <ul id="medication-list"></ul>
-      </div>
-    </div>
+  <div class="status-box" id="in-treatment">
+    <h3>진료부</h3>
+    <ul id="treatment-list"></ul>
+  </div>
+
+  <!-- ✅ 간호부: 수액대기중 / 수액중 분리 -->
+  <div class="status-box" id="in-infusion-wait">
+    <h3>간호부 - 수액대기중</h3>
+    <ul id="infusion-waiting-list"></ul>
+  </div>
+
+  <div class="status-box" id="in-infusion">
+    <h3>간호부 - 수액중</h3>
+    <ul id="infusion-inprogress-list"></ul>
+  </div>
+
+  <div class="status-box" id="in-medication">
+    <h3>약국부</h3>
+    <ul id="medication-list"></ul>
+  </div>
+</div>  
 
     <div class="search-patient-section">
       <input type="text" id="patient-name-search" placeholder="환자 이름 검색">
