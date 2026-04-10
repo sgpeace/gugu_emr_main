@@ -113,9 +113,10 @@ document.addEventListener("DOMContentLoaded", function () {
           break;
         }
       }
-      // 오늘 날짜 외 없으면 첫 번째 사용
+      // 오늘 날짜 외 이전 기록이 없으면 종료
       if (!targetDate) {
-        targetDate = visitLinks[0].parentElement.getAttribute("data-visit-date");
+        showToast("이전 처방 내역이 없습니다.", true);
+        return;
       }
 
       const name = document.querySelector("input[name='name']")?.value || "";
