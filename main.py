@@ -1425,6 +1425,43 @@ if __name__ == "__main__":
 #     db.commit()
 #     return RedirectResponse(url="/registration", status_code=302)
 
+@app.get("/dashboard/export_summary")
+def export_summary(db: Session = Depends(get_db)):
+    from datetime import date
+    today = date.today()
+    regs = db.query(Registration).order_by(Registration.id.asc()).all()
+    result = []
+    for i, reg in enumerate(regs, 1):
+        patient = db.query(Patient).filter(
+            Patient.name == reg.patient_name,
+            Patient.birth_date == reg.birth_date
+        ).first()
+        emr = None
+        if patient:
+            emr = db.query(EMR).filter(
+                EMR.patient_id == patient.id,
+                EMR.record_date == today
+            ).first()
+        iv_order = (emr.iv_order or "").strip().upper() if emr else ""
+        if iv_order == "O":
+            r1 = (emr.nursing_result_1 or "").strip()
+            r2 = (emr.nursing_result_2 or "").strip()
+            r3 = (emr.nursing_result_3 or "").strip()
+            iv_success = "O" if any("성공" in r for r in [r1, r2, r3]) else "X"
+        elif iv_order == "X":
+            iv_success = "-"
+        else:
+            iv_order = ""
+            iv_success = ""
+        result.append({
+            "seq": i,
+            "name": reg.patient_name,
+            "birth_date": reg.birth_date,
+            "iv_order": iv_order,
+            "iv_success": iv_success,
+        })
+    return JSONResponse(content=result)
+
 @app.get("/druglist")
 def get_druglist():
     path = os.path.join(os.path.dirname(__file__), "static", "druglist.xlsx")
