@@ -69,19 +69,28 @@
                 </div>
             </fieldset>
 
-            <!-- 2) C.C. (주호소) -->
+            <!-- 2) SOAP -->
             <fieldset class="section-fieldset">
-                <legend>주호소 (C.C.)</legend>
-                <div class="readonly-value">{{ emr.cc or '—' }}</div>
+                <legend>S — Subjective</legend>
+                <div class="readonly-value">{{ emr.subjective or '—' }}</div>
             </fieldset>
 
-            <!-- 3) P.I. (병력) -->
             <fieldset class="section-fieldset">
-                <legend>P.I. (병력)</legend>
-                <div class="readonly-value">{{ emr.pi or '—' }}</div>
+                <legend>O — Objective</legend>
+                <div class="readonly-value">{{ emr.objective or '—' }}</div>
             </fieldset>
 
-            <!-- 4) Prescription — Plan -->
+            <fieldset class="section-fieldset">
+                <legend>A — Assessment</legend>
+                <div class="readonly-value">{{ emr.assessment or '—' }}</div>
+            </fieldset>
+
+            <fieldset class="section-fieldset">
+                <legend>P — Plan</legend>
+                <div class="readonly-value">{{ emr.plan_text or '—' }}</div>
+            </fieldset>
+
+            <!-- 3) Prescription — Plan -->
             <fieldset class="form-section">
                 <legend>Plan</legend>
                 <table class="plan-table">

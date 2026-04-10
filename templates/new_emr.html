@@ -1,138 +1,141 @@
 {% extends "base.html" %}
-
-{% block title %}기본 정보 조사 - GuGu Medical Center EMR{% endblock %}
+{% block title %}신환 차트 – GuGu Medical Center EMR{% endblock %}
 
 {% block content %}
 <div class="container">
-  <!-- 상단 버튼 그룹 -->
   <div class="button-group top-buttons">
     <a href="/dashboard" class="back-button">← 메인 대시보드</a>
-    <button type="button" class="button" id="back-button">뒤로가기</button>
   </div>
-  <div class="card">
-    <h2>기본 정보 조사</h2>
-    <form id="basic-info-form">
 
-      <!-- 1) 작성일/정보제공자/작성자 분리 -->
-      <div class="form-grid-three">
-        <div class="form-group">
-          <label for="form_date">작성일</label>
-          <input type="date" id="form_date" name="form_date" value="{{ chart.form_date if chart else '' }}" required>
-        </div>
-        <div class="form-group">
-          <label for="provider">정보제공자</label>
-          <select id="provider" name="provider" required>
-            <option value="">— 선택 —</option>
-            <option value="본인" {% if chart and chart.provider == "본인" %}selected{% endif %}>본인</option>
-            <option value="보호자" {% if chart and chart.provider == "보호자" %}selected{% endif %}>보호자</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="author">작성자</label>
-          <input type="text" id="author" name="author" value="{{ chart.author if chart else '' }}" placeholder="작성자 이름" required>
-        </div>
+  <div id="custom-toast" class="toast hidden"></div>
+
+  <div class="card">
+    <h2>신환 차트</h2>
+    <form id="basic-info-form">
+      <input type="hidden" name="name" value="{{ name }}">
+      <input type="hidden" name="birth_date" value="{{ birth_date }}">
+
+      <!-- C.C. -->
+      <div class="form-group">
+        <label for="cc">C.C. (주호소)</label>
+        <textarea id="cc" name="cc" rows="3">{{ chart.cc if chart and chart.cc is not none else '' }}</textarea>
       </div>
 
-      <!-- 2) 기본 정보 박스 -->
-      <div class="form-grid">
-        <fieldset>
-          <legend>기본 정보</legend>
-          <div class="three-col">
-            <div class="form-group">
-              <label for="name">성명</label>
-              <input type="text" id="name" name="name" value="{{ chart.name if chart else '' }}" placeholder="예) 홍길동">
-            </div>
-            <div class="form-group">
-              <label for="gender">성별</label>
-              <select id="gender" name="gender">
-                <option value="">— 선택 —</option>
-                <option value="M" {% if chart and chart.gender == "M" %}selected{% endif %}>M</option>
-                <option value="F" {% if chart and chart.gender == "F" %}selected{% endif %}>F</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="birth_date">생년월일</label>
-              <input type="date" id="birth_date" name="birth_date" value="{{ chart.birth_date if chart else '' }}">
-            </div>
-            <div class="form-group address">
-              <label for="address">주소</label>
-              <input type="text" id="address" name="address" value="{{ chart.address if chart else '' }}" placeholder="예) 서울시 강남구 ...">
-            </div>
-            <div class="form-group">
-              <label for="occupation">직업</label>
-              <input type="text" id="occupation" name="occupation" value="{{ chart.occupation if chart else '' }}" placeholder="예) 회사원, 학생 등">
-            </div>
-            <div class="form-group">
-              <label for="religion">종교</label>
-              <input type="text" id="religion" name="religion" value="{{ chart.religion if chart else '' }}" placeholder="예) 기독교, 불교 등">
-            </div>
-            <div class="form-group">
-              <label for="education">교육정도</label>
-              <input type="text" id="education" name="education" value="{{ chart.education if chart else '' }}" placeholder="최종 학력">
-            </div>
-            <div class="form-group">
-              <label for="marital_status">가족사항</label>
-              <input type="text" id="marital_status" name="marital_status" value="{{ chart.marital_status if chart else '' }}" placeholder="기혼/미혼 등">
-            </div>
-            <div class="form-group full-span">
-              <label for="other_info">기타사항</label>
-              <textarea id="other_info" name="other_info" rows="2">{{ chart.other_info if chart else '' }}</textarea>
-            </div>
-          </div>
-        </fieldset>
+      <!-- P.I. -->
+      <div class="form-group">
+        <label for="pi">P.I. (병력)</label>
+        <textarea id="pi" name="pi" rows="7">{{ chart.pi if chart and chart.pi is not none else '' }}</textarea>
+      </div>
 
-        <fieldset>
-          <legend>Vital Signs (V/S)</legend>
-          <div class="grid-six">
-            {% for fld in ["bt","pr","rr","bp","height","weight"] %}
-            <div class="form-group">
-              <label for="{{ fld }}">{{ fld|upper }}</label>
-              <input
-                type="{{ fld in ['bt','height','weight'] and 'number' or 'text' }}"
-                id="{{ fld }}" name="{{ fld }}"
-                value="{{ getattr(chart, fld) if chart else '' }}"
-                {% if fld=="bp" %} placeholder="예) 120/80"{% endif %}>
-            </div>
-            {% endfor %}
-          </div>
-        </fieldset>
+      <!-- ROS -->
+      <div class="form-group">
+        <label for="ros">ROS</label>
+        <textarea id="ros" name="ros" rows="5">{{ chart.ros if chart and chart.ros is not none else '' }}</textarea>
+      </div>
 
-        <fieldset>
-          <legend>과거력 및 현 복용약</legend>
-          <div class="two-col">
-            <div class="form-group">
-              <label for="allergy">Allergy</label>
-              <select id="allergy" name="allergy">
-                <option value="">— 선택 —</option>
-                <option value="무" {% if chart and chart.allergy == "무" %}selected{% endif %}>무</option>
-                <option value="유" {% if chart and chart.allergy == "유" %}selected{% endif %}>유</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="allergy_detail">세부내용</label>
-              <input type="text" id="allergy_detail" name="allergy_detail" value="{{ chart.allergy_detail if chart else '' }}" placeholder="음식/약/기타">
-            </div>
-            {% for item, field in [("당뇨", "history_DM"), ("고혈압", "history_HTN"), ("간염", "history_HEPA"), ("결핵", "history_TB"), ("관절염", "history_OA"), ("기타", "history_ETC")] %}
-            <div class="form-group">
-              <label>{{ item }}</label>
-              <select name="{{ field }}">
-                <option value="">— 선택 —</option>
-                <option value="무" {% if chart and getattr(chart, field) == "무" %}selected{% endif %}>무</option>
-                <option value="유" {% if chart and getattr(chart, field) == "유" %}selected{% endif %}>유</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>{{ item }} 세부</label>
-              <input type="text" name="{{ field }}_detail" value="{{ getattr(chart, field + '_detail') if chart else '' }}" placeholder="진단 시기/치료/약">
-            </div>
-            {% endfor %}
-          </div>
-        </fieldset>
-
-        <div class="button-group">
-          <button type="submit" class="button" id="save-button">저장</button>
-          <button type="button" class="button" onclick="history.back()">취소</button>
+      <!-- History -->
+      <fieldset class="section-fieldset">
+        <legend>History</legend>
+        <div class="form-group">
+          <label for="pmhx">PMHx.</label>
+          <textarea id="pmhx" name="pmhx" rows="2">{{ chart.pmhx if chart and chart.pmhx is not none else '' }}</textarea>
         </div>
+        <div class="form-group">
+          <label for="medication_hx">Medication Hx.</label>
+          <textarea id="medication_hx" name="medication_hx" rows="2">{{ chart.medication_hx if chart and chart.medication_hx is not none else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="social">Social Hx.</label>
+          <textarea id="social" name="social" rows="2">{{ chart.social if chart and chart.social is not none else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="fhx">FHx.</label>
+          <textarea id="fhx" name="fhx" rows="2">{{ chart.fhx if chart and chart.fhx is not none else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="allergy_notes">Allergy</label>
+          <textarea id="allergy_notes" name="allergy_notes" rows="2">{{ chart.allergy_notes if chart and chart.allergy_notes is not none else '' }}</textarea>
+        </div>
+      </fieldset>
+
+      <!-- P/E -->
+      <div class="form-group">
+        <label for="pe">P/E</label>
+        <textarea id="pe" name="pe" rows="3">{{ chart.pe if chart and chart.pe is not none else '' }}</textarea>
+      </div>
+
+      <!-- Problem list / Assessment -->
+      <div class="form-group">
+        <label for="problem_list">Problem list</label>
+        <textarea id="problem_list" name="problem_list" rows="5">{{ chart.problem_list if chart and chart.problem_list is not none else '' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="assessment">Assessment</label>
+        <textarea id="assessment" name="assessment" rows="5">{{ chart.assessment if chart and chart.assessment is not none else '' }}</textarea>
+      </div>
+
+      <!-- N/Ex. -->
+      <fieldset class="section-fieldset">
+        <legend>N/Ex.</legend>
+        <table class="ne-table">
+          <tr>
+            <td>
+              <label>
+                <input type="radio" name="ne_cog" value="O"
+                       {% if chart and chart.ne_cog %}checked{% endif %}>
+                인지저하
+              </label>
+            </td>
+            <td>
+              MMSE
+              <input type="text" name="mmse" style="width:50px;"
+                     value="{{ chart.mmse if chart and chart.mmse is not none else '' }}">
+              /30
+            </td>
+            <td>
+              CDR
+              <input type="text" name="cdr_score" style="width:50px;"
+                     value="{{ chart.cdr_score if chart and chart.cdr_score is not none else '' }}">
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label>
+                <input type="radio" name="ne_sleep" value="O"
+                       {% if chart and chart.ne_sleep %}checked{% endif %}>
+                수면장애
+              </label>
+            </td>
+            <td colspan="2">
+              PSQI
+              <input type="text" name="psqi" style="width:60px;"
+                     value="{{ chart.psqi if chart and chart.psqi is not none else '' }}">
+              or ISI
+              <input type="text" name="isi" style="width:60px;"
+                     value="{{ chart.isi if chart and chart.isi is not none else '' }}">
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label>
+                <input type="radio" name="ne_depress" value="O"
+                       {% if chart and chart.ne_depress %}checked{% endif %}>
+                우울감
+              </label>
+            </td>
+            <td colspan="2">
+              GDS
+              <input type="text" name="gds" style="width:60px;"
+                     value="{{ chart.gds if chart and chart.gds is not none else '' }}">
+            </td>
+          </tr>
+        </table>
+      </fieldset>
+
+      <div class="button-group">
+        <button type="submit" class="button" id="save-button">저장</button>
+        <button type="button" class="button" onclick="history.back()">취소</button>
+        <button type="button" class="button" id="back-button">뒤로가기</button>
       </div>
     </form>
   </div>

@@ -4,6 +4,44 @@
 {% block content %}
 <a href="/dashboard" class="back-button">← 메인 대시보드</a>
 
+<!-- 오늘의 환자 슬라이드 사이드바 -->
+<div id="today-sidebar">
+  <div id="today-sidebar-content">
+    <h3>오늘의 환자</h3>
+    <ul id="sidebar-patient-list"></ul>
+  </div>
+  <button id="today-sidebar-tab">오늘의&#10;환자</button>
+</div>
+
+<!-- Drug list 슬라이드 사이드바 -->
+<div id="drug-sidebar">
+  <button id="drug-sidebar-tab">Drug&#10;List&#10;💊</button>
+  <div id="drug-sidebar-content">
+    <div id="drug-sidebar-header">
+      <h3>Drug List</h3>
+      <input type="text" id="drug-search" placeholder="약품명 검색...">
+    </div>
+    <div id="drug-table-wrap">
+      <table id="drug-table">
+        <thead>
+          <tr>
+            <th>분류</th>
+            <th>소분류</th>
+            <th>상품명</th>
+            <th>성분 및 함량</th>
+            <th>효능 및 효과</th>
+            <th>용법</th>
+            <th>비고</th>
+            <th>금기</th>
+            <th>복약지도</th>
+          </tr>
+        </thead>
+        <tbody id="drug-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div id="custom-toast" class="toast hidden"></div>
 <div class="patient-header">
   <h1 class="patient-title">{{ name }} 님 <span>({{ birth_date }})</span></h1>
@@ -51,7 +89,7 @@
         <input type="text" id="display_name" name="display_name" value="{{ name }}" readonly>
 
         <label for="gender">&nbsp;&nbsp;성별</label>
-        <select id="gender" name="gender">
+        <select id="gender" name="gender" data-has-value="{{ 'true' if emr and emr.gender else 'false' }}">
           <option value="남" {% if emr and emr.gender=='남' %}selected{% endif %}>남</option>
           <option value="여" {% if emr and emr.gender=='여' %}selected{% endif %}>여</option>
         </select>
@@ -102,132 +140,33 @@
         Vital 저장
       </button>
 
-      <!-- 4. C.C. -->
+      <!-- S - Subjective -->
       <div class="form-group">
-        <label for="cc">C.C. (주호소)</label>
-        <textarea id="cc" name="cc" rows="3">{{ emr.cc if emr and emr.cc is not none else '' }}</textarea>
-      </div>
-      
-
-      <!-- 6. P.I. -->
-      <div class="form-group">
-        <label for="pi">P.I. (병력)</label>
-        <textarea id="pi" name="pi" rows="7">{{ emr.pi if emr and emr.pi is not none else '' }}</textarea>
+        <label for="subjective"><strong>S</strong> — Subjective</label>
+        <textarea id="subjective" name="subjective" rows="5">{{ emr.subjective if emr and emr.subjective is not none else '' }}</textarea>
       </div>
 
-      <!-- 7. ROS -->
+      <!-- O - Objective -->
       <div class="form-group">
-        <label for="ros">ROS</label>
-        <textarea id="ros" name="ros" rows="5">{{ emr.ros if emr and emr.ros is not none else '' }}</textarea>
-      </div>
-      
-
-      <!-- History -->
-      <fieldset class="section-fieldset">
-        <legend>History</legend>
-        <div class="form-group">
-          <label for="pmhx">PMHx.</label>
-          <textarea id="pmhx" name="pmhx" rows="2">{{ emr.pmhx if emr and emr.pmhx is not none else '' }}</textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="med_hx">Medication Hx.</label>
-          <textarea id="med_hx" name="medication_hx" rows="2">{{ emr.medication_hx if emr and emr.medication_hx is not none else '' }}</textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="social">Social Hx.</label>
-          <textarea id="social" name="social" rows="2">{{ emr.social if emr and emr.social is not none else '' }}</textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="fhx">FHx.</label>
-          <textarea id="fhx" name="fhx" rows="2">{{ emr.fhx if emr and emr.fhx is not none else '' }}</textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="allergy">Allergy</label>
-          <textarea id="allergy" name="allergy" rows="2">{{ emr.allergy if emr and emr.allergy is not none else '' }}</textarea>
-        </div>
-      </fieldset>
-
-      <!-- 8. P/E -->
-      <div class="form-group">
-        <label for="pe">P/E</label>
-        <textarea id="pe" name="pe" rows="2">{{ emr.pe if emr and emr.pe is not none else '' }}</textarea>
+        <label for="objective"><strong>O</strong> — Objective</label>
+        <textarea id="objective" name="objective" rows="5">{{ emr.objective if emr and emr.objective is not none else '' }}</textarea>
       </div>
 
-      <!-- 9. Problem list / Assessment -->
+      <!-- A - Assessment -->
       <div class="form-group">
-        <label for="problems">Problem list</label>
-        <textarea id="problems" name="problem_list" rows="5">{{ emr.problem_list if emr and emr.problem_list is not none else '' }}</textarea>
-      </div>
-      <div class="form-group">
-        <label for="assessment">Assessment</label>
+        <label for="assessment"><strong>A</strong> — Assessment</label>
         <textarea id="assessment" name="assessment" rows="5">{{ emr.assessment if emr and emr.assessment is not none else '' }}</textarea>
       </div>
 
-      <!-- 10. N/Ex. -->
-      <fieldset class="section-fieldset">
-        <legend>N/Ex.</legend>
-        <table class="ne-table">
-          <tr>
-            <td>
-              <label>
-                <input type="radio" name="ne_cog" value="O"
-                       {% if emr and emr.ne_cog %}checked{% endif %}>
-                인지저하
-              </label>
-            </td>
-            <td>
-              MMSE
-              <input type="text" name="mmse" style="width:50px;"
-                     value="{{ emr.mmse if emr and emr.mmse is not none else '' }}">
-              /30
-            </td>
-            <td>
-              CDR
-              <input type="text" name="cdr" style="width:50px;"
-                     value="{{ emr.cdr if emr and emr.cdr is not none else '' }}">
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label>
-                <input type="radio" name="ne_sleep" value="O"
-                       {% if emr and emr.ne_sleep %}checked{% endif %}>
-                수면장애
-              </label>
-            </td>
-            <td colspan="2">
-              PSQI
-              <input type="text" name="psqi" style="width:60px;"
-                     value="{{ emr.psqi if emr and emr.psqi is not none else '' }}">
-              or ISI
-              <input type="text" name="isi" style="width:60px;"
-                     value="{{ emr.isi if emr and emr.isi is not none else '' }}">
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label>
-                <input type="radio" name="ne_depress" value="O"
-                       {% if emr and emr.ne_depress %}checked{% endif %}>
-                우울감
-              </label>
-            </td>
-            <td colspan="2">
-              GDS
-              <input type="text" name="gds" style="width:60px;"
-                     value="{{ emr.gds if emr and emr.gds is not none else '' }}">
-            </td>
-          </tr>
-        </table>
-      </fieldset>
+      <!-- P - Plan (텍스트) -->
+      <div class="form-group">
+        <label for="plan_text"><strong>P</strong> — Plan</label>
+        <textarea id="plan_text" name="plan_text" rows="5">{{ emr.plan_text if emr and emr.plan_text is not none else '' }}</textarea>
+      </div>
 
       <!-- (4) Prescription — Plan -->
       <fieldset class="form-section">
-        <legend>Plan</legend>
+        <legend>Plan <button type="button" id="load-prev-plan-btn" style="margin-left:10px; font-size:0.85rem;">이전 처방 불러오기</button></legend>
         <table class="plan-table">
           <colgroup>
             <col class="col-num">
@@ -397,6 +336,8 @@
     <h2>
       과거 진료 기록
       <button type="button" id="toggle-past-btn" style="margin-left: 10px; font-size: 0.9rem;">숨기기</button>
+      <button type="button" id="edit-past-btn" style="margin-left: 6px; font-size: 0.9rem;" disabled>수정</button>
+      <button type="button" id="save-past-btn" style="margin-left: 6px; font-size: 0.9rem; display:none;">저장</button>
     </h2>
     <div id="past-panel-body">
       <form id="past-emr-form">
@@ -455,92 +396,29 @@
           </div>
         </fieldset>
 
-        <!-- 4. C.C. -->
+        <!-- S - Subjective -->
         <div class="form-group">
-          <label>C.C. (주호소)</label>
-          <textarea name="cc" row="3" readonly></textarea>
-        </div>
-        
-
-        <!-- 6. P.I. -->
-        <div class="form-group">
-          <label>P.I. (병력)</label>
-          <textarea name="pi" rows="7" readonly></textarea>
+          <label><strong>S</strong> — Subjective</label>
+          <textarea name="subjective" rows="5" readonly></textarea>
         </div>
 
-        <!-- 7. ROS -->
+        <!-- O - Objective -->
         <div class="form-group">
-          <label>ROS</label>
-          <textarea name="ros" rows="5" readonly></textarea>
+          <label><strong>O</strong> — Objective</label>
+          <textarea name="objective" rows="5" readonly></textarea>
         </div>
 
-        <!-- History (과거 패널은 JS로 채우므로 placeholder 유지 가능) -->
-        <fieldset class="section-fieldset">
-          <legend>History</legend>
-          <div class="form-group">
-            <label for="pmhx_past">PMHx.</label>
-            <textarea id="pmhx_past" name="pmhx" readonly></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="med_hx_past">Medication Hx.</label>
-            <textarea id="med_hx_past" name="medication_hx" readonly></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="social_past">Social Hx.</label>
-            <textarea id="social_past" name="social"  readonly></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="fhx_past">FHx.</label>
-            <textarea id="fhx_past" name="fhx" readonly></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="allergy_past">Allergy</label>
-            <textarea id="allergy_past" name="allergy" readonly></textarea>
-          </div>
-        </fieldset>
-
-        <!-- 8. P/E -->
+        <!-- A - Assessment -->
         <div class="form-group">
-          <label>P/E</label>
-          <textarea name="pe" rows="2" readonly></textarea>
-        </div>
-
-        <!-- 9. Problem list / Assessment -->
-        <div class="form-group">
-          <label>Problem list</label>
-          <textarea name="problem_list" rows="5" readonly></textarea>
-        </div>
-        <div class="form-group">
-          <label>Assessment</label>
+          <label><strong>A</strong> — Assessment</label>
           <textarea name="assessment" rows="5" readonly></textarea>
         </div>
 
-        <!-- 10. N/Ex. -->
-        <fieldset class="section-fieldset">
-          <legend>N/Ex.</legend>
-          <table class="ne-table">
-            <tr>
-              <td><label><input type="radio" name="ne_cog" value="O" disabled>인지저하</label></td>
-              <td>MMSE <input type="text" name="mmse" style="width:50px;" readonly> /30</td>
-              <td>CDR <input type="text" name="cdr" style="width:50px;" readonly></td>
-            </tr>
-            <tr>
-              <td><label><input type="radio" name="ne_sleep" value="O" disabled>수면장애</label></td>
-              <td colspan="2">
-                PSQI <input type="text" name="psqi" style="width:60px;" readonly>
-                or ISI <input type="text" name="isi" style="width:60px;" readonly>
-              </td>
-            </tr>
-            <tr>
-              <td><label><input type="radio" name="ne_depress" value="O" disabled>우울감</label></td>
-              <td colspan="2">GDS<input type="text" name="gds" style="width:60px;" readonly></td>
-            </tr>
-          </table>
-        </fieldset>
+        <!-- P - Plan (텍스트) -->
+        <div class="form-group">
+          <label><strong>P</strong> — Plan</label>
+          <textarea name="plan_text" rows="5" readonly></textarea>
+        </div>
 
         <!-- (4) Plan -->
         <fieldset class="form-section">
@@ -658,7 +536,7 @@
       <span class="close-button">&times;</span>
       <h3>진료 완료 확인</h3>
       <div class="modal-section">
-        <p>CC(주호소): <strong id="modal-cc"></strong></p>
+        <p>Subjective: <strong id="modal-cc"></strong></p>
         <p>오늘 혈압: <strong id="modal-bp"></strong></p>
         <p>처방 내역: <strong id="modal-plan"></strong></p>
         <p>수액처방 (IV Order): <strong id="modal-iv"></strong></p>

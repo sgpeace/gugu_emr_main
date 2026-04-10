@@ -131,51 +131,81 @@
   <div class="emr-card recent-panel">
     <h2>이전 간호 기록</h2>
     <table class="table table-sm table-bordered align-middle">
-  <thead>
-    <tr>
-      <th rowspan="2">날짜</th>
-      <th colspan="3">1차</th>
-      <th colspan="3">2차</th>
-      <th colspan="3">3차</th>
-      <th rowspan="2">메모</th>
-    </tr>
-    <tr>
-      <th>IV 경로</th><th>결과</th><th>SN</th>
-      <th>IV 경로</th><th>결과</th><th>SN</th>
-      <th>IV 경로</th><th>결과</th><th>SN</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% set ns = namespace(has_rows=false) %}
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>차수</th>
+          <th>항목</th>
+          <th>내용</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% set ns = namespace(has_rows=false) %}
+      {% for r in visit_records %}
+        {% set ns.has_rows = true %}
+        {% set is_active = selected_emr_id and r.id == selected_emr_id %}
+        {% set date_str = r.record_date.strftime('%y%m%d') if r.record_date else '-' %}
 
-  {% for r in visit_records %}
-    {% set ns.has_rows = true %}
-    <tr {% if selected_emr_id and r.id == selected_emr_id %}class="table-active"{% endif %}>
-      <td>{{ r.record_date.strftime('%y%m%d') if r.record_date else '-' }}</td>
+        {# 1차 — IV 경로 #}
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td rowspan="10">{{ date_str }}</td>
+          <td rowspan="3">1차</td>
+          <td>IV 경로</td>
+          <td>{{ r.iv_route_1 or '-' }}</td>
+        </tr>
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td>결과</td>
+          <td>{{ r.nursing_result_1 or '-' }}</td>
+        </tr>
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td>SN</td>
+          <td>{{ r.sign_nurse_1 or '-' }}</td>
+        </tr>
 
-      <td>{{ r.iv_route_1 or '-' }}</td>
-      <td>{{ r.nursing_result_1 or '-' }}</td>
-      <td>{{ r.sign_nurse_1 or '-' }}</td>
+        {# 2차 #}
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td rowspan="3">2차</td>
+          <td>IV 경로</td>
+          <td>{{ r.iv_route_2 or '-' }}</td>
+        </tr>
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td>결과</td>
+          <td>{{ r.nursing_result_2 or '-' }}</td>
+        </tr>
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td>SN</td>
+          <td>{{ r.sign_nurse_2 or '-' }}</td>
+        </tr>
 
-      <td>{{ r.iv_route_2 or '-' }}</td>
-      <td>{{ r.nursing_result_2 or '-' }}</td>
-      <td>{{ r.sign_nurse_2 or '-' }}</td>
+        {# 3차 #}
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td rowspan="3">3차</td>
+          <td>IV 경로</td>
+          <td>{{ r.iv_route_3 or '-' }}</td>
+        </tr>
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td>결과</td>
+          <td>{{ r.nursing_result_3 or '-' }}</td>
+        </tr>
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td>SN</td>
+          <td>{{ r.sign_nurse_3 or '-' }}</td>
+        </tr>
 
-      <td>{{ r.iv_route_3 or '-' }}</td>
-      <td>{{ r.nursing_result_3 or '-' }}</td>
-      <td>{{ r.sign_nurse_3 or '-' }}</td>
+        {# 메모 #}
+        <tr {% if is_active %}class="table-active"{% endif %}>
+          <td colspan="2">메모</td>
+          <td>{{ r.nurse_note or '-' }}</td>
+        </tr>
+      {% endfor %}
 
-      <td>{{ r.nurse_note or '-' }}</td>
-    </tr>
-  {% endfor %}
-
-  {% if not ns.has_rows %}
-    <tr>
-      <td colspan="11" class="text-center text-muted">이전 간호 기록이 없습니다.</td>
-    </tr>
-  {% endif %}
-</tbody>
-</table>
+      {% if not ns.has_rows %}
+        <tr>
+          <td colspan="4" class="text-center text-muted">이전 간호 기록이 없습니다.</td>
+        </tr>
+      {% endif %}
+      </tbody>
+    </table>
   </div>
 </div>
 {% endblock %}

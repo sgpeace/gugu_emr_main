@@ -2156,3 +2156,281 @@ input[type="submit"]:disabled {
   font-size: 0.95rem !important;
 }
 
+
+/* =========================================================
+   오늘의 환자 슬라이드 사이드바
+   ========================================================= */
+#today-sidebar {
+  position: fixed;
+  top: 50%;
+  left: -220px;
+  transform: translateY(-50%);
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  display: flex;
+  align-items: stretch;
+}
+
+#today-sidebar.open {
+  left: 0;
+}
+
+#today-sidebar-content {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  box-shadow: 4px 0 16px rgba(0,0,0,0.15);
+  width: 220px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 16px 14px;
+}
+
+#today-sidebar-content h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c3e50;
+  border-bottom: 2px solid #3f7f93;
+  padding-bottom: 6px;
+}
+
+#sidebar-patient-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#sidebar-patient-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 4px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.95rem;
+  gap: 6px;
+}
+
+#sidebar-patient-list li:last-child {
+  border-bottom: none;
+}
+
+.sidebar-seq {
+  font-weight: 700;
+  color: #888;
+  min-width: 20px;
+}
+
+.sidebar-name {
+  flex: 1;
+  font-weight: 600;
+  color: #1a2636;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-status {
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #e8f4f8;
+  color: #2c6e84;
+  white-space: nowrap;
+}
+
+#today-sidebar-tab {
+  background: #3f7f93;
+  color: #fff;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  padding: 12px 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: pre-line;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+  width: 36px;
+  text-align: center;
+}
+
+#today-sidebar-tab:hover {
+  background: #2c6e84;
+  transform: none !important;
+}
+
+/* =========================================================
+   Drug List 슬라이드 사이드바 (오른쪽에서 왼쪽으로 닫힘)
+   ========================================================= */
+#drug-sidebar {
+  position: fixed;
+  top: 50%;
+  right: calc(-85vw - 4px);
+  transform: translateY(-50%);
+  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  display: flex;
+  align-items: stretch;
+}
+
+#drug-sidebar.open {
+  right: 0;
+}
+
+#drug-sidebar-tab {
+  background: #4a7c59;
+  color: #fff;
+  border: none;
+  border-radius: 8px 0 0 8px;
+  padding: 14px 10px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: pre-line;
+  box-shadow: -2px 2px 8px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+  width: 46px;
+  text-align: center;
+}
+
+#drug-sidebar-tab:hover {
+  background: #3a6347;
+  transform: none !important;
+}
+
+#drug-sidebar-content {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-left: none;
+  border-radius: 0 0 0 8px;
+  box-shadow: -4px 0 16px rgba(0,0,0,0.15);
+  width: 85vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#drug-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 8px;
+  border-bottom: 2px solid #4a7c59;
+  flex-shrink: 0;
+}
+
+#drug-sidebar-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c3e28;
+  white-space: nowrap;
+}
+
+#drug-search {
+  flex: 1;
+  padding: 5px 10px;
+  border: 1px solid #bbb;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+#drug-search:focus {
+  border-color: #4a7c59;
+  box-shadow: 0 0 0 2px rgba(74,124,89,0.15);
+}
+
+#drug-table-wrap {
+  overflow: auto;
+  flex: 1;
+}
+
+#drug-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  min-width: 900px;
+}
+
+#drug-table thead th {
+  position: sticky;
+  top: 0;
+  background: #4a7c59;
+  color: #fff;
+  padding: 7px 8px;
+  text-align: left;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+#drug-table tbody tr:nth-child(even) {
+  background: #f5faf6;
+}
+
+#drug-table tbody tr:hover {
+  background: #e3f0e7;
+}
+
+#drug-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e4e4e4;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+/* 분류/소분류 열: 좁게, 굵게 */
+#drug-table td:nth-child(1),
+#drug-table td:nth-child(2) {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #2c5e3a;
+  min-width: 60px;
+}
+
+/* 상품명 */
+#drug-table td:nth-child(3) {
+  white-space: nowrap;
+  font-weight: 700;
+  color: #1a2636;
+  min-width: 80px;
+}
+
+/* 성분, 효능, 용법: 중간 너비 */
+#drug-table td:nth-child(4) { min-width: 120px; max-width: 160px; }
+#drug-table td:nth-child(5) { min-width: 140px; max-width: 180px; }
+#drug-table td:nth-child(6) {
+  min-width: 100px;
+  max-width: 140px;
+  color: #1a4a7c;
+  font-weight: 600;
+}
+
+/* 비고, 금기, 복약지도: 긴 텍스트 */
+#drug-table td:nth-child(7),
+#drug-table td:nth-child(8),
+#drug-table td:nth-child(9) {
+  min-width: 130px;
+  max-width: 200px;
+}
+
+/* 금기: 강조 */
+#drug-table td:nth-child(8) {
+  color: #b83232;
+  font-weight: 600;
+}
+
+/* 같은 분류 첫 행 구분선 */
+#drug-table tr.category-start td {
+  border-top: 2px solid #4a7c59;
+}
+
+/* 검색으로 숨겨진 행 */
+#drug-table tr.drug-hidden {
+  display: none;
+}

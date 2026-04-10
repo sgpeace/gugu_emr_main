@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, Body, status
+import openpyxl
+import os
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -60,7 +62,7 @@ class EMR(Base):
     hr = Column(Integer, nullable = True)  # HR (맥박)
     bp2 = Column(String(20), nullable = True)  # 2차 BP
     bst = Column(Integer, nullable = True)  # BST (혈당)
-    post_bst = Column(Integer, nullable = True)  # 식후(시간)
+    post_bst = Column(String(50), nullable = True)  # 식후(시간)
     cc = Column(Text, nullable = True)  # 주호소
     onset = Column(String(50), nullable = True)  # Onset
     duration = Column(String(50), nullable = True)  # Duration
@@ -128,6 +130,10 @@ class EMR(Base):
     # ──── 약국부 전용 필드 ──────────────────
     counseling_pharmacist = Column(String(100), nullable=True)  # 복약지도 담당
     sign_pharmacist = Column(String(100), nullable=True)        # 약국부장
+    # ──── SOAP 노트 필드 ──────────────────
+    subjective = Column(Text, nullable=True)   # S - Subjective
+    objective  = Column(Text, nullable=True)   # O - Objective
+    plan_text  = Column(Text, nullable=True)   # P - Plan (자유 텍스트)
     patient = relationship("Patient", back_populates="emrs")
 
 class VitalsUpdate(BaseModel):
@@ -169,13 +175,13 @@ class RegistrationCreate(BaseModel):
 class NewPatientChart(Base):
     __tablename__ = "new_patient_chart"
     id = Column(Integer, primary_key=True, index=True)
-    form_date = Column(Date, nullable=False)
-    provider = Column(String(50), nullable=False)
-    author = Column(String(50), nullable=False)
+    form_date = Column(Date, nullable=True)
+    provider = Column(String(50), nullable=True)
+    author = Column(String(50), nullable=True)
     name = Column(String(100), nullable=False)
-    gender = Column(String(10), nullable=False)
+    gender = Column(String(10), nullable=True)
     birth_date = Column(Date, nullable=False)
-    address = Column(String(255), nullable=False)
+    address = Column(String(255), nullable=True)
     occupation = Column(String(100), nullable=True)
     religion = Column(String(50), nullable=True)
     education = Column(String(50), nullable=True)
@@ -201,6 +207,26 @@ class NewPatientChart(Base):
     history_OA_detail = Column(Text, nullable=True)
     history_ETC = Column(String(10), nullable=True)
     history_ETC_detail = Column(Text, nullable=True)
+    # ──── 이관된 임상 기록 필드 ──────────────────
+    cc            = Column(Text, nullable=True)
+    pi            = Column(Text, nullable=True)
+    ros           = Column(Text, nullable=True)
+    pmhx          = Column(Text, nullable=True)
+    medication_hx = Column(Text, nullable=True)
+    social        = Column(Text, nullable=True)
+    fhx           = Column(Text, nullable=True)
+    allergy_notes = Column(Text, nullable=True)
+    pe            = Column(Text, nullable=True)
+    problem_list  = Column(Text, nullable=True)
+    assessment    = Column(Text, nullable=True)
+    mmse          = Column(Integer, nullable=True)
+    cdr_score     = Column(Float, nullable=True)
+    psqi          = Column(Integer, nullable=True)
+    isi           = Column(Integer, nullable=True)
+    gds           = Column(Integer, nullable=True)
+    ne_cog        = Column(Boolean, default=False, nullable=True)
+    ne_sleep      = Column(Boolean, default=False, nullable=True)
+    ne_depress    = Column(Boolean, default=False, nullable=True)
 
 
 # (추후Visit, Chart 등 추가 가능)
@@ -233,6 +259,88 @@ app = FastAPI()
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    _migrate_columns()
+
+def _migrate_columns():
+    """기존 테이블에 누락된 컬럼을 자동으로 추가합니다."""
+    migrations = [
+        # (테이블명, 컬럼명, DDL 타입)
+        ("new_patient_chart", "cc",            "TEXT"),
+        ("new_patient_chart", "pi",            "TEXT"),
+        ("new_patient_chart", "ros",           "TEXT"),
+        ("new_patient_chart", "pmhx",          "TEXT"),
+        ("new_patient_chart", "medication_hx", "TEXT"),
+        ("new_patient_chart", "social",        "TEXT"),
+        ("new_patient_chart", "fhx",           "TEXT"),
+        ("new_patient_chart", "allergy_notes", "TEXT"),
+        ("new_patient_chart", "pe",            "TEXT"),
+        ("new_patient_chart", "problem_list",  "TEXT"),
+        ("new_patient_chart", "assessment",    "TEXT"),
+        ("new_patient_chart", "mmse",          "INT"),
+        ("new_patient_chart", "cdr_score",     "FLOAT"),
+        ("new_patient_chart", "psqi",          "INT"),
+        ("new_patient_chart", "isi",           "INT"),
+        ("new_patient_chart", "gds",           "INT"),
+        ("new_patient_chart", "ne_cog",        "BOOLEAN"),
+        ("new_patient_chart", "ne_sleep",      "BOOLEAN"),
+        ("new_patient_chart", "ne_depress",    "BOOLEAN"),
+        # EMR 테이블 SOAP 컬럼
+        ("emrs", "subjective", "TEXT"),
+        ("emrs", "objective",  "TEXT"),
+        ("emrs", "plan_text",  "TEXT"),
+    ]
+    # NOT NULL → NULL 허용으로 변경할 컬럼 목록
+    nullable_fixes = [
+        ("new_patient_chart", "form_date",  "DATE"),
+        ("new_patient_chart", "provider",   "VARCHAR(50)"),
+        ("new_patient_chart", "author",     "VARCHAR(50)"),
+        ("new_patient_chart", "gender",     "VARCHAR(10)"),
+        ("new_patient_chart", "address",    "VARCHAR(255)"),
+    ]
+
+    with engine.connect() as conn:
+        # 새 컬럼 추가
+        for table, column, col_type in migrations:
+            result = conn.execute(text(
+                f"SELECT COUNT(*) FROM information_schema.columns "
+                f"WHERE table_schema = DATABASE() "
+                f"AND table_name = '{table}' AND column_name = '{column}'"
+            ))
+            if result.scalar() == 0:
+                conn.execute(text(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}"))
+                conn.commit()
+                print(f"[migration] {table}.{column} 컬럼 추가됨")
+
+        # NOT NULL 컬럼을 NULL 허용으로 변경
+        for table, column, col_type in nullable_fixes:
+            result = conn.execute(text(
+                f"SELECT IS_NULLABLE FROM information_schema.columns "
+                f"WHERE table_schema = DATABASE() "
+                f"AND table_name = '{table}' AND column_name = '{column}'"
+            ))
+            row = result.fetchone()
+            if row and row[0] == "NO":
+                conn.execute(text(
+                    f"ALTER TABLE `{table}` MODIFY COLUMN `{column}` {col_type} NULL"
+                ))
+                conn.commit()
+                print(f"[migration] {table}.{column} NULL 허용으로 변경됨")
+
+        # 컬럼 타입 변경 (INT → VARCHAR 등)
+        type_changes = [
+            ("emrs", "post_bst", "VARCHAR(50)", ["int", "tinyint", "smallint", "mediumint", "bigint"]),
+        ]
+        for table, column, col_type, from_types in type_changes:
+            result = conn.execute(text(
+                f"SELECT DATA_TYPE FROM information_schema.columns "
+                f"WHERE table_schema = DATABASE() "
+                f"AND table_name = '{table}' AND column_name = '{column}'"
+            ))
+            row = result.fetchone()
+            if row and row[0].lower() in from_types:
+                conn.execute(text(f"ALTER TABLE `{table}` MODIFY COLUMN `{column}` {col_type}"))
+                conn.commit()
+                print(f"[migration] {table}.{column} 타입 변경: {row[0]} → {col_type}")
 
 # 정적파일 경로 설정
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -301,7 +409,7 @@ def add_new_patient(name: str = Form(...), birth_date: str = Form(...), db: Sess
 # 환자 접수 관리 페이지
 @app.get("/dashboard/registrations", response_model=List[RegistrationOut])
 def list_registrations(db: Session = Depends(get_db)):
-    regs = db.query(Registration).order_by(Registration.id).all()
+    regs = db.query(Registration).order_by(Registration.id.desc()).all()
     return regs
 
 @app.post("/dashboard/registrations", response_model = RegistrationOut, status_code = status.HTTP_201_CREATED,)
@@ -422,7 +530,7 @@ async def upsert_vitals(
     emr.hr = parse_int(payload.hr)
     emr.bp2 = payload.bp2.strip() if payload.bp2 else None
     emr.bst = parse_int(payload.bst)
-    emr.post_bst = parse_int(payload.post_bst)
+    emr.post_bst = payload.post_bst.strip() if payload.post_bst else None
 
     db.commit()
     db.refresh(emr)
@@ -538,7 +646,7 @@ async def patient_emr(
     )
     latest_record = visit_records[0] if visit_records else None
 
-    # 3) ✅ “오늘 날짜” EMR이 있을 때만 폼에 자동 채우기
+    # 3) ✅ "오늘 날짜" EMR이 있을 때만 폼에 자동 채우기
     today = date.today()
     today_emr = (
         db.query(EMR)
@@ -548,10 +656,6 @@ async def patient_emr(
 
     # 폼에 들어갈 emr: 오늘 기록이 있으면 그걸, 없으면 None(빈 폼)
     emr_for_form = today_emr
-
-    # cc/pi도 “폼 기준(오늘 기록)”으로 보여주고 싶으면 이렇게
-    cc = emr_for_form.cc if emr_for_form else None
-    pi = emr_for_form.pi if emr_for_form else None
 
     print(
         "환자 조회 성공:", patient,
@@ -564,12 +668,10 @@ async def patient_emr(
         "name": name,
         "birth_date": birth_date,
         "patient": patient,
-        "visit_records": visit_records,   # 방문기록 리스트는 그대로 전체
-        "latest_record": latest_record,   # (참고용) 최신기록도 유지
-        "emr": emr_for_form,              # ✅ 핵심: 오늘 기록 있을 때만 자동 채움
-        "cc": cc,
-        "pi": pi,
-        "getattr": getattr,               # ✅ 템플릿에서 getattr 사용 시 필수
+        "visit_records": visit_records,
+        "latest_record": latest_record,
+        "emr": emr_for_form,
+        "getattr": getattr,
     })
 
 from fastapi.responses import JSONResponse
@@ -591,25 +693,10 @@ async def create_new_emr(
     bp2: Optional[str]              = Form(None),
     bst: Optional[str]              = Form(None),
     post_bst: Optional[str]         = Form(None),
-    cc: Optional[str]               = Form(None),
-    medication_hx: Optional[str]    = Form(None),
-    pmhx: Optional[str]             = Form(None),
-    allergy: Optional[str]          = Form(None),
-    fhx: Optional[str]              = Form(None),
-    social: Optional[str]           = Form(None),
-    pi: Optional[str]               = Form(None),
-    ros: Optional[str]              = Form(None),
-    pe: Optional[str]               = Form(None),
-    problem_list: Optional[str]     = Form(None),
+    subjective: Optional[str]       = Form(None),
+    objective: Optional[str]        = Form(None),
     assessment: Optional[str]       = Form(None),
-    mmse: Optional[str]             = Form(None),
-    cdr: Optional[str]              = Form(None),
-    psqi: Optional[str]             = Form(None),
-    isi: Optional[str]              = Form(None),
-    gds: Optional[str]              = Form(None),
-    ne_cog: Optional[str]           = Form(None),
-    ne_sleep: Optional[str]         = Form(None),
-    ne_depress: Optional[str]       = Form(None),
+    plan_text: Optional[str]        = Form(None),
 
     plan_desc_1: Optional[str]      = Form(None),
     plan_desc_2: Optional[str]      = Form(None),
@@ -688,12 +775,7 @@ async def create_new_emr(
     bt_val        = parse_float(bt)
     hr_val        = parse_int(hr)
     bst_val       = parse_int(bst)
-    post_bst_val  = parse_int(post_bst)
-    mmse_val      = parse_int(mmse)
-    cdr_val       = parse_float(cdr)
-    psqi_val      = parse_int(psqi)
-    isi_val       = parse_int(isi)
-    gds_val       = parse_int(gds)
+    post_bst_val  = post_bst.strip() if post_bst else None
 
     # 4) ✅ 업서트 핵심: 오늘자 EMR 있으면 UPDATE, 없으면 INSERT
     emr = db.query(EMR).filter(
@@ -725,29 +807,10 @@ async def create_new_emr(
     emr.bst = bst_val
     emr.post_bst = post_bst_val
 
-    emr.cc = cc
-    emr.medication_hx = medication_hx
-    emr.pmhx = pmhx
-    emr.allergy = allergy
-    emr.fhx = fhx
-    emr.social = social
-    emr.pi = pi
-    emr.ros = ros
-    emr.pe = pe
-    emr.problem_list = problem_list
+    emr.subjective = subjective
+    emr.objective  = objective
     emr.assessment = assessment
-
-    emr.mmse = mmse_val
-    emr.cdr = cdr_val
-    emr.psqi = psqi_val
-    emr.isi = isi_val
-    emr.gds = gds_val
-
-    # Boolean(체크박스) 처리: HTML 폼에서 체크되면 보통 "on"이 들어옴
-    truthy = {"on", "true", "1", "yes", "o"}
-    emr.ne_cog     = True if (ne_cog and ne_cog.lower() in truthy) else False
-    emr.ne_sleep   = True if (ne_sleep and ne_sleep.lower() in truthy) else False
-    emr.ne_depress = True if (ne_depress and ne_depress.lower() in truthy) else False
+    emr.plan_text  = plan_text
 
     emr.plan_desc_1 = plan_desc_1
     emr.plan_desc_2 = plan_desc_2
@@ -841,25 +904,10 @@ async def get_past_emr(
         "bp2": emr_record.bp2,
         "bst": emr_record.bst,
         "post_bst": emr_record.post_bst,
-        "cc": emr_record.cc,
-        "medication_hx": emr_record.medication_hx,
-        "pmhx": emr_record.pmhx,
-        "allergy": emr_record.allergy,
-        "fhx": emr_record.fhx,
-        "social": emr_record.social,
-        "pi": emr_record.pi,
-        "ros": emr_record.ros,
-        "pe": emr_record.pe,
-        "problem_list": emr_record.problem_list,
+        "subjective": emr_record.subjective,
+        "objective": emr_record.objective,
         "assessment": emr_record.assessment,
-        "mmse": emr_record.mmse,
-        "cdr": emr_record.cdr,
-        "psqi": emr_record.psqi,
-        "isi": emr_record.isi,
-        "gds": emr_record.gds,
-        "ne_cog": emr_record.ne_cog,
-        "ne_sleep": emr_record.ne_sleep,
-        "ne_depress": emr_record.ne_depress,
+        "plan_text": emr_record.plan_text,
 
         "plan_desc_1": emr_record.plan_desc_1,
         "plan_method_1": emr_record.plan_method_1,
@@ -913,83 +961,90 @@ async def new_patient_chart(request: Request, name: str, birth_date: str, db: Se
     return templates.TemplateResponse("new_emr.html", {
         "request": request,
         "chart": patient_chart,
-        "getattr": getattr  # Jinja2 템플릿에서 사용할 수 있도록 추가
+        "name": name,
+        "birth_date": birth_date,
+        "getattr": getattr
     })
 
 @app.post("/patient_emr/new_patient_chart/information")
 async def save_new_patient_chart(
-    form_date: str = Form(...),
-    provider: str = Form(...),
-    author: str = Form(...),
     name: str = Form(...),
-    gender: str = Form(...),
-    birth_date: str = Form(...),
-    address: str = Form(...),
-    occupation: str = Form(None),
-    religion: str = Form(None),
-    education: str = Form(None),
-    marital_status: str = Form(None),
-    other_info: str = Form(None),
-    bt: float = Form(None),
-    pr: int = Form(None),
-    rr: int = Form(None),
-    bp: str = Form(None),
-    height: float = Form(None),
-    weight: float = Form(None),
-    allergy: str = Form(None),
-    allergy_detail: str = Form(None),
-    history_DM: str = Form(None),
-    history_DM_detail: str = Form(None),
-    history_HTN: str = Form(None),
-    history_HTN_detail: str = Form(None),
-    history_HEPA: str = Form(None),
-    history_HEPA_detail: str = Form(None),
-    history_TB: str = Form(None),
-    history_TB_detail: str = Form(None),
-    history_OA: str = Form(None),
-    history_OA_detail: str = Form(None),
-    history_ETC: str = Form(None),
-    history_ETC_detail: str = Form(None),
+    birth_date: str = Form(...),          # 6자리 (예: "000506")
+    cc: Optional[str] = Form(None),
+    pi: Optional[str] = Form(None),
+    ros: Optional[str] = Form(None),
+    pmhx: Optional[str] = Form(None),
+    medication_hx: Optional[str] = Form(None),
+    social: Optional[str] = Form(None),
+    fhx: Optional[str] = Form(None),
+    allergy_notes: Optional[str] = Form(None),
+    pe: Optional[str] = Form(None),
+    problem_list: Optional[str] = Form(None),
+    assessment: Optional[str] = Form(None),
+    ne_cog: Optional[str] = Form(None),
+    mmse: Optional[str] = Form(None),
+    cdr_score: Optional[str] = Form(None),
+    ne_sleep: Optional[str] = Form(None),
+    psqi: Optional[str] = Form(None),
+    isi: Optional[str] = Form(None),
+    ne_depress: Optional[str] = Form(None),
+    gds: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
-    new_chart = NewPatientChart(
-        form_date=form_date,
-        provider=provider,
-        author=author,
-        name=name,
-        gender=gender,
-        birth_date=birth_date,
-        address=address,
-        occupation=occupation,
-        religion=religion,
-        education=education,
-        marital_status=marital_status,
-        other_info=other_info,
-        bt=bt,
-        pr=pr,
-        rr=rr,
-        bp=bp,
-        height=height,
-        weight=weight,
-        allergy=allergy,
-        allergy_detail=allergy_detail,
-        history_DM=history_DM,
-        history_DM_detail=history_DM_detail,
-        history_HTN=history_HTN,
-        history_HTN_detail=history_HTN_detail,
-        history_HEPA=history_HEPA,
-        history_HEPA_detail=history_HEPA_detail,
-        history_TB=history_TB,
-        history_TB_detail=history_TB_detail,
-        history_OA=history_OA,
-        history_OA_detail=history_OA_detail,
-        history_ETC=history_ETC,
-        history_ETC_detail=history_ETC_detail,
-    )
-    db.add(new_chart)
+    # birth_date 포맷 변환 (6자리 → YYYY-MM-DD)
+    try:
+        if int(birth_date[:2]) < 10:
+            formatted_birth_date = f"20{birth_date[:2]}-{birth_date[2:4]}-{birth_date[4:]}"
+        else:
+            formatted_birth_date = f"19{birth_date[:2]}-{birth_date[2:4]}-{birth_date[4:]}"
+    except (ValueError, IndexError):
+        raise HTTPException(status_code=400, detail="잘못된 생년월일 형식입니다.")
+
+    def parse_int(x):
+        if not x or not x.strip(): return None
+        try: return int(x.strip())
+        except: return None
+
+    def parse_float(x):
+        if not x or not x.strip(): return None
+        try: return float(x.strip())
+        except: return None
+
+    truthy = {"on", "true", "1", "yes", "o"}
+
+    # upsert: 기존 기록 있으면 update, 없으면 insert
+    chart = db.query(NewPatientChart).filter(
+        NewPatientChart.name == name,
+        NewPatientChart.birth_date == formatted_birth_date
+    ).first()
+
+    if not chart:
+        chart = NewPatientChart(name=name, birth_date=formatted_birth_date)
+        db.add(chart)
+
+    chart.cc            = cc
+    chart.pi            = pi
+    chart.ros           = ros
+    chart.pmhx          = pmhx
+    chart.medication_hx = medication_hx
+    chart.social        = social
+    chart.fhx           = fhx
+    chart.allergy_notes = allergy_notes
+    chart.pe            = pe
+    chart.problem_list  = problem_list
+    chart.assessment    = assessment
+    chart.ne_cog        = True if (ne_cog and ne_cog.lower() in truthy) else False
+    chart.mmse          = parse_int(mmse)
+    chart.cdr_score     = parse_float(cdr_score)
+    chart.ne_sleep      = True if (ne_sleep and ne_sleep.lower() in truthy) else False
+    chart.psqi          = parse_int(psqi)
+    chart.isi           = parse_int(isi)
+    chart.ne_depress    = True if (ne_depress and ne_depress.lower() in truthy) else False
+    chart.gds           = parse_int(gds)
+
     db.commit()
-    db.refresh(new_chart)
-    return {"message": "환자 정보가 성공적으로 저장되었습니다.", "id": new_chart.id}
+    db.refresh(chart)
+    return {"message": "신환 차트가 성공적으로 저장되었습니다.", "id": chart.id}
 
 @app.post("/patient_emr/vitals")
 async def save_vitals(
@@ -1049,7 +1104,7 @@ async def save_vitals(
     emr.hr = parse_int(hr)
     emr.bp2 = bp2
     emr.bst = parse_int(bst)
-    emr.post_bst = parse_int(post_bst)
+    emr.post_bst = post_bst.strip() if post_bst else None
 
     db.commit()
     db.refresh(emr)
@@ -1369,5 +1424,55 @@ if __name__ == "__main__":
 #     db.execute(text("ALTER TABLE registrations AUTO_INCREMENT = 1"))
 #     db.commit()
 #     return RedirectResponse(url="/registration", status_code=302)
+
+@app.get("/druglist")
+def get_druglist():
+    path = os.path.join(os.path.dirname(__file__), "static", "druglist.xlsx")
+    wb = openpyxl.load_workbook(path, data_only=True)
+    ws = wb.active
+
+    HEADER_COLS = ["분류", "소분류", "상품명", "성분 및 함량", "효능 및 효과", "용법", "비고", "금기", "복약지도"]
+    HEADER_KEYS = ["category", "subcategory", "name", "ingredient", "effect", "dosage", "note", "contraindication", "counseling"]
+    # 헤더 행 감지용 (분류가 있는 행)
+    HEADER_MARKER = "분류"
+
+    drugs = []
+    last_category = ""
+    last_subcategory = ""
+
+    for row in ws.iter_rows(min_row=1, max_row=37, max_col=9, values_only=True):
+        # 빈 행 skip
+        if all(c is None for c in row):
+            continue
+        # 헤더 행 skip
+        if str(row[0]).strip() == HEADER_MARKER and row[2] == "상품명":
+            continue
+
+        cat   = str(row[0]).strip() if row[0] else ""
+        subcat = str(row[1]).strip() if row[1] else ""
+        name  = str(row[2]).strip() if row[2] else ""
+
+        if not name:
+            continue
+
+        # 분류 fill-forward
+        if cat:
+            last_category = cat
+        if subcat:
+            last_subcategory = subcat
+
+        drugs.append({
+            "category":        last_category,
+            "subcategory":     last_subcategory,
+            "name":            name,
+            "ingredient":      str(row[3]).strip() if row[3] else "",
+            "effect":          str(row[4]).strip() if row[4] else "",
+            "dosage":          str(row[5]).strip() if row[5] else "",
+            "note":            str(row[6]).strip() if row[6] else "",
+            "contraindication":str(row[7]).strip() if row[7] else "",
+            "counseling":      str(row[8]).strip() if row[8] else "",
+        })
+
+    return JSONResponse(content=drugs)
 
 # 실행: uvicorn main:app --reload

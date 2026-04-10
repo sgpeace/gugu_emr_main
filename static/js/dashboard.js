@@ -2,6 +2,15 @@
 // Helper Functions
 // ──────────────────────────────
 
+function updateRowNumbers() {
+  const rows = document.querySelectorAll('#patient-list tr');
+  const total = rows.length;
+  rows.forEach((row, i) => {
+    const cell = row.querySelector('.row-index');
+    if (cell) cell.textContent = total - i;
+  });
+}
+
 // ──────────────────────────────
 // Chart Picker Modal (동적 생성)
 // ──────────────────────────────
@@ -102,16 +111,15 @@ function addPatientToTable(patient) {
   const table = document.getElementById('patient-list');
   const row = document.createElement('tr');
   row.dataset.id = patient.id;
-  const index = table.children.length + 1;
-
   row.innerHTML = `
-    <td>${index}</td>
+    <td class="row-index"></td>
     <td>${patient.name} <span class="small-birthdate">(${patient.birth_date})</span></td>
     <td class="status-cell">${patient.status}</td>
     <td><button class="enter-button"></button></td>
     <td><button class="delete-button">삭제</button></td>
   `;
-  table.appendChild(row);
+  table.prepend(row);
+  updateRowNumbers();
 
   const statusCell = row.querySelector('.status-cell');
   const enterBtn = row.querySelector('.enter-button');
@@ -183,6 +191,7 @@ row.querySelector('.delete-button').addEventListener('click', () => {
 
       // 환자 테이블에서 삭제
       row.remove();
+      updateRowNumbers();
 
       // 이름과 생년월일 기반으로 리스트에서 삭제
       const name = patient.name;
@@ -218,7 +227,8 @@ document.addEventListener("DOMContentLoaded", () => {
   fetch("/dashboard/registrations")
     .then(r => r.json())
     .then(regs => {
-      regs.forEach(reg => {
+      // API는 최신순(내림차순) 반환 → reverse 후 prepend하면 최신이 맨 위, 번호도 올바르게 부여됨
+      [...regs].reverse().forEach(reg => {
         addPatientToTable({
           id: reg.id,
           name: reg.patient_name,

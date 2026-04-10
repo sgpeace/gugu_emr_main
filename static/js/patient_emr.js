@@ -46,6 +46,130 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!dateInput.value) dateInput.value = today;
   }
 
+  // ===== 나이 자동 계산 (birth_date YYMMDD → 만나이) =====
+  function calcAgeFromBirthDate(bd) {
+    if (!bd || bd.length < 6) return "";
+    const yy = parseInt(bd.substring(0, 2), 10);
+    const mm = parseInt(bd.substring(2, 4), 10);
+    const dd = parseInt(bd.substring(4, 6), 10);
+    const fullYear = yy <= 25 ? 2000 + yy : 1900 + yy;
+    const today = new Date();
+    let age = today.getFullYear() - fullYear;
+    const thisYearBirthday = new Date(today.getFullYear(), mm - 1, dd);
+    if (today < thisYearBirthday) age--;
+    return age >= 0 ? String(age) : "";
+  }
+
+  const ageInput = document.getElementById("age");
+  const birthDateVal = document.querySelector("input[name='birth_date']")?.value || "";
+  if (ageInput && !ageInput.value && birthDateVal) {
+    const calculatedAge = calcAgeFromBirthDate(birthDateVal);
+    if (calculatedAge) ageInput.value = calculatedAge;
+  }
+
+  // ===== 성별 자동 입력 (이전 기록에서 불러오기) =====
+  const genderSelect = document.getElementById("gender");
+  if (genderSelect && genderSelect.dataset.hasValue === "false") {
+    const firstVisitLink = document.querySelector(".record-link");
+    if (firstVisitLink) {
+      const visitDate = firstVisitLink.parentElement.getAttribute("data-visit-date");
+      const name = document.querySelector("input[name='name']")?.value || "";
+      const birthDate = document.querySelector("input[name='birth_date']")?.value || "";
+      if (visitDate && name && birthDate) {
+        fetch(`/patient_emr/past_emr?visit_date=${encodeURIComponent(visitDate)}&name=${encodeURIComponent(name)}&birth_date=${encodeURIComponent(birthDate)}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data && data.gender) {
+              Array.from(genderSelect.options).forEach(opt => {
+                opt.selected = opt.value === data.gender;
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }
+
+  // ===== 이전 처방 불러오기 =====
+  const loadPrevPlanBtn = document.getElementById("load-prev-plan-btn");
+  if (loadPrevPlanBtn) {
+    loadPrevPlanBtn.addEventListener("click", async () => {
+      const visitLinks = document.querySelectorAll(".record-link");
+      if (!visitLinks.length) {
+        showToast("이전 처방 기록이 없습니다.", true);
+        return;
+      }
+
+      // 오늘 날짜
+      const todayEl = document.getElementById("record_date");
+      const todayVal = todayEl ? todayEl.value : "";
+
+      // 오늘 날짜가 아닌 가장 최근 방문일 찾기
+      let targetDate = null;
+      for (const link of visitLinks) {
+        const vd = link.parentElement.getAttribute("data-visit-date");
+        if (vd && vd !== todayVal) {
+          targetDate = vd;
+          break;
+        }
+      }
+      // 오늘 날짜 외 없으면 첫 번째 사용
+      if (!targetDate) {
+        targetDate = visitLinks[0].parentElement.getAttribute("data-visit-date");
+      }
+
+      const name = document.querySelector("input[name='name']")?.value || "";
+      const birthDate = document.querySelector("input[name='birth_date']")?.value || "";
+
+      try {
+        const res = await fetch(
+          `/patient_emr/past_emr?visit_date=${encodeURIComponent(targetDate)}&name=${encodeURIComponent(name)}&birth_date=${encodeURIComponent(birthDate)}`
+        );
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        // plan_text
+        const planTextEl = document.getElementById("plan_text");
+        if (planTextEl && data.plan_text) planTextEl.value = data.plan_text;
+
+        // plan rows 1~5
+        for (let i = 1; i <= 5; i++) {
+          const descEl = document.querySelector(`#new-emr-form [name="plan_desc_${i}"]`);
+          const methodEl = document.querySelector(`#new-emr-form [name="plan_method_${i}"]`);
+          const periodEl = document.querySelector(`#new-emr-form [name="plan_period_${i}"]`);
+          if (descEl) descEl.value = data[`plan_desc_${i}`] || "";
+          if (methodEl) methodEl.value = data[`plan_method_${i}`] || "";
+          if (periodEl) periodEl.value = data[`plan_period_${i}`] || "";
+        }
+
+        // plan radios (helper)
+        const checkNewRadio = (name, value) => {
+          if (!value) return;
+          const el = document.querySelector(`#new-emr-form input[type="radio"][name="${name}"][value="${value}"]`);
+          if (el) el.checked = true;
+        };
+
+        checkNewRadio("plan_pas_6", data.plan_pas_6);
+        checkNewRadio("plan_pas_period_6", data.plan_pas_period_6);
+        checkNewRadio("plan_bear_7", data.plan_bear_7);
+        checkNewRadio("plan_anti_8", data.plan_anti_8);
+        checkNewRadio("plan_ruma_8", data.plan_ruma_8);
+
+        const tineaSite = document.querySelector(`#new-emr-form [name="plan_tinea_site_9"]`);
+        if (tineaSite) tineaSite.value = data.plan_tinea_site_9 || "";
+        checkNewRadio("plan_tinea_9", data.plan_tinea_9);
+
+        const dermaSite = document.querySelector(`#new-emr-form [name="plan_derma_site_10"]`);
+        if (dermaSite) dermaSite.value = data.plan_derma_site_10 || "";
+        checkNewRadio("plan_derma_10", data.plan_derma_10);
+
+        showToast(`${targetDate} 처방 불러오기 완료`);
+      } catch {
+        showToast("처방 불러오기 실패", true);
+      }
+    });
+  }
+
   // ===== EMR 전체 저장 (submit) =====
   if (emrForm) {
     emrForm.addEventListener("submit", async function (e) {
@@ -90,6 +214,101 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // ===== Drug List 사이드바 =====
+  const drugSidebar = document.getElementById("drug-sidebar");
+  const drugTab = document.getElementById("drug-sidebar-tab");
+  const drugTableBody = document.getElementById("drug-table-body");
+  const drugSearch = document.getElementById("drug-search");
+  let drugLoaded = false;
+
+  async function loadDrugList() {
+    if (drugLoaded) return;
+    try {
+      const res = await fetch("/druglist");
+      if (!res.ok) throw new Error();
+      const drugs = await res.json();
+      drugTableBody.innerHTML = "";
+
+      let lastCategory = "";
+      drugs.forEach(drug => {
+        const tr = document.createElement("tr");
+        if (drug.category !== lastCategory) {
+          tr.classList.add("category-start");
+          lastCategory = drug.category;
+        }
+        // 줄바꿈 → <br>
+        const fmt = (t) => (t || "").replace(/\n/g, "<br>");
+        tr.innerHTML = `
+          <td>${fmt(drug.category)}</td>
+          <td>${fmt(drug.subcategory)}</td>
+          <td>${fmt(drug.name)}</td>
+          <td>${fmt(drug.ingredient)}</td>
+          <td>${fmt(drug.effect)}</td>
+          <td>${fmt(drug.dosage)}</td>
+          <td>${fmt(drug.note)}</td>
+          <td>${fmt(drug.contraindication)}</td>
+          <td>${fmt(drug.counseling)}</td>
+        `;
+        drugTableBody.appendChild(tr);
+      });
+      drugLoaded = true;
+    } catch {
+      drugTableBody.innerHTML = "<tr><td colspan='9' style='color:#c00;padding:12px;'>불러오기 실패</td></tr>";
+    }
+  }
+
+  drugTab?.addEventListener("click", () => {
+    const isOpen = drugSidebar.classList.toggle("open");
+    if (isOpen) loadDrugList();
+  });
+
+  drugSearch?.addEventListener("input", () => {
+    const q = drugSearch.value.trim().toLowerCase();
+    document.querySelectorAll("#drug-table-body tr").forEach(tr => {
+      const text = tr.textContent.toLowerCase();
+      tr.classList.toggle("drug-hidden", q.length > 0 && !text.includes(q));
+    });
+  });
+
+  // ===== 오늘의 환자 사이드바 =====
+  const sidebar = document.getElementById("today-sidebar");
+  const sidebarTab = document.getElementById("today-sidebar-tab");
+  const sidebarList = document.getElementById("sidebar-patient-list");
+  let sidebarLoaded = false;
+
+  async function loadSidebarPatients() {
+    if (sidebarLoaded) return;
+    try {
+      const res = await fetch("/dashboard/registrations");
+      if (!res.ok) return;
+      const regs = await res.json();
+      sidebarList.innerHTML = "";
+      const total = regs.length;
+      // regs is desc order (newest first), assign numbers: newest = total, oldest = 1
+      regs.forEach((reg, i) => {
+        const seq = total - i;
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span class="sidebar-seq">${seq}</span>
+          <span class="sidebar-name">${reg.patient_name}</span>
+          <span class="sidebar-status">${reg.status}</span>
+        `;
+        sidebarList.appendChild(li);
+      });
+      if (!regs.length) {
+        sidebarList.innerHTML = "<li style='color:#999;'>등록된 환자 없음</li>";
+      }
+      sidebarLoaded = true;
+    } catch {
+      sidebarList.innerHTML = "<li style='color:#c00;'>불러오기 실패</li>";
+    }
+  }
+
+  sidebarTab?.addEventListener("click", () => {
+    const isOpen = sidebar.classList.toggle("open");
+    if (isOpen) loadSidebarPatients();
+  });
+
   // ===== 과거 진료 기록 토글 =====
   const pastPanel = document.getElementById("past-panel-body");
   const togglePastBtn = document.getElementById("toggle-past-btn");
@@ -101,16 +320,64 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // ===== 과거 기록 수정 모드 토글 =====
+  const editPastBtn = document.getElementById("edit-past-btn");
+  const savePastBtn = document.getElementById("save-past-btn");
+  const pastForm = document.getElementById("past-emr-form");
+
+  function setPastFormEditable(editable) {
+    if (!pastForm) return;
+    pastForm.querySelectorAll("input, textarea").forEach((el) => {
+      if (editable) el.removeAttribute("readonly");
+      else el.setAttribute("readonly", true);
+    });
+    pastForm.querySelectorAll("select, input[type='radio']").forEach((el) => {
+      if (editable) el.removeAttribute("disabled");
+      else el.setAttribute("disabled", true);
+    });
+    editPastBtn.style.display = editable ? "none" : "";
+    savePastBtn.style.display = editable ? "" : "none";
+  }
+
+  editPastBtn?.addEventListener("click", () => setPastFormEditable(true));
+
+  savePastBtn?.addEventListener("click", async () => {
+    if (!pastForm) return;
+    const formData = new FormData(pastForm);
+
+    // disabled 라디오는 FormData에 안 잡히므로 체크된 값을 직접 추가
+    ["ne_cog", "ne_sleep", "ne_depress",
+     "plan_pas_6", "plan_pas_period_6", "plan_bear_7",
+     "plan_anti_8", "plan_ruma_8", "plan_tinea_9",
+     "plan_derma_10", "iv_order"].forEach((name) => {
+      const checked = pastForm.querySelector(`input[type="radio"][name="${name}"]:checked`);
+      if (checked && !formData.get(name)) formData.set(name, checked.value);
+    });
+
+    try {
+      const res = await fetch("/patient_emr/new_emr", { method: "POST", body: formData });
+      if (!res.ok) throw new Error(await res.text());
+      const result = await res.json();
+      showToast(result.message || "수정 내용이 저장되었습니다.");
+      setPastFormEditable(false);
+    } catch (err) {
+      console.error(err);
+      showToast("저장 중 오류가 발생했습니다.", true);
+    }
+  });
+
   // ===== 과거 기록 불러오기 (birth_date 포함) =====
   document.querySelectorAll(".record-link").forEach((link) => {
     link.addEventListener("click", async function (e) {
       e.preventDefault();
 
+      // 날짜를 클릭할 때마다 수정 모드 해제
+      setPastFormEditable(false);
+      editPastBtn.disabled = false;
+
       const visitDate = this.parentElement.getAttribute("data-visit-date");
       const name = document.querySelector("input[name='name']")?.value || "";
       const birthDate = document.querySelector("input[name='birth_date']")?.value || "";
-
-      console.log("방문 날짜:", visitDate, "환자 이름:", name, "생년월일:", birthDate);
 
       if (!visitDate || !name || !birthDate) {
         alert("visit_date / name / birth_date 값을 찾을 수 없습니다.");
@@ -133,9 +400,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const data = await response.json();
-        console.log("진료 기록 데이터:", data);
-
-        populatePastForm(data); // 아래 함수 호출
+        populatePastForm(data);
       } catch (error) {
         console.error("진료 기록 조회 실패:", error);
         alert("진료 기록을 불러오는 데 실패했습니다.");
@@ -162,7 +427,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       let record_date = document.getElementById("record_date")?.value || "";
       if (!record_date) {
-        record_date = new Date().toISOString().split("T")[0];
+        // toISOString()은 UTC 기준이라 한국 시간과 날짜가 다를 수 있으므로 로컬 날짜 사용
+        const now = new Date();
+        record_date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         const el = document.getElementById("record_date");
         if (el) el.value = record_date;
       }
@@ -203,10 +470,11 @@ document.addEventListener("DOMContentLoaded", function () {
           return;
         }
 
-        window.location.href = "/dashboard";
+        showToast("Vital 저장 완료");
+        setTimeout(() => { window.location.href = "/dashboard"; }, 1000);
       } catch (e) {
         console.error(e);
-        alert("서버 오류로 Vital 저장 실패");
+        showToast("서버 오류로 Vital 저장 실패", true);
       }
     });
   }
@@ -231,13 +499,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     btnComplete?.addEventListener("click", () => {
-      const ccVal = document.querySelector('[name="cc"]')?.value?.trim() || "";
+      const ccVal = document.querySelector('[name="subjective"]')?.value?.trim() || "";
       const bpVal = document.querySelector('[name="bp"]')?.value?.trim() || "";
 
-      const planVal = Array.from(document.querySelectorAll('[name^="plan_desc_"]'))
+      const planTextVal = document.querySelector('[name="plan_text"]')?.value?.trim() || "";
+      const planTableVal = Array.from(document.querySelectorAll('[name^="plan_desc_"]'))
         .map((el) => (el.value || "").trim())
         .filter((v) => v)
         .join("; ");
+      const planVal = [planTextVal, planTableVal].filter((v) => v).join(" | ");
 
       const ivRadio = document.querySelector('input[name="iv_order"]:checked');
       const ivVal = ivRadio ? ivRadio.value : "";
@@ -341,34 +611,11 @@ function populatePastForm(data) {
   setVal("bst", data.bst);
   setVal("post_bst", data.post_bst);
 
-  // CC / PI / ROS / PE
-  setVal("cc", data.cc);
-  setVal("pi", data.pi);
-  setVal("ros", data.ros);
-  setVal("pe", data.pe);
-
-  // History
-  setVal("medication_hx", data.medication_hx);
-  setVal("pmhx", data.pmhx);
-  setVal("allergy", data.allergy);
-  setVal("fhx", data.fhx);
-  setVal("social", data.social);
-
-  // Problem list / Assessment
-  setVal("problem_list", data.problem_list);
+  // SOAP
+  setVal("subjective", data.subjective);
+  setVal("objective", data.objective);
   setVal("assessment", data.assessment);
-
-  // N/Ex
-  setVal("mmse", data.mmse);
-  setVal("cdr", data.cdr);
-  setVal("psqi", data.psqi);
-  setVal("isi", data.isi);
-  setVal("gds", data.gds);
-
-  // 라디오(인지/수면/우울) — 서버가 'O'/'X' 또는 true/false 등을 줄 수 있으니 O만 체크
-  if (data.ne_cog === "O") checkRadio("ne_cog", "O");
-  if (data.ne_sleep === "O") checkRadio("ne_sleep", "O");
-  if (data.ne_depress === "O") checkRadio("ne_depress", "O");
+  setVal("plan_text", data.plan_text);
 
   // Plan free input rows 1~5
   for (let i = 1; i <= 5; i++) {
