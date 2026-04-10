@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <!-- ✅ FastAPI에서 정적 파일 연결 -->
-    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=3">
 
     <title>{% block title %}GuGu Medical Center EMR{% endblock %}</title>
 </head>

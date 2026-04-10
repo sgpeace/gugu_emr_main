@@ -2161,18 +2161,18 @@ input[type="submit"]:disabled {
    오늘의 환자 슬라이드 사이드바
    ========================================================= */
 #today-sidebar {
-  position: fixed;
-  top: 50%;
-  left: -220px;
-  transform: translateY(-50%);
-  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
-  display: flex;
-  align-items: stretch;
+  position: fixed !important;
+  top: 50% !important;
+  left: -220px !important;
+  transform: translateY(-50%) !important;
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: stretch !important;
 }
 
 #today-sidebar.open {
-  left: 0;
+  left: 0 !important;
 }
 
 #today-sidebar-content {
@@ -2241,24 +2241,24 @@ input[type="submit"]:disabled {
 }
 
 #today-sidebar-tab {
-  background: #3f7f93;
-  color: #fff;
-  border: none;
-  border-radius: 0 8px 8px 0;
-  padding: 12px 8px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1.4;
-  white-space: pre-line;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-  flex-shrink: 0;
-  width: 36px;
-  text-align: center;
+  background: #3f7f93 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 0 8px 8px 0 !important;
+  padding: 12px 8px !important;
+  cursor: pointer !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+  white-space: pre-line !important;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.2) !important;
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  text-align: center !important;
 }
 
 #today-sidebar-tab:hover {
-  background: #2c6e84;
+  background: #2c6e84 !important;
   transform: none !important;
 }
 
@@ -2266,39 +2266,39 @@ input[type="submit"]:disabled {
    Drug List 슬라이드 사이드바 (오른쪽에서 왼쪽으로 닫힘)
    ========================================================= */
 #drug-sidebar {
-  position: fixed;
-  top: 50%;
-  right: calc(-85vw - 4px);
-  transform: translateY(-50%);
-  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
-  display: flex;
-  align-items: stretch;
+  position: fixed !important;
+  top: 50% !important;
+  right: -85vw !important;
+  transform: translateY(-50%) !important;
+  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: stretch !important;
 }
 
 #drug-sidebar.open {
-  right: 0;
+  right: 0 !important;
 }
 
 #drug-sidebar-tab {
-  background: #4a7c59;
-  color: #fff;
-  border: none;
-  border-radius: 8px 0 0 8px;
-  padding: 14px 10px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 700;
-  line-height: 1.5;
-  white-space: pre-line;
-  box-shadow: -2px 2px 8px rgba(0,0,0,0.2);
-  flex-shrink: 0;
-  width: 46px;
-  text-align: center;
+  background: #4a7c59 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px 0 0 8px !important;
+  padding: 14px 10px !important;
+  cursor: pointer !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+  white-space: pre-line !important;
+  box-shadow: -2px 2px 8px rgba(0,0,0,0.2) !important;
+  flex-shrink: 0 !important;
+  width: 46px !important;
+  text-align: center !important;
 }
 
 #drug-sidebar-tab:hover {
-  background: #3a6347;
+  background: #3a6347 !important;
   transform: none !important;
 }
 
