@@ -263,6 +263,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (isOpen) loadDrugList();
   });
 
+  // 페이지 로드 후 백그라운드에서 미리 fetch
+  // → 탭 클릭 시 이미 캐시되어 있어 즉시 표시됨
+  setTimeout(() => loadDrugList(), 800);
+
   drugSearch?.addEventListener("input", () => {
     const q = drugSearch.value.trim().toLowerCase();
     document.querySelectorAll("#drug-table-body tr").forEach(tr => {

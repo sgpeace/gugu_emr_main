@@ -19,8 +19,11 @@ from typing import List, Optional
 
 
 # === DATABASE SETUP ===
-DATABASE_URL = "mysql+pymysql://root:1234@localhost/emr_db"
-engine = create_engine(DATABASE_URL, echo=True)
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "mysql+pymysql://root:1234@localhost/emr_db"   # 로컬 개발용 기본값
+)
+engine = create_engine(DATABASE_URL, echo=False)
 Base = declarative_base()
 SessionLocal = sessionmaker(bind=engine)
 
@@ -258,13 +261,17 @@ app = FastAPI()
 
 @app.on_event("startup")
 def on_startup():
+    global _druglist_cache
     Base.metadata.create_all(bind=engine)
     _migrate_columns()
+    # Drug list를 서버 시작 시 1회 파싱해 메모리에 캐싱
+    _druglist_cache = _parse_druglist()
+    print(f"[startup] druglist 캐싱 완료: {len(_druglist_cache)}개 항목")
 
 def _migrate_columns():
     """기존 테이블에 누락된 컬럼을 자동으로 추가합니다."""
     migrations = [
-        # (테이블명, 컬럼명, DDL 타입)
+        # ── new_patient_chart 컬럼 ──────────────────────────────
         ("new_patient_chart", "cc",            "TEXT"),
         ("new_patient_chart", "pi",            "TEXT"),
         ("new_patient_chart", "ros",           "TEXT"),
@@ -284,10 +291,28 @@ def _migrate_columns():
         ("new_patient_chart", "ne_cog",        "BOOLEAN"),
         ("new_patient_chart", "ne_sleep",      "BOOLEAN"),
         ("new_patient_chart", "ne_depress",    "BOOLEAN"),
-        # EMR 테이블 SOAP 컬럼
+        # ── emrs: SOAP 컬럼 ─────────────────────────────────────
         ("emrs", "subjective", "TEXT"),
         ("emrs", "objective",  "TEXT"),
         ("emrs", "plan_text",  "TEXT"),
+        # ── emrs: 인지/수면/우울 플래그 ────────────────────────
+        ("emrs", "ne_cog",     "BOOLEAN"),
+        ("emrs", "ne_sleep",   "BOOLEAN"),
+        ("emrs", "ne_depress", "BOOLEAN"),
+        # ── emrs: 간호부 컬럼 ───────────────────────────────────
+        ("emrs", "iv_route_1",       "VARCHAR(100)"),
+        ("emrs", "nursing_result_1", "TEXT"),
+        ("emrs", "sign_nurse_1",     "VARCHAR(100)"),
+        ("emrs", "iv_route_2",       "VARCHAR(100)"),
+        ("emrs", "nursing_result_2", "TEXT"),
+        ("emrs", "sign_nurse_2",     "VARCHAR(100)"),
+        ("emrs", "iv_route_3",       "VARCHAR(100)"),
+        ("emrs", "nursing_result_3", "TEXT"),
+        ("emrs", "sign_nurse_3",     "VARCHAR(100)"),
+        ("emrs", "nurse_note",       "TEXT"),
+        # ── emrs: 약국부 컬럼 ───────────────────────────────────
+        ("emrs", "counseling_pharmacist", "VARCHAR(100)"),
+        ("emrs", "sign_pharmacist",       "VARCHAR(100)"),
     ]
     # NOT NULL → NULL 허용으로 변경할 컬럼 목록
     nullable_fixes = [
@@ -1256,6 +1281,32 @@ async def save_patient_emr_pha(
     sign_pharmacist: str = Form(None),
     registration_id: int = Form(...),
     current_status: str = Form(""),
+    # Plan 1–5
+    plan_desc_1: Optional[str] = Form(None),
+    plan_method_1: Optional[str] = Form(None),
+    plan_period_1: Optional[str] = Form(None),
+    plan_desc_2: Optional[str] = Form(None),
+    plan_method_2: Optional[str] = Form(None),
+    plan_period_2: Optional[str] = Form(None),
+    plan_desc_3: Optional[str] = Form(None),
+    plan_method_3: Optional[str] = Form(None),
+    plan_period_3: Optional[str] = Form(None),
+    plan_desc_4: Optional[str] = Form(None),
+    plan_method_4: Optional[str] = Form(None),
+    plan_period_4: Optional[str] = Form(None),
+    plan_desc_5: Optional[str] = Form(None),
+    plan_method_5: Optional[str] = Form(None),
+    plan_period_5: Optional[str] = Form(None),
+    # Plan 6–10 (고정 항목)
+    plan_pas_6: Optional[str] = Form(None),
+    plan_pas_period_6: Optional[str] = Form(None),
+    plan_bear_7: Optional[str] = Form(None),
+    plan_anti_8: Optional[str] = Form(None),
+    plan_ruma_8: Optional[str] = Form(None),
+    plan_tinea_site_9: Optional[str] = Form(None),
+    plan_tinea_9: Optional[str] = Form(None),
+    plan_derma_site_10: Optional[str] = Form(None),
+    plan_derma_10: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
     # 1. EMR 저장
@@ -1265,6 +1316,32 @@ async def save_patient_emr_pha(
 
     emr.counseling_pharmacist = sign_med_counsel
     emr.sign_pharmacist       = sign_pharmacist
+
+    # Plan 필드 업데이트
+    emr.plan_desc_1 = plan_desc_1
+    emr.plan_method_1 = plan_method_1
+    emr.plan_period_1 = plan_period_1
+    emr.plan_desc_2 = plan_desc_2
+    emr.plan_method_2 = plan_method_2
+    emr.plan_period_2 = plan_period_2
+    emr.plan_desc_3 = plan_desc_3
+    emr.plan_method_3 = plan_method_3
+    emr.plan_period_3 = plan_period_3
+    emr.plan_desc_4 = plan_desc_4
+    emr.plan_method_4 = plan_method_4
+    emr.plan_period_4 = plan_period_4
+    emr.plan_desc_5 = plan_desc_5
+    emr.plan_method_5 = plan_method_5
+    emr.plan_period_5 = plan_period_5
+    emr.plan_pas_6 = plan_pas_6
+    emr.plan_pas_period_6 = plan_pas_period_6
+    emr.plan_bear_7 = plan_bear_7
+    emr.plan_anti_8 = plan_anti_8
+    emr.plan_ruma_8 = plan_ruma_8
+    emr.plan_tinea_site_9 = plan_tinea_site_9
+    emr.plan_tinea_9 = plan_tinea_9
+    emr.plan_derma_site_10 = plan_derma_site_10
+    emr.plan_derma_10 = plan_derma_10
 
     # 2. Registration 상태 업데이트
     reg = db.query(Registration).filter(Registration.id == registration_id).first()
@@ -1462,54 +1539,55 @@ def export_summary(db: Session = Depends(get_db)):
         })
     return JSONResponse(content=result)
 
-@app.get("/druglist")
-def get_druglist():
+# ── Drug list 메모리 캐시 ─────────────────────────────────────
+_druglist_cache: list = []
+
+def _parse_druglist() -> list:
+    """xlsx를 파싱해 약품 목록을 반환합니다. 서버 시작 시 1회만 호출됩니다."""
     path = os.path.join(os.path.dirname(__file__), "static", "druglist.xlsx")
     wb = openpyxl.load_workbook(path, data_only=True)
     ws = wb.active
 
-    HEADER_COLS = ["분류", "소분류", "상품명", "성분 및 함량", "효능 및 효과", "용법", "비고", "금기", "복약지도"]
-    HEADER_KEYS = ["category", "subcategory", "name", "ingredient", "effect", "dosage", "note", "contraindication", "counseling"]
-    # 헤더 행 감지용 (분류가 있는 행)
     HEADER_MARKER = "분류"
-
     drugs = []
     last_category = ""
     last_subcategory = ""
 
     for row in ws.iter_rows(min_row=1, max_row=37, max_col=9, values_only=True):
-        # 빈 행 skip
         if all(c is None for c in row):
             continue
-        # 헤더 행 skip
         if str(row[0]).strip() == HEADER_MARKER and row[2] == "상품명":
             continue
 
-        cat   = str(row[0]).strip() if row[0] else ""
+        cat    = str(row[0]).strip() if row[0] else ""
         subcat = str(row[1]).strip() if row[1] else ""
-        name  = str(row[2]).strip() if row[2] else ""
+        name   = str(row[2]).strip() if row[2] else ""
 
         if not name:
             continue
 
-        # 분류 fill-forward
         if cat:
             last_category = cat
         if subcat:
             last_subcategory = subcat
 
         drugs.append({
-            "category":        last_category,
-            "subcategory":     last_subcategory,
-            "name":            name,
-            "ingredient":      str(row[3]).strip() if row[3] else "",
-            "effect":          str(row[4]).strip() if row[4] else "",
-            "dosage":          str(row[5]).strip() if row[5] else "",
-            "note":            str(row[6]).strip() if row[6] else "",
-            "contraindication":str(row[7]).strip() if row[7] else "",
-            "counseling":      str(row[8]).strip() if row[8] else "",
+            "category":         last_category,
+            "subcategory":      last_subcategory,
+            "name":             name,
+            "ingredient":       str(row[3]).strip() if row[3] else "",
+            "effect":           str(row[4]).strip() if row[4] else "",
+            "dosage":           str(row[5]).strip() if row[5] else "",
+            "note":             str(row[6]).strip() if row[6] else "",
+            "contraindication": str(row[7]).strip() if row[7] else "",
+            "counseling":       str(row[8]).strip() if row[8] else "",
         })
 
-    return JSONResponse(content=drugs)
+    return drugs
+
+@app.get("/druglist")
+def get_druglist():
+    """캐시된 약품 목록을 즉시 반환합니다."""
+    return JSONResponse(content=_druglist_cache)
 
 # 실행: uvicorn main:app --reload

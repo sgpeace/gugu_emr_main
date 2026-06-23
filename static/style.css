@@ -2434,3 +2434,214 @@ input[type="submit"]:disabled {
 #drug-table tr.drug-hidden {
   display: none;
 }
+
+/* ─── Plan 표 라디오 버튼 → 세로선 분할 버튼 ───────────────── */
+
+/* 라디오 그룹을 가진 td: 패딩 제거, 버튼이 칸에 꽉 차게 */
+.plan-table td:has(.radio-btn-group) {
+  padding: 0;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+/* 버튼 그룹: 가로 100% */
+.radio-btn-group {
+  display: flex;
+  width: 100%;
+}
+
+/* 각 버튼: 절반씩 균등 분할 */
+.plan-radio-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.6rem 0.2rem;
+  background: #f9f9f9;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #444;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+  /* border/radius 없음 — 세로선만 사용 */
+  border: none;
+  border-radius: 0;
+}
+
+/* 세로 구분선 (두 번째 버튼 왼쪽) */
+.plan-radio-label + .plan-radio-label {
+  border-left: 1px solid #ccc;
+}
+
+/* 라디오 인풋 숨김 */
+.plan-radio-label input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+/* 호버 */
+.plan-radio-label:hover {
+  background: #eaf3ec;
+  color: #2c5e3a;
+}
+
+/* 선택됨 */
+.plan-radio-label:has(input[type="radio"]:checked) {
+  background: #4a7c59;
+  color: #fff;
+}
+
+/* 비활성 (과거 기록 읽기 전용) */
+.plan-radio-label:has(input[type="radio"]:disabled) {
+  cursor: default;
+  background: #f0f0f0;
+  color: #999;
+}
+.plan-radio-label:has(input[type="radio"]:disabled):hover {
+  background: #f0f0f0;
+  color: #999;
+}
+.plan-radio-label:has(input[type="radio"]:disabled:checked) {
+  background: #7aab8a;
+  color: #fff;
+}
+
+/* 약품명 소제목 (안티푸라민, 루마겔) — 가로선으로 버튼과 분리 */
+.radio-cell-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #555;
+  text-align: center;
+  padding: 0.25rem 0.4rem;
+  background: #f0f0f0;
+  border-bottom: 1px solid #ccc;
+}
+
+/* ─── Plan 표 수정 버튼 ──────────────────────────────────────── */
+.btn-plan-edit {
+  margin-left: 0.75rem;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #4a7c59;
+  border-radius: 4px;
+  background: #fff;
+  color: #4a7c59;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-plan-edit:hover,
+.btn-plan-edit-active {
+  background: #4a7c59;
+  color: #fff;
+}
+
+/* ─── Plan 표: 기본(뷰) 모드 — 편집 컨트롤 숨김 ─────────────── */
+#pha-plan-table .plan-edit {
+  display: none;
+}
+
+/* ─── Plan 표: 편집 모드 (.editing 클래스 시) ───────────────── */
+/* view span 숨기기 */
+#pha-plan-table.editing .plan-view {
+  display: none;
+}
+
+/* 텍스트 입력 필드 */
+#pha-plan-table.editing input.plan-edit[type="text"] {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #4a7c59;
+  border-radius: 3px;
+  background: #f9fff9;
+  font-size: 0.9rem;
+}
+
+/* site-row 안의 인라인 텍스트 입력 */
+#pha-plan-table.editing td.site-row input.plan-edit[type="text"] {
+  display: inline-block;
+  width: 120px;
+}
+
+/* 라디오 그룹 span */
+#pha-plan-table.editing span.plan-edit.radio-group {
+  display: inline-flex;
+  gap: 0;
+}
+
+/* 라디오 그룹 label: 세로선 분할 버튼 */
+#pha-plan-table span.plan-edit.radio-group label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.6rem 0.2rem;
+  background: #f9f9f9;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #444;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+  border: none;
+  border-radius: 0;
+}
+#pha-plan-table span.plan-edit.radio-group label + label {
+  border-left: 1px solid #ccc;
+}
+#pha-plan-table span.plan-edit.radio-group label:hover {
+  background: #eaf3ec;
+  color: #2c5e3a;
+}
+#pha-plan-table span.plan-edit.radio-group label:has(input:checked) {
+  background: #4a7c59;
+  color: #fff;
+}
+#pha-plan-table span.plan-edit.radio-group input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+/* ─── 약국부장 체크박스 서명 ─────────────────────────────────── */
+.checkbox-sign-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fafafa;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.checkbox-sign-label input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #4a7c59;
+  cursor: pointer;
+}
+
+.checkbox-sign-label:has(input:checked) {
+  background: #e8f5e9;
+  border-color: #4a7c59;
+  color: #2c5e3a;
+}

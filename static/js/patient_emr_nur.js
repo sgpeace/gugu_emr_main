@@ -19,20 +19,16 @@ async function setCompleteButtonLockByStatus() {
     if (!r.ok) throw new Error("registrations 조회 실패");
     const regs = await r.json();
 
-    // 동일 환자의 최신 등록건을 뒤에서부터 찾기
-    let latest = null;
-    for (let i = regs.length - 1; i >= 0; i--) {
-      const it = regs[i];
-      if (it.patient_name === name && it.birth_date === birth) {
-        latest = it;
-        break;
-      }
-    }
+    // API는 id DESC 정렬로 반환 → 동일 환자의 가장 최신 등록건을 id 기준으로 정렬해 선택
+    // ⚠️ 이전 코드: 배열 뒤에서부터 탐색 → 오래된 등록건(이전 방문)을 최신으로 오인하는 버그
+    const candidates = regs.filter(it => it.patient_name === name && it.birth_date === birth);
+    candidates.sort((a, b) => b.id - a.id);   // id 큰 것 = 최신
+    const latest = candidates[0] || null;
 
     const status = latest?.status || "";
 
-    // ✅ '수액중'일 때만 완료 버튼 활성화
-    // (예: '수액중, 복약' / '복약, 수액중' 모두 포함 처리)
+    // '수액중'일 때만 완료 버튼 활성화
+    // (예: '수액중 복약' / '복약 수액중' 모두 포함 처리)
     completeBtn.disabled = !status.includes("수액중");
   } catch (e) {
     console.error(e);

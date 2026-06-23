@@ -210,16 +210,20 @@
               <td>6</td>
               <td>파스</td>
               <td>
-                <label><input type="radio" name="plan_pas_6" value="O"
-                              {% if emr and emr.plan_pas_6=='O' %}checked{% endif %}>O</label>
-                <label><input type="radio" name="plan_pas_6" value="X"
-                              {% if emr and emr.plan_pas_6=='X' %}checked{% endif %}>X</label>
+                <span class="radio-btn-group">
+                  <label class="plan-radio-label"><input type="radio" name="plan_pas_6" value="O"
+                      {% if emr and emr.plan_pas_6=='O' %}checked{% endif %}>O</label>
+                  <label class="plan-radio-label"><input type="radio" name="plan_pas_6" value="X"
+                      {% if emr and emr.plan_pas_6=='X' %}checked{% endif %}>X</label>
+                </span>
               </td>
               <td>
-                <label><input type="radio" name="plan_pas_period_6" value="Cool"
-                              {% if emr and emr.plan_pas_period_6=='Cool' %}checked{% endif %}>Cool</label>
-                <label><input type="radio" name="plan_pas_period_6" value="Hot"
-                              {% if emr and emr.plan_pas_period_6=='Hot' %}checked{% endif %}>Hot</label>
+                <span class="radio-btn-group">
+                  <label class="plan-radio-label"><input type="radio" name="plan_pas_period_6" value="Cool"
+                      {% if emr and emr.plan_pas_period_6=='Cool' %}checked{% endif %}>Cool</label>
+                  <label class="plan-radio-label"><input type="radio" name="plan_pas_period_6" value="Hot"
+                      {% if emr and emr.plan_pas_period_6=='Hot' %}checked{% endif %}>Hot</label>
+                </span>
               </td>
             </tr>
 
@@ -228,10 +232,12 @@
               <td>7</td>
               <td>삐콤</td>
               <td colspan="2">
-                <label><input type="radio" name="plan_bear_7" value="O"
-                              {% if emr and emr.plan_bear_7=='O' %}checked{% endif %}>O</label>
-                <label><input type="radio" name="plan_bear_7" value="X"
-                              {% if emr and emr.plan_bear_7=='X' %}checked{% endif %}>X</label>
+                <span class="radio-btn-group">
+                  <label class="plan-radio-label"><input type="radio" name="plan_bear_7" value="O"
+                      {% if emr and emr.plan_bear_7=='O' %}checked{% endif %}>O</label>
+                  <label class="plan-radio-label"><input type="radio" name="plan_bear_7" value="X"
+                      {% if emr and emr.plan_bear_7=='X' %}checked{% endif %}>X</label>
+                </span>
               </td>
             </tr>
 
@@ -240,18 +246,22 @@
               <td>8</td>
               <td>근육통</td>
               <td>
-                안티푸라민<br>
-                <label><input type="radio" name="plan_anti_8" value="O"
-                              {% if emr and emr.plan_anti_8=='O' %}checked{% endif %}>O</label>
-                <label><input type="radio" name="plan_anti_8" value="X"
-                              {% if emr and emr.plan_anti_8=='X' %}checked{% endif %}>X</label>
+                <div class="radio-cell-label">안티푸라민</div>
+                <span class="radio-btn-group">
+                  <label class="plan-radio-label"><input type="radio" name="plan_anti_8" value="O"
+                      {% if emr and emr.plan_anti_8=='O' %}checked{% endif %}>O</label>
+                  <label class="plan-radio-label"><input type="radio" name="plan_anti_8" value="X"
+                      {% if emr and emr.plan_anti_8=='X' %}checked{% endif %}>X</label>
+                </span>
               </td>
               <td>
-                루마겔<br>
-                <label><input type="radio" name="plan_ruma_8" value="O"
-                              {% if emr and emr.plan_ruma_8=='O' %}checked{% endif %}>O</label>
-                <label><input type="radio" name="plan_ruma_8" value="X"
-                              {% if emr and emr.plan_ruma_8=='X' %}checked{% endif %}>X</label>
+                <div class="radio-cell-label">루마겔</div>
+                <span class="radio-btn-group">
+                  <label class="plan-radio-label"><input type="radio" name="plan_ruma_8" value="O"
+                      {% if emr and emr.plan_ruma_8=='O' %}checked{% endif %}>O</label>
+                  <label class="plan-radio-label"><input type="radio" name="plan_ruma_8" value="X"
+                      {% if emr and emr.plan_ruma_8=='X' %}checked{% endif %}>X</label>
+                </span>
               </td>
             </tr>
 
@@ -266,10 +276,12 @@
               </td>
               <td></td>
               <td>
-                <label><input type="radio" name="plan_tinea_9" value="O"
-                              {% if emr and emr.plan_tinea_9=='O' %}checked{% endif %}>O</label>
-                <label><input type="radio" name="plan_tinea_9" value="X"
-                              {% if emr and emr.plan_tinea_9=='X' %}checked{% endif %}>X</label>
+                <span class="radio-btn-group">
+                  <label class="plan-radio-label"><input type="radio" name="plan_tinea_9" value="O"
+                      {% if emr and emr.plan_tinea_9=='O' %}checked{% endif %}>O</label>
+                  <label class="plan-radio-label"><input type="radio" name="plan_tinea_9" value="X"
+                      {% if emr and emr.plan_tinea_9=='X' %}checked{% endif %}>X</label>
+                </span>
               </td>
             </tr>
 
@@ -284,10 +296,12 @@
               </td>
               <td></td>
               <td>
-                <label><input type="radio" name="plan_derma_10" value="O"
-                              {% if emr and emr.plan_derma_10=='O' %}checked{% endif %}>O</label>
-                <label><input type="radio" name="plan_derma_10" value="X"
-                              {% if emr and emr.plan_derma_10=='X' %}checked{% endif %}>X</label>
+                <span class="radio-btn-group">
+                  <label class="plan-radio-label"><input type="radio" name="plan_derma_10" value="O"
+                      {% if emr and emr.plan_derma_10=='O' %}checked{% endif %}>O</label>
+                  <label class="plan-radio-label"><input type="radio" name="plan_derma_10" value="X"
+                      {% if emr and emr.plan_derma_10=='X' %}checked{% endif %}>X</label>
+                </span>
               </td>
             </tr>
           </tbody>
@@ -446,34 +460,44 @@
                 <td>6</td>
                 <td>파스</td>
                 <td>
-                  <label><input type="radio" name="plan_pas_6" value="O" disabled>O</label>
-                  <label><input type="radio" name="plan_pas_6" value="X" disabled>X</label>
+                  <span class="radio-btn-group">
+                    <label class="plan-radio-label"><input type="radio" name="plan_pas_6" value="O" disabled>O</label>
+                    <label class="plan-radio-label"><input type="radio" name="plan_pas_6" value="X" disabled>X</label>
+                  </span>
                 </td>
                 <td>
-                  <label><input type="radio" name="plan_pas_period_6" value="Cool" disabled>Cool</label>
-                  <label><input type="radio" name="plan_pas_period_6" value="Hot" disabled>Hot</label>
+                  <span class="radio-btn-group">
+                    <label class="plan-radio-label"><input type="radio" name="plan_pas_period_6" value="Cool" disabled>Cool</label>
+                    <label class="plan-radio-label"><input type="radio" name="plan_pas_period_6" value="Hot" disabled>Hot</label>
+                  </span>
                 </td>
               </tr>
               <tr>
                 <td>7</td>
                 <td>삐콤</td>
                 <td colspan="2">
-                  <label><input type="radio" name="plan_bear_7" value="O" disabled>O</label>
-                  <label><input type="radio" name="plan_bear_7" value="X" disabled>X</label>
+                  <span class="radio-btn-group">
+                    <label class="plan-radio-label"><input type="radio" name="plan_bear_7" value="O" disabled>O</label>
+                    <label class="plan-radio-label"><input type="radio" name="plan_bear_7" value="X" disabled>X</label>
+                  </span>
                 </td>
               </tr>
               <tr>
                 <td>8</td>
                 <td>근육통</td>
                 <td>
-                  안티푸라민<br>
-                  <label><input type="radio" name="plan_anti_8" value="O" disabled>O</label>
-                  <label><input type="radio" name="plan_anti_8" value="X" disabled>X</label>
+                  <div class="radio-cell-label">안티푸라민</div>
+                  <span class="radio-btn-group">
+                    <label class="plan-radio-label"><input type="radio" name="plan_anti_8" value="O" disabled>O</label>
+                    <label class="plan-radio-label"><input type="radio" name="plan_anti_8" value="X" disabled>X</label>
+                  </span>
                 </td>
                 <td>
-                  루마겔<br>
-                  <label><input type="radio" name="plan_ruma_8" value="O" disabled>O</label>
-                  <label><input type="radio" name="plan_ruma_8" value="X" disabled>X</label>
+                  <div class="radio-cell-label">루마겔</div>
+                  <span class="radio-btn-group">
+                    <label class="plan-radio-label"><input type="radio" name="plan_ruma_8" value="O" disabled>O</label>
+                    <label class="plan-radio-label"><input type="radio" name="plan_ruma_8" value="X" disabled>X</label>
+                  </span>
                 </td>
               </tr>
               <tr>
@@ -483,8 +507,10 @@
                 </td>
                 <td></td>
                 <td>
-                  <label><input type="radio" name="plan_tinea_9" value="O" disabled>O</label>
-                  <label><input type="radio" name="plan_tinea_9" value="X" disabled>X</label>
+                  <span class="radio-btn-group">
+                    <label class="plan-radio-label"><input type="radio" name="plan_tinea_9" value="O" disabled>O</label>
+                    <label class="plan-radio-label"><input type="radio" name="plan_tinea_9" value="X" disabled>X</label>
+                  </span>
                 </td>
               </tr>
               <tr>
@@ -494,8 +520,10 @@
                 </td>
                 <td></td>
                 <td>
-                  <label><input type="radio" name="plan_derma_10" value="O" disabled>O</label>
-                  <label><input type="radio" name="plan_derma_10" value="X" disabled>X</label>
+                  <span class="radio-btn-group">
+                    <label class="plan-radio-label"><input type="radio" name="plan_derma_10" value="O" disabled>O</label>
+                    <label class="plan-radio-label"><input type="radio" name="plan_derma_10" value="X" disabled>X</label>
+                  </span>
                 </td>
               </tr>
             </tbody>
