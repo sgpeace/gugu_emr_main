@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 2. 라디오 그룹 → span.plan-view (checked 값)
-    planTable.querySelectorAll("span.plan-edit.radio-group").forEach(group => {
+    planTable.querySelectorAll("span.radio-btn-group.plan-edit").forEach(group => {
       const view    = group.parentElement.querySelector(".plan-view");
       const checked = group.querySelector("input[type='radio']:checked");
       if (view) view.textContent = checked ? checked.value : "";

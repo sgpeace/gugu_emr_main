@@ -92,10 +92,10 @@
 
             <!-- 3) Prescription — Plan -->
             <fieldset class="form-section">
-                <legend>
-                    Plan
+                <legend>Plan</legend>
+                <div style="text-align:right; margin-bottom:0.5rem;">
                     <button type="button" id="plan-edit-btn" class="btn-plan-edit">수정</button>
-                </legend>
+                </div>
                 <table class="plan-table" id="pha-plan-table">
                     <colgroup>
                         <col class="col-num">
@@ -139,19 +139,19 @@
                             <td>파스</td>
                             <td>
                                 <span class="plan-view">{{ emr.plan_pas_6 or '' }}</span>
-                                <span class="plan-edit radio-group">
-                                    <label><input type="radio" name="plan_pas_6" value="O"
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_pas_6" value="O"
                                         {{ 'checked' if emr.plan_pas_6 == 'O' else '' }}>O</label>
-                                    <label><input type="radio" name="plan_pas_6" value="X"
+                                    <label class="plan-radio-label"><input type="radio" name="plan_pas_6" value="X"
                                         {{ 'checked' if emr.plan_pas_6 == 'X' else '' }}>X</label>
                                 </span>
                             </td>
                             <td>
                                 <span class="plan-view">{{ emr.plan_pas_period_6 or '' }}</span>
-                                <span class="plan-edit radio-group">
-                                    <label><input type="radio" name="plan_pas_period_6" value="Cool"
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_pas_period_6" value="Cool"
                                         {{ 'checked' if emr.plan_pas_period_6 == 'Cool' else '' }}>Cool</label>
-                                    <label><input type="radio" name="plan_pas_period_6" value="Hot"
+                                    <label class="plan-radio-label"><input type="radio" name="plan_pas_period_6" value="Hot"
                                         {{ 'checked' if emr.plan_pas_period_6 == 'Hot' else '' }}>Hot</label>
                                 </span>
                             </td>
@@ -163,10 +163,10 @@
                             <td>삐콤</td>
                             <td colspan="2">
                                 <span class="plan-view">{{ emr.plan_bear_7 or '' }}</span>
-                                <span class="plan-edit radio-group">
-                                    <label><input type="radio" name="plan_bear_7" value="O"
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_bear_7" value="O"
                                         {{ 'checked' if emr.plan_bear_7 == 'O' else '' }}>O</label>
-                                    <label><input type="radio" name="plan_bear_7" value="X"
+                                    <label class="plan-radio-label"><input type="radio" name="plan_bear_7" value="X"
                                         {{ 'checked' if emr.plan_bear_7 == 'X' else '' }}>X</label>
                                 </span>
                             </td>
@@ -177,22 +177,22 @@
                             <td>8</td>
                             <td>근육통</td>
                             <td>
-                                안티푸라민<br>
                                 <span class="plan-view">{{ emr.plan_anti_8 or '' }}</span>
-                                <span class="plan-edit radio-group">
-                                    <label><input type="radio" name="plan_anti_8" value="O"
+                                <div class="radio-cell-label plan-edit">안티푸라민</div>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_anti_8" value="O"
                                         {{ 'checked' if emr.plan_anti_8 == 'O' else '' }}>O</label>
-                                    <label><input type="radio" name="plan_anti_8" value="X"
+                                    <label class="plan-radio-label"><input type="radio" name="plan_anti_8" value="X"
                                         {{ 'checked' if emr.plan_anti_8 == 'X' else '' }}>X</label>
                                 </span>
                             </td>
                             <td>
-                                루마겔<br>
                                 <span class="plan-view">{{ emr.plan_ruma_8 or '' }}</span>
-                                <span class="plan-edit radio-group">
-                                    <label><input type="radio" name="plan_ruma_8" value="O"
+                                <div class="radio-cell-label plan-edit">루마겔</div>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_ruma_8" value="O"
                                         {{ 'checked' if emr.plan_ruma_8 == 'O' else '' }}>O</label>
-                                    <label><input type="radio" name="plan_ruma_8" value="X"
+                                    <label class="plan-radio-label"><input type="radio" name="plan_ruma_8" value="X"
                                         {{ 'checked' if emr.plan_ruma_8 == 'X' else '' }}>X</label>
                                 </span>
                             </td>
@@ -211,10 +211,10 @@
                             <td></td>
                             <td>
                                 <span class="plan-view">{{ emr.plan_tinea_9 or '' }}</span>
-                                <span class="plan-edit radio-group">
-                                    <label><input type="radio" name="plan_tinea_9" value="O"
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_tinea_9" value="O"
                                         {{ 'checked' if emr.plan_tinea_9 == 'O' else '' }}>O</label>
-                                    <label><input type="radio" name="plan_tinea_9" value="X"
+                                    <label class="plan-radio-label"><input type="radio" name="plan_tinea_9" value="X"
                                         {{ 'checked' if emr.plan_tinea_9 == 'X' else '' }}>X</label>
                                 </span>
                             </td>
@@ -233,10 +233,10 @@
                             <td></td>
                             <td>
                                 <span class="plan-view">{{ emr.plan_derma_10 or '' }}</span>
-                                <span class="plan-edit radio-group">
-                                    <label><input type="radio" name="plan_derma_10" value="O"
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_derma_10" value="O"
                                         {{ 'checked' if emr.plan_derma_10 == 'O' else '' }}>O</label>
-                                    <label><input type="radio" name="plan_derma_10" value="X"
+                                    <label class="plan-radio-label"><input type="radio" name="plan_derma_10" value="X"
                                         {{ 'checked' if emr.plan_derma_10 == 'X' else '' }}>X</label>
                                 </span>
                             </td>
