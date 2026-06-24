@@ -2,6 +2,15 @@
 // Helper Functions
 // ──────────────────────────────
 
+function updateRowNumbers() {
+  const rows = document.querySelectorAll('#patient-list tr');
+  const total = rows.length;
+  rows.forEach((row, i) => {
+    const cell = row.querySelector('.row-index');
+    if (cell) cell.textContent = total - i;
+  });
+}
+
 // ──────────────────────────────
 // Chart Picker Modal (동적 생성)
 // ──────────────────────────────
@@ -74,14 +83,24 @@ function appendToMedicationList(patient) {
   document.getElementById('medication-list').appendChild(li);
 }
 
-// ▶ 수액중 링크: 수액 중인 환자의 링크를 만들어 infusion-list에 추가
-function appendToInfusionList(patient) {
+// ▶ 수액대기중 링크
+function appendToInfusionWaitingList(patient) {
   const li = document.createElement("li");
   const a = document.createElement("a");
   a.href = `/patient_emr_nur?name=${encodeURIComponent(patient.name)}&birth_date=${encodeURIComponent(patient.birth_date)}`;
   a.textContent = `${patient.name} (${patient.birth_date})`;
   li.appendChild(a);
-  document.getElementById('infusion-list').appendChild(li);
+  document.getElementById('infusion-waiting-list').appendChild(li);
+}
+
+// ▶ 수액중 링크
+function appendToInfusionInProgressList(patient) {
+  const li = document.createElement("li");
+  const a = document.createElement("a");
+  a.href = `/patient_emr_nur?name=${encodeURIComponent(patient.name)}&birth_date=${encodeURIComponent(patient.birth_date)}`;
+  a.textContent = `${patient.name} (${patient.birth_date})`;
+  li.appendChild(a);
+  document.getElementById('infusion-inprogress-list').appendChild(li);
 }
 
 // ──────────────────────────────
@@ -92,16 +111,15 @@ function addPatientToTable(patient) {
   const table = document.getElementById('patient-list');
   const row = document.createElement('tr');
   row.dataset.id = patient.id;
-  const index = table.children.length + 1;
-
   row.innerHTML = `
-    <td>${index}</td>
+    <td class="row-index"></td>
     <td>${patient.name} <span class="small-birthdate">(${patient.birth_date})</span></td>
     <td class="status-cell">${patient.status}</td>
     <td><button class="enter-button"></button></td>
     <td><button class="delete-button">삭제</button></td>
   `;
-  table.appendChild(row);
+  table.prepend(row);
+  updateRowNumbers();
 
   const statusCell = row.querySelector('.status-cell');
   const enterBtn = row.querySelector('.enter-button');
@@ -122,9 +140,16 @@ function addPatientToTable(patient) {
     if (patient.status.includes("복약")) {
       appendToMedicationList(patient);
     }
-    if (patient.status.includes("수액")) {
-      appendToInfusionList(patient);
-    }
+   // ✅ 수액 상태 분기
+const st = String(patient.status || "");
+if (st.includes("수액대기중")) {
+  appendToInfusionWaitingList(patient);
+} else if (st.includes("수액중")) {
+  appendToInfusionInProgressList(patient);
+} else if (st.includes("수액")) {
+  // (과거 데이터 호환: "수액 복약" 같은 레거시 상태는 수액중으로 취급)
+  appendToInfusionInProgressList(patient);
+}
   }
 
   // ▶ 진료 시작 버튼
@@ -166,6 +191,7 @@ row.querySelector('.delete-button').addEventListener('click', () => {
 
       // 환자 테이블에서 삭제
       row.remove();
+      updateRowNumbers();
 
       // 이름과 생년월일 기반으로 리스트에서 삭제
       const name = patient.name;
@@ -181,7 +207,8 @@ row.querySelector('.delete-button').addEventListener('click', () => {
       };
 
       removeFromList('treatment-list');
-      removeFromList('infusion-list');
+      removeFromList('infusion-waiting-list');
+      removeFromList('infusion-inprogress-list');
       removeFromList('medication-list');
     })
     .catch(err => {
@@ -200,7 +227,8 @@ document.addEventListener("DOMContentLoaded", () => {
   fetch("/dashboard/registrations")
     .then(r => r.json())
     .then(regs => {
-      regs.forEach(reg => {
+      // API는 최신순(내림차순) 반환 → reverse 후 prepend하면 최신이 맨 위, 번호도 올바르게 부여됨
+      [...regs].reverse().forEach(reg => {
         addPatientToTable({
           id: reg.id,
           name: reg.patient_name,
@@ -375,41 +403,41 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // 내보내기 버튼 클릭시 '오늘의 환자' 테이블을 엑셀 파일로 저장
-document.getElementById("export-patients").addEventListener("click", function () {
-  // 오늘의 환자 테이블 요소 선택
-  const table = document.querySelector(".patient-table");
+document.getElementById("export-patients").addEventListener("click", async function () {
+  try {
+    const res = await fetch("/dashboard/export_summary");
+    if (!res.ok) throw new Error("서버 오류");
+    const data = await res.json();
 
-  if (!table) {
-    alert("환자 테이블을 찾을 수 없습니다.");
-    return;
+    const rows = [["순번", "이름", "생년월일", "수액여부", "수액성공여부"]];
+    data.forEach(p => {
+      rows.push([p.seq, p.name, p.birth_date, p.iv_order, p.iv_success]);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+    // 열 너비 설정
+    worksheet["!cols"] = [
+      { wch: 6 },   // 순번
+      { wch: 12 },  // 이름
+      { wch: 12 },  // 생년월일
+      { wch: 10 },  // 수액여부
+      { wch: 14 },  // 수액성공여부
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Today_Patients");
+
+    const today = new Date();
+    const y = String(today.getFullYear()).slice(-2);
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    const filename = `today_patients_${y}${m}${d}.xlsx`;
+
+    XLSX.writeFile(workbook, filename);
+  } catch (e) {
+    alert("내보내기 실패: " + e.message);
   }
-
-  const rows = [["이름", "생년월일"]];
-
-document.querySelectorAll("#patient-list tr").forEach(tr => {
-  const nameCell = tr.children[1].textContent.trim();
-  const birthMatch = nameCell.match(/\((.*?)\)/);
-  const birth = birthMatch ? birthMatch[1] : "";
-  const name = nameCell.replace(/\(.*?\)/, "").trim();
-  rows.push([name, birth]);
-});
-
-const worksheet = XLSX.utils.aoa_to_sheet(rows);
-const workbook = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(workbook, worksheet, "Today_Patients");
-
-// ✅ 오늘 날짜를 YYMMDD 형식으로 구하기
-const today = new Date();
-const y = String(today.getFullYear()).slice(-2); // '25'
-const m = String(today.getMonth() + 1).padStart(2, '0'); // '09'
-const d = String(today.getDate()).padStart(2, '0'); // '09'
-const dateStr = `${y}${m}${d}`; // '250909'
-
-// ✅ 파일 이름에 날짜 포함
-const filename = `today_patients_${dateStr}.xlsx`;
-
-// ✅ 엑셀 파일 다운로드
-XLSX.writeFile(workbook, filename);
 });
 
 

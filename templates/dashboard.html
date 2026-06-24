@@ -35,40 +35,42 @@
       <div id="new-patient-search"></div>
     </div>
 
-    <div class="button-group">
-      <button id="confirm-patient" class="confirm-button">확인</button>
-      <button id="new-patient" class="new-button">신환 등록</button>
-
-    </div>
-
-    <div class="patient-actions">
-      <div class="button-group">
-        <button id="export-patients" class="export-button">내보내기</button>
-        <button id="reset-patients" class="reset-button">초기화</button>
-      </div>
+    <div class="button-group" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+      <button id="confirm-patient" class="confirm-button" style="flex:1; min-width:80px;">확인</button>
+      <button id="new-patient" class="new-button" style="flex:1; min-width:80px;">신환 등록</button>
+      <button id="export-patients" class="export-button" style="flex:1; min-width:80px;">내보내기</button>
+      <button id="reset-patients" class="reset-button" style="flex:1; min-width:80px;">초기화</button>
     </div>
   </div>
 
   <!-- 오른쪽: 상태별 환자 (진료중, 수액중, 복약중) 및 환자 검색 -->
   <div class="status-section card">
     <div class="status-container">
-      <div class="status-box" id="in-treatment">
-        <h3>진료중</h3>
-        <ul id="treatment-list"></ul>
-      </div>
-      <div class="status-box" id="in-infusion">
-        <h3>수액중</h3>
-        <ul id="infusion-list"></ul>
-      </div>
-      <div class="status-box" id="in-medication">
-        <h3>복약중</h3>
-        <ul id="medication-list"></ul>
-      </div>
-    </div>
+  <div class="status-box" id="in-treatment">
+    <h3>진료부</h3>
+    <ul id="treatment-list"></ul>
+  </div>
+
+  <!-- ✅ 간호부: 수액대기중 / 수액중 분리 -->
+  <div class="status-box" id="in-infusion-wait">
+    <h3>간호부 - 수액대기중</h3>
+    <ul id="infusion-waiting-list"></ul>
+  </div>
+
+  <div class="status-box" id="in-infusion">
+    <h3>간호부 - 수액중</h3>
+    <ul id="infusion-inprogress-list"></ul>
+  </div>
+
+  <div class="status-box" id="in-medication">
+    <h3>약국부</h3>
+    <ul id="medication-list"></ul>
+  </div>
+</div>  
 
     <div class="search-patient-section">
       <input type="text" id="patient-name-search" placeholder="환자 이름 검색">
-      <button id="confirm-name-search">확인</button>
+      <button id="confirm-name-search" style="margin-top:8px;">확인</button>
       <div id="search-results"></div>
     </div>
   </div>

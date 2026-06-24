@@ -69,22 +69,34 @@
                 </div>
             </fieldset>
 
-            <!-- 2) C.C. (주호소) -->
+            <!-- 2) SOAP -->
             <fieldset class="section-fieldset">
-                <legend>주호소 (C.C.)</legend>
-                <div class="readonly-value">{{ emr.cc or '—' }}</div>
+                <legend>S — Subjective</legend>
+                <div class="readonly-value">{{ emr.subjective or '—' }}</div>
             </fieldset>
 
-            <!-- 3) P.I. (병력) -->
             <fieldset class="section-fieldset">
-                <legend>P.I. (병력)</legend>
-                <div class="readonly-value">{{ emr.pi or '—' }}</div>
+                <legend>O — Objective</legend>
+                <div class="readonly-value">{{ emr.objective or '—' }}</div>
             </fieldset>
 
-            <!-- 4) Prescription — Plan -->
+            <fieldset class="section-fieldset">
+                <legend>A — Assessment</legend>
+                <div class="readonly-value">{{ emr.assessment or '—' }}</div>
+            </fieldset>
+
+            <fieldset class="section-fieldset">
+                <legend>P — Plan</legend>
+                <div class="readonly-value">{{ emr.plan_text or '—' }}</div>
+            </fieldset>
+
+            <!-- 3) Prescription — Plan -->
             <fieldset class="form-section">
                 <legend>Plan</legend>
-                <table class="plan-table">
+                <div style="text-align:right; margin-bottom:0.5rem;">
+                    <button type="button" id="plan-edit-btn" class="btn-plan-edit">수정</button>
+                </div>
+                <table class="plan-table" id="pha-plan-table">
                     <colgroup>
                         <col class="col-num">
                         <col class="col-desc">
@@ -104,57 +116,129 @@
                         <tr>
                             <td>{{ i }}</td>
                             <td>
-                                <div class="readonly-value">{{ emr['plan_desc_' ~ i] or '' }}</div>
+                                <span class="plan-view">{{ emr['plan_desc_' ~ i] or '' }}</span>
+                                <input type="text" class="plan-edit" name="plan_desc_{{ i }}"
+                                       value="{{ emr['plan_desc_' ~ i] or '' }}">
                             </td>
                             <td>
-                                <div class="readonly-value">{{ emr['plan_method_' ~ i] or '' }}</div>
+                                <span class="plan-view">{{ emr['plan_method_' ~ i] or '' }}</span>
+                                <input type="text" class="plan-edit" name="plan_method_{{ i }}"
+                                       value="{{ emr['plan_method_' ~ i] or '' }}">
                             </td>
                             <td>
-                                <div class="readonly-value">{{ emr['plan_period_' ~ i] or '' }}</div>
+                                <span class="plan-view">{{ emr['plan_period_' ~ i] or '' }}</span>
+                                <input type="text" class="plan-edit" name="plan_period_{{ i }}"
+                                       value="{{ emr['plan_period_' ~ i] or '' }}">
                             </td>
                         </tr>
                         {% endfor %}
+
+                        <!-- Row 6: 파스 -->
                         <tr>
                             <td>6</td>
                             <td>파스</td>
                             <td>
-                                <div class="readonly-value">{{ emr.plan_pas_6 or '' }}</div>
+                                <span class="plan-view">{{ emr.plan_pas_6 or '' }}</span>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_pas_6" value="O"
+                                        {{ 'checked' if emr.plan_pas_6 == 'O' else '' }}>O</label>
+                                    <label class="plan-radio-label"><input type="radio" name="plan_pas_6" value="X"
+                                        {{ 'checked' if emr.plan_pas_6 == 'X' else '' }}>X</label>
+                                </span>
                             </td>
                             <td>
-                                <div class="readonly-value">{{ emr.plan_pas_period_6 or '' }}</div>
+                                <span class="plan-view">{{ emr.plan_pas_period_6 or '' }}</span>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_pas_period_6" value="Cool"
+                                        {{ 'checked' if emr.plan_pas_period_6 == 'Cool' else '' }}>Cool</label>
+                                    <label class="plan-radio-label"><input type="radio" name="plan_pas_period_6" value="Hot"
+                                        {{ 'checked' if emr.plan_pas_period_6 == 'Hot' else '' }}>Hot</label>
+                                </span>
                             </td>
                         </tr>
+
+                        <!-- Row 7: 삐콤 -->
                         <tr>
                             <td>7</td>
                             <td>삐콤</td>
                             <td colspan="2">
-                                <div class="readonly-value">{{ emr.plan_bear_7 or '' }}</div>
+                                <span class="plan-view">{{ emr.plan_bear_7 or '' }}</span>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_bear_7" value="O"
+                                        {{ 'checked' if emr.plan_bear_7 == 'O' else '' }}>O</label>
+                                    <label class="plan-radio-label"><input type="radio" name="plan_bear_7" value="X"
+                                        {{ 'checked' if emr.plan_bear_7 == 'X' else '' }}>X</label>
+                                </span>
                             </td>
                         </tr>
+
+                        <!-- Row 8: 근육통 -->
                         <tr>
                             <td>8</td>
                             <td>근육통</td>
                             <td>
-                                <div class="readonly-value">안티푸라민 {{ emr.plan_anti_8 or '' }}</div>
+                                <span class="plan-view">{{ emr.plan_anti_8 or '' }}</span>
+                                <div class="radio-cell-label plan-edit">안티푸라민</div>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_anti_8" value="O"
+                                        {{ 'checked' if emr.plan_anti_8 == 'O' else '' }}>O</label>
+                                    <label class="plan-radio-label"><input type="radio" name="plan_anti_8" value="X"
+                                        {{ 'checked' if emr.plan_anti_8 == 'X' else '' }}>X</label>
+                                </span>
                             </td>
                             <td>
-                                <div class="readonly-value">루마겔 {{ emr.plan_ruma_8 or '' }}</div>
+                                <span class="plan-view">{{ emr.plan_ruma_8 or '' }}</span>
+                                <div class="radio-cell-label plan-edit">루마겔</div>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_ruma_8" value="O"
+                                        {{ 'checked' if emr.plan_ruma_8 == 'O' else '' }}>O</label>
+                                    <label class="plan-radio-label"><input type="radio" name="plan_ruma_8" value="X"
+                                        {{ 'checked' if emr.plan_ruma_8 == 'X' else '' }}>X</label>
+                                </span>
                             </td>
                         </tr>
+
+                        <!-- Row 9: 발백선 -->
                         <tr>
                             <td>9</td>
-                            <td>발백선 (site: {{ emr.plan_tinea_site_9 or '' }})</td>
+                            <td class="site-row">
+                                발백선 (site:&nbsp;
+                                <span class="plan-view site-view">{{ emr.plan_tinea_site_9 or '' }}</span>
+                                <input type="text" class="plan-edit" name="plan_tinea_site_9"
+                                       value="{{ emr.plan_tinea_site_9 or '' }}" placeholder="부위">
+                                )
+                            </td>
                             <td></td>
                             <td>
-                                <div class="readonly-value">무조날 크림 {{ emr.plan_tinea_9 or '' }}</div>
+                                <span class="plan-view">{{ emr.plan_tinea_9 or '' }}</span>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_tinea_9" value="O"
+                                        {{ 'checked' if emr.plan_tinea_9 == 'O' else '' }}>O</label>
+                                    <label class="plan-radio-label"><input type="radio" name="plan_tinea_9" value="X"
+                                        {{ 'checked' if emr.plan_tinea_9 == 'X' else '' }}>X</label>
+                                </span>
                             </td>
                         </tr>
+
+                        <!-- Row 10: 피부염 -->
                         <tr>
                             <td>10</td>
-                            <td>피부염 (site: {{ emr.plan_derma_site_10 or '' }})</td>
+                            <td class="site-row">
+                                피부염 (site:&nbsp;
+                                <span class="plan-view site-view">{{ emr.plan_derma_site_10 or '' }}</span>
+                                <input type="text" class="plan-edit" name="plan_derma_site_10"
+                                       value="{{ emr.plan_derma_site_10 or '' }}" placeholder="부위">
+                                )
+                            </td>
                             <td></td>
                             <td>
-                                <div class="readonly-value">노바손 크림 {{ emr.plan_derma_10 or '' }}</div>
+                                <span class="plan-view">{{ emr.plan_derma_10 or '' }}</span>
+                                <span class="radio-btn-group plan-edit">
+                                    <label class="plan-radio-label"><input type="radio" name="plan_derma_10" value="O"
+                                        {{ 'checked' if emr.plan_derma_10 == 'O' else '' }}>O</label>
+                                    <label class="plan-radio-label"><input type="radio" name="plan_derma_10" value="X"
+                                        {{ 'checked' if emr.plan_derma_10 == 'X' else '' }}>X</label>
+                                </span>
                             </td>
                         </tr>
                     </tbody>
@@ -171,6 +255,15 @@
             <fieldset class="section-fieldset">
             <legend>서명</legend>
 
+            <!-- ✅ 추가: 의사 서명 (읽기 전용) -->
+            <div class="form-group">
+                <label for="sign_dr_display">진료의(Dr.)</label>
+                <input type="text"
+                id="sign_dr_display"
+                value="{{ emr.sign_dr or '' }}"
+                readonly>
+            </div>
+
             <div class="form-group">
                 <label for="sign_med_counsel">복약지도자</label>
                 <!-- ✅ DB 저장값을 화면에 미리 채움 -->
@@ -182,12 +275,13 @@
             </div>
 
             <div class="form-group">
-                <label for="sign_pharmacist">약국부장 서명</label>
-                <!-- ✅ DB 저장값을 화면에 미리 채움 -->
-                <input type="text"
-                    id="sign_pharmacist"
-                    name="sign_pharmacist"
-                    placeholder="서명"
+                <label>약국부장 확인</label>
+                <label class="checkbox-sign-label">
+                    <input type="checkbox" id="sign_pharmacist_check"
+                        {{ 'checked' if emr.sign_pharmacist else '' }}>
+                    확인
+                </label>
+                <input type="hidden" name="sign_pharmacist" id="sign_pharmacist_hidden"
                     value="{{ emr.sign_pharmacist or '' }}">
             </div>
             </fieldset>
